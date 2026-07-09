@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>이치방쿠지 사용법</title>
+    <style>
+      :root {
+        --bg: #0b0b0d;
+        --panel: #17171a;
+        --panel-border: #2a2a2e;
+        --text: #f2f2f2;
+        --text-dim: #9a9aa0;
+        --accent: #e8e8ec;
+        --danger: #ff5c5c;
+        --danger-bg: rgba(255, 92, 92, 0.12);
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont,
+          sans-serif;
+      }
+
+      .manual-shell {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px;
+      }
+      .manual-shell h1 {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+      }
+      .manual-shell .back-link {
+        display: inline-block;
+        margin-bottom: 24px;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+      }
+      .manual-shell h2 {
+        font-size: 1.05rem;
+        margin: 32px 0 12px;
+        color: var(--text);
+        border-bottom: 1px solid var(--panel-border);
+        padding-bottom: 8px;
+      }
+      .manual-shell h3 {
+        font-size: 0.95rem;
+        margin: 20px 0 8px;
+        color: var(--accent);
+      }
+      .manual-shell p,
+      .manual-shell li {
+        font-size: 0.92rem;
+        line-height: 1.6;
+        color: var(--text-dim);
+      }
+      .manual-shell strong {
+        color: var(--text);
+      }
+      .manual-shell code {
+        background: #0e0e11;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 0.88em;
+        color: var(--accent);
+      }
+      .manual-shell ul,
+      .manual-shell ol {
+        padding-left: 22px;
+      }
+      .manual-shell .callout {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 14px 0;
+      }
+      .manual-shell .callout.danger {
+        border-color: var(--danger);
+        background: var(--danger-bg);
+      }
+      .manual-shell .callout.danger strong {
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="manual-shell">
+      <a class="back-link" href="/admin.html">← 관리자 화면으로 돌아가기</a>
+      <h1>이치방쿠지 사용법</h1>
+      <p>치지직 후원과 연동해 번호별 상품을 자동으로 배정하는 프로그램입니다. 최초 설정이 끝났다면, 방송할 때마다 아래 순서대로 진행하세요.</p>
+
+      <h2>1. 프로그램 켜기</h2>
+      <p>
+        <code>Web/chzzk-kuji</code> 폴더에서 <code>npm run dev</code> 실행. 로컬 PC에서 쓰는 경우 이 창을
+        <strong>방송 내내 켜두어야</strong> 후원을 계속 받을 수 있습니다. 껐다 켤 때마다 치지직 계정을 다시
+        인가할 필요는 없습니다 — 연결 정보는 이미 저장되어 있습니다.
+      </p>
+
+      <h2>2. 회차 만들기</h2>
+      <ol>
+        <li>
+          <code>http://localhost:5173/admin.html</code> 접속 후 로그인 — <strong>네이버(치지직) 계정으로
+          로그인</strong> 버튼 또는 비밀번호 사용. 네이버 로그인은 치지직 계정을 한 번 연결한 뒤부터, 연결했던
+          그 계정으로만 가능합니다.
+        </li>
+        <li>맨 위 "치지직 연결 상태"가 <code>connected</code>인지 확인 (다른 상태면 아래 "문제 생겼을 때" 참고)</li>
+        <li>
+          "현재 회차" 칸에 입력:
+          <ul>
+            <li><strong>회차 이름</strong>: 자유롭게 (예: "7월 6일 이치방쿠지")</li>
+            <li><strong>장당 가격</strong>: 티켓 1장당 치즈 금액 (예: 1000)</li>
+            <li><strong>최대 번호</strong>: 몇 번까지 팔 것인지 (예: 10이면 1~10번)</li>
+            <li><strong>번호,상품명,등급(선택)</strong>: 한 줄에 하나씩, 쉼표로 구분 (예: <code>1,A상</code>)</li>
+          </ul>
+        </li>
+        <li>"회차 시작" 클릭 → 번호판이 뜨면 준비 완료</li>
+      </ol>
+
+      <h2>3. 후원 받기</h2>
+      <p>
+        시청자가 "장당 가격"만큼 치즈를 후원하면서 메시지에 원하는 번호(예: "3번")를 적으면 자동으로 처리됩니다.
+      </p>
+      <div class="callout">
+        번호가 아직 안 팔렸으면 → 즉시 그 시청자에게 배정되어 번호판/오버레이에 반영됩니다.<br />
+        이미 팔린 번호거나, 금액이 안 맞거나, 번호를 안 적었으면 → 배정되지 않고 "처리 필요 큐"에 기록만
+        됩니다. <strong>환불은 자동으로 되지 않으니</strong> 방송에서 직접 안내해주세요.
+      </div>
+
+      <h2>4. OBS에 오버레이 넣기 (한 번만 설정)</h2>
+      <p>
+        OBS에서 소스 추가 → <strong>브라우저</strong> 선택 → URL에 <code>http://localhost:5173/overlay.html</code>
+        입력. 배경이 투명한 번호판이 화면에 뜹니다. 판매된 번호는 초록색으로 강조되고, 방금 팔린 번호는 잠깐
+        반짝이는 효과가 나타납니다.
+      </p>
+
+      <h2>5. 회차 마무리</h2>
+      <p>
+        번호가 다 팔렸거나 방송을 마무리할 때 관리자 화면에서 <strong>"회차 종료"</strong> 클릭. 종료된 회차
+        기록은 삭제되지 않고 남아있고, 다음 방송에는 "회차 시작"으로 새로 만들면 됩니다.
+      </p>
+
+      <h2>6. 처리 필요 큐 확인</h2>
+      <p>
+        "처리 필요 큐"에 쌓인 항목(중복 후원, 금액 불일치 등)은 방송 중/후에 확인해서 시청자에게 안내하거나
+        필요하면 직접 처리한 뒤, "처리완료" 버튼으로 정리하세요.
+      </p>
+
+      <h2>문제 생겼을 때</h2>
+      <h3>연결 상태가 "reconnecting"</h3>
+      <p>일시적 문제입니다. 잠시 후 자동으로 <code>connected</code>로 돌아옵니다.</p>
+
+      <h3>빨간 배너("재인증 필요")가 뜰 때</h3>
+      <div class="callout danger">
+        배너의 "치지직 재인증하기" 링크를 클릭해 인가를 완료한 뒤, <strong>서버(터미널)를 껐다 다시 켜야</strong>
+        실제로 연결이 복구됩니다. 재인증만 하고 재시작을 안 하면 후원을 계속 못 받습니다.
+      </div>
+
+      <h2>관리자 비밀번호 변경</h2>
+      <ol>
+        <li>관리자 화면 맨 아래 "비밀번호 변경" 섹션에서 현재 비밀번호 → 새 비밀번호 → 새 비밀번호 확인 입력</li>
+        <li>"비밀번호 변경" 클릭 → 성공하면 바로 적용 (재시작 불필요)</li>
+        <li>새 비밀번호는 4자 이상이어야 하며, <strong>잊어버리면 되돌릴 방법이 없으니</strong> 꼭 기억해두세요</li>
+      </ol>
+    </div>
+  </body>
+</html>

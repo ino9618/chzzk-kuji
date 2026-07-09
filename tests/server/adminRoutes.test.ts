@@ -1,0 +1,172 @@
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
+import request from 'supertest';
+import bcrypt from 'bcryptjs';
+import type { Db } from '../../src/server/db';
+import { createApp } from '../../src/server/index';
+import { createTestDb, resetDb } from '../helpers/testDb';
+
+let db: Db;
+let agent: ReturnType<typeof request.agent>;
+const PASSWORD = 'test-password-123';
+const PASSWORD_HASH = bcrypt.hashSync(PASSWORD, 10);
+
+beforeAll(async () => {
+  db = await createTestDb();
+});
+
+afterAll(async () => {
+  await db.close();
+});
+
+beforeEach(async () => {
+  await resetDb(db);
+  const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+  agent = request.agent(app);
+  await agent.post('/api/auth/login').send({ password: PASSWORD });
+});
+
+describe('admin session routes', () => {
+  it('reports no active session initially', async () => {
+    const res = await agent.get('/api/admin/session');
+    expect(res.body).toEqual({ active: false });
+  });
+
+  it('creates a session and then reports it as active', async () => {
+    const createRes = await agent.post('/api/admin/session').send({
+      name: '1회차',
+      ticketPrice: 1000,
+      numberRangeMin: 1,
+      numberRangeMax: 2,
+      tickets: [
+        { number: 1, prizeName: 'A상' },
+        { number: 2, prizeName: 'B상' },
+      ],
+    });
+    expect(createRes.status).toBe(200);
+
+    const getRes = await agent.get('/api/admin/session');
+    expect(getRes.body.active).toBe(true);
+    expect(getRes.body.tickets).toHaveLength(2);
+  });
+
+  it('closes the active session', async () => {
+    await agent.post('/api/admin/session').send({
+      name: '1회차',
+      ticketPrice: 1000,
+      numberRangeMin: 1,
+      numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: 'A상' }],
+    });
+    await agent.post('/api/admin/session/close');
+    const getRes = await agent.get('/api/admin/session');
+    expect(getRes.body).toEqual({ active: false });
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/admin/session');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('admin queue and log routes', () => {
+  it('lists pending issues and marks them resolved', async () => {
+    await agent.post('/api/admin/session').send({
+      name: '1회차',
+      ticketPrice: 1000,
+      numberRangeMin: 1,
+      numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: 'A상' }],
+    });
+
+    // Simulate an amount_mismatch by calling processDonation indirectly is not exposed via HTTP;
+    // instead exercise the queue endpoints against the DB directly through db helpers.
+    const { insertDonationLog } = await import('../../src/server/db');
+    await insertDonationLog(db, {
+      sessionId: null,
+      donorNickname: 'bad',
+      donorChannelId: 'c1',
+      amount: 1500,
+      rawMessage: '???',
+      status: 'amount_mismatch',
+      needsAttention: true,
+    });
+
+    const queueRes = await agent.get('/api/admin/queue');
+    expect(queueRes.body).toHaveLength(1);
+    const logId = queueRes.body[0].id;
+
+    const resolveRes = await agent.post(`/api/admin/queue/${logId}/resolve`);
+    expect(resolveRes.status).toBe(200);
+
+    const queueAfter = await agent.get('/api/admin/queue');
+    expect(queueAfter.body).toHaveLength(0);
+  });
+});
+
+describe('winners list', () => {
+  it('lists sold tickets across a closed session and the current active one', async () => {
+    await agent.post('/api/admin/session').send({
+      name: '1회차',
+      ticketPrice: 1000,
+      numberRangeMin: 1,
+      numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: 'A상' }],
+    });
+    const { processDonation } = await import('../../src/server/donationProcessor');
+    await processDonation(db, { channelId: 'c1', nickname: '홍길동', amount: 1000, message: '1번' });
+    await agent.post('/api/admin/session/close');
+
+    await agent.post('/api/admin/session').send({
+      name: '2회차',
+      ticketPrice: 2000,
+      numberRangeMin: 1,
+      numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: 'B상' }],
+    });
+    await processDonation(db, { channelId: 'c2', nickname: '김철수', amount: 2000, message: '1번' });
+
+    const res = await agent.get('/api/admin/winners');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    expect(res.body.map((w: any) => w.sessionName).sort()).toEqual(['1회차', '2회차']);
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/admin/winners');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('nickname mode setting', () => {
+  it('defaults to masked and can be switched to full', async () => {
+    const getRes = await agent.get('/api/admin/nickname-mode');
+    expect(getRes.body).toEqual({ mode: 'masked' });
+
+    await agent.post('/api/admin/nickname-mode').send({ mode: 'full' });
+    const getRes2 = await agent.get('/api/admin/nickname-mode');
+    expect(getRes2.body).toEqual({ mode: 'full' });
+  });
+});
+
+describe('kuji-enabled setting', () => {
+  it('defaults to enabled and can be turned off/on', async () => {
+    const getRes = await agent.get('/api/admin/kuji-enabled');
+    expect(getRes.body).toEqual({ enabled: true });
+
+    await agent.post('/api/admin/kuji-enabled').send({ enabled: false });
+    const getRes2 = await agent.get('/api/admin/kuji-enabled');
+    expect(getRes2.body).toEqual({ enabled: false });
+
+    await agent.post('/api/admin/kuji-enabled').send({ enabled: true });
+    const getRes3 = await agent.get('/api/admin/kuji-enabled');
+    expect(getRes3.body).toEqual({ enabled: true });
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/admin/kuji-enabled');
+    expect(res.status).toBe(401);
+  });
+});

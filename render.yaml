@@ -1,0 +1,29 @@
+# Render Blueprint: creates the free web service with one click when this
+# repo is connected via "New +" -> "Blueprint" on render.com.
+# Free-tier note: the instance spins down after 15 idle minutes; the GitHub
+# Actions keepalive workflow (.github/workflows/keepalive.yml) pings /health
+# every 10 minutes to keep it awake. Data lives in Supabase Postgres
+# (DATABASE_URL), so even a spin-down/redeploy loses nothing.
+services:
+  - type: web
+    name: chzzk-kuji
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: CHZZK_CLIENT_ID
+        sync: false
+      - key: CHZZK_CLIENT_SECRET
+        sync: false
+      - key: CHZZK_REDIRECT_URI
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
