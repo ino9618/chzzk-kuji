@@ -33,10 +33,10 @@
 }
 
 .grade-x {
-  --grade-color: #3ddc84;
-  --grade-color-dim: rgba(61, 220, 132, 0.2);
-  --grade-text: #baffd8;
-  --grade-badge-bg: linear-gradient(135deg, #3ddc84, #27ae60);
+  --grade-color: #00ffa3;
+  --grade-color-dim: rgba(0, 255, 163, 0.2);
+  --grade-text: #b8ffe4;
+  --grade-badge-bg: linear-gradient(135deg, #00ffa3, #00c67f);
   --grade-badge-text: #002a12;
 }
 

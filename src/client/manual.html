@@ -2,18 +2,22 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+    />
     <title>이치방쿠지 사용법</title>
     <style>
-      /* Matches the admin dashboard's 빵떡-style warm bakery theme. */
+      /* Matches the admin dashboard's CHZZK-style dark theme. */
       :root {
-        --bg: #fbf5e9;
-        --panel: #ffffff;
-        --panel-border: #f0e4cd;
-        --text: #3e3226;
-        --text-dim: #a28f76;
-        --accent: #c9821a;
-        --danger: #e5484d;
-        --danger-bg: rgba(229, 72, 77, 0.07);
+        --bg: #141517;
+        --panel: #1f2023;
+        --panel-border: #2e3033;
+        --text: #eaecee;
+        --text-dim: #9da1a8;
+        --accent: #00ffa3;
+        --danger: #ff5454;
+        --danger-bg: rgba(255, 84, 84, 0.09);
       }
 
       body {
@@ -61,7 +65,7 @@
         color: var(--text);
       }
       .manual-shell code {
-        background: #f7efdd;
+        background: #0e0f10;
         border: 1px solid var(--panel-border);
         border-radius: 4px;
         padding: 1px 6px;
@@ -104,9 +108,9 @@
       <h2>2. 회차 만들기</h2>
       <ol>
         <li>
-          <code>http://localhost:5173/admin.html</code> 접속 후 로그인 — <strong>네이버(치지직) 계정으로
-          로그인</strong> 버튼 또는 비밀번호 사용. 네이버 로그인은 치지직 계정을 한 번 연결한 뒤부터, 연결했던
-          그 계정으로만 가능합니다.
+          관리자 화면(<code>/admin.html</code>) 접속 → <strong>네이버 계정으로 로그인</strong> 버튼 클릭.
+          가장 처음 로그인한 치지직 계정이 이 보드의 소유자로 등록되며, 이후에는 그 계정으로만 로그인할 수
+          있습니다. 로그인과 동시에 치지직 후원 수신 연결도 자동으로 시작됩니다.
         </li>
         <li>맨 위 "치지직 연결 상태"가 <code>connected</code>인지 확인 (다른 상태면 아래 "문제 생겼을 때" 참고)</li>
         <li>
@@ -156,16 +160,16 @@
 
       <h3>빨간 배너("재인증 필요")가 뜰 때</h3>
       <div class="callout danger">
-        배너의 "치지직 재인증하기" 링크를 클릭해 인가를 완료한 뒤, <strong>서버(터미널)를 껐다 다시 켜야</strong>
-        실제로 연결이 복구됩니다. 재인증만 하고 재시작을 안 하면 후원을 계속 못 받습니다.
+        배너의 <strong>"네이버로 다시 로그인"</strong> 링크를 클릭해 인가를 완료하면 후원 수신 연결이
+        <strong>즉시 자동으로 복구</strong>됩니다. 서버를 재시작할 필요는 없습니다.
       </div>
 
-      <h2>관리자 비밀번호 변경</h2>
-      <ol>
-        <li>관리자 화면 맨 아래 "비밀번호 변경" 섹션에서 현재 비밀번호 → 새 비밀번호 → 새 비밀번호 확인 입력</li>
-        <li>"비밀번호 변경" 클릭 → 성공하면 바로 적용 (재시작 불필요)</li>
-        <li>새 비밀번호는 4자 이상이어야 하며, <strong>잊어버리면 되돌릴 방법이 없으니</strong> 꼭 기억해두세요</li>
-      </ol>
+      <h2>로그인 방식 안내</h2>
+      <p>
+        접속은 <strong>네이버 계정 로그인만</strong> 지원합니다. 처음 로그인한 치지직 계정이 소유자로 등록되고,
+        다른 계정의 로그인 시도는 자동으로 거부됩니다. 치지직 OAuth 장애 등으로 로그인이 불가능해질 때를 대비한
+        비상용 접근 방법은 프로젝트 README에 정리되어 있습니다.
+      </p>
     </div>
   </body>
 </html>

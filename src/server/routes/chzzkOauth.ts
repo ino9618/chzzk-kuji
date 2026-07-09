@@ -11,15 +11,22 @@ export interface ChzzkOauthRouterOptions {
   redirectUri: string;
   encryptionKey: Buffer;
   fetchImpl?: typeof fetch;
+  /**
+   * Fired whenever fresh tokens are persisted (connect flow, owner login,
+   * first-login claim). Lets the server hot-start/replace the donation
+   * socket immediately instead of requiring a process restart.
+   */
+  onTokensSaved?: (tokens: { accessToken: string; refreshToken: string }) => void;
 }
 
 /**
  * CHZZK apps register a single redirect URI, so both flows share one
  * callback and are told apart by the purpose recorded per state:
- * - 'connect': admin-authenticated flow that links the streamer's account
+ * - 'connect': admin-authenticated flow that re-links the streamer's account
  *   (stores tokens + records the channel as the board's owner)
- * - 'login': unauthenticated "네이버(치지직) 계정으로 로그인" — only the
- *   recorded owner's channel is granted an admin session
+ * - 'login': unauthenticated "네이버 계정으로 로그인". The very first channel
+ *   to log in claims ownership of the board; afterwards only that channel is
+ *   ever granted an admin session.
  */
 const pendingStates = new Map<string, 'connect' | 'login'>();
 
@@ -55,6 +62,7 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
 
       if (purpose === 'connect') {
         await saveTokens(db, tokens, options.encryptionKey);
+        options.onTokensSaved?.(tokens);
         try {
           const me = await fetchUserMe({
             accessToken: tokens.accessToken,
@@ -73,9 +81,10 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
         return;
       }
 
-      // Login flow: only the channel that originally connected this board
-      // may sign in. A stranger completing OAuth gets no cookie, and their
-      // tokens must never overwrite the streamer's stored tokens.
+      // Login flow: the first channel ever to log in claims the board;
+      // afterwards only that owner may sign in. A stranger completing OAuth
+      // gets no cookie, and their tokens must never overwrite the
+      // streamer's stored tokens.
       const me = await fetchUserMe({
         accessToken: tokens.accessToken,
         clientId: options.clientId,
@@ -83,17 +92,18 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
         fetchImpl: options.fetchImpl,
       });
       const owner = await getSetting(db, 'owner_channel_id');
-      if (!owner) {
-        res.redirect('/admin.html?login=not_configured');
-        return;
-      }
-      if (owner !== me.channelId) {
+      if (owner && owner !== me.channelId) {
         res.redirect('/admin.html?login=denied');
         return;
+      }
+      if (!owner) {
+        await setSetting(db, 'owner_channel_id', me.channelId);
+        await setSetting(db, 'owner_channel_name', me.channelName);
       }
       // Same account -> refreshing the stored tokens on every login is a
       // free way to keep the 30-day refresh token from ever going stale.
       await saveTokens(db, tokens, options.encryptionKey);
+      options.onTokensSaved?.(tokens);
       issueAdminSession(res);
       res.redirect('/admin.html');
     } catch {

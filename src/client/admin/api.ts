@@ -46,7 +46,6 @@ async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  login: (password: string) => jsonFetch<{ ok: true }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
   getSession: () => jsonFetch<SessionState>('/api/admin/session'),
   createSession: (payload: {
     name: string;
@@ -67,17 +66,4 @@ export const api = {
   getKujiEnabled: () => jsonFetch<{ enabled: boolean }>('/api/admin/kuji-enabled'),
   setKujiEnabled: (enabled: boolean) =>
     jsonFetch('/api/admin/kuji-enabled', { method: 'POST', body: JSON.stringify({ enabled }) }),
-  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
-    const res = await fetch('/api/auth/password', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-    if (res.ok) return;
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
-    if (body.error === 'invalid_current_password') throw new Error('현재 비밀번호가 올바르지 않습니다.');
-    if (body.error === 'new_password_too_short') throw new Error('새 비밀번호는 4자 이상이어야 합니다.');
-    throw new Error('비밀번호 변경에 실패했습니다.');
-  },
 };

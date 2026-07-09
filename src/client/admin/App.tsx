@@ -5,10 +5,29 @@ import './admin.css';
 
 const socket = io({ autoConnect: false });
 
+type MenuKey = 'dashboard' | 'kuji' | 'winners' | 'settings';
+
+const MENU_ITEMS: Array<{ key: MenuKey; label: string; icon: string }> = [
+  { key: 'dashboard', label: '대시보드', icon: '📊' },
+  { key: 'kuji', label: '이치방쿠지', icon: '🎫' },
+  { key: 'winners', label: '당첨자', icon: '🏆' },
+  { key: 'settings', label: '설정', icon: '⚙️' },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  connected: '연결됨',
+  reconnecting: '재연결 중',
+  disconnected: '연결 끊김',
+  not_configured: '미연결',
+  needs_reauth: '재인증 필요',
+  unknown: '확인 중',
+};
+
 export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [oauthAvailable, setOauthAvailable] = useState(true);
+  const [menu, setMenu] = useState<MenuKey>('dashboard');
   const [session, setSession] = useState<SessionState>({ active: false });
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [winners, setWinners] = useState<Winner[]>([]);
@@ -17,17 +36,21 @@ export function App() {
   const [kujiEnabled, setKujiEnabled] = useState(true);
 
   // Restore an existing session (e.g. right after the Naver OAuth callback
-  // set the cookie, or on a page refresh) and surface OAuth error messages
-  // passed back via ?login= query params.
+  // set the cookie, or on a page refresh), surface OAuth error messages
+  // passed back via ?login= query params, and detect whether the OAuth
+  // routes are mounted at all (they 404 when server env vars are missing).
   useEffect(() => {
     fetch('/api/auth/whoami', { credentials: 'include' }).then((r) => {
       if (r.ok) setLoggedIn(true);
     });
+    fetch('/api/chzzk/oauth/login', { method: 'GET', redirect: 'manual' }).then((r) => {
+      // An opaque redirect (type ~ 'opaqueredirect', status 0) means the route
+      // exists and tried to redirect to Naver; a plain 404 means it's disabled.
+      if (r.status === 404) setOauthAvailable(false);
+    });
     const params = new URLSearchParams(window.location.search);
     const login = params.get('login');
     if (login === 'denied') setLoginError('이 채널의 관리자 계정이 아닙니다.');
-    else if (login === 'not_configured')
-      setLoginError('먼저 비밀번호로 로그인해 치지직 계정을 연결한 뒤에 네이버 로그인을 사용할 수 있습니다.');
     else if (login === 'error') setLoginError('네이버 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
     if (params.size > 0) window.history.replaceState(null, '', '/admin.html');
   }, []);
@@ -56,33 +79,23 @@ export function App() {
     };
   }, [loggedIn]);
 
-  async function handleLogin() {
-    try {
-      await api.login(password);
-      setLoggedIn(true);
-      setLoginError('');
-    } catch {
-      setLoginError('비밀번호가 올바르지 않습니다.');
-    }
-  }
-
   if (!loggedIn) {
     return (
-      <div className="admin-shell">
+      <div className="login-screen">
         <div className="login-card">
-          <h1>관리자 로그인</h1>
-          <input
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          />
-          <button onClick={handleLogin}>로그인</button>
-          <div className="login-divider">또는</div>
-          <a className="naver-login-button" href="/api/chzzk/oauth/login">
-            <span className="naver-logo">N</span> 네이버(치지직) 계정으로 로그인
-          </a>
+          <div className="login-logo">🎫</div>
+          <h1>이치방쿠지</h1>
+          <p className="login-subtitle">치지직 후원 연동 뽑기 보드</p>
+          {oauthAvailable ? (
+            <a className="naver-login-button" href="/api/chzzk/oauth/login">
+              <span className="naver-logo">N</span> 네이버 계정으로 로그인
+            </a>
+          ) : (
+            <p className="login-error">
+              서버에 치지직 연동 설정(CHZZK_CLIENT_ID/SECRET, TOKEN_ENCRYPTION_KEY)이 없어 로그인할 수 없습니다.
+              환경변수를 확인해주세요.
+            </p>
+          )}
           {loginError && <p className="login-error">{loginError}</p>}
         </div>
       </div>
@@ -90,195 +103,228 @@ export function App() {
   }
 
   return (
-    <div className="admin-shell">
-      {chzzkStatus === 'needs_reauth' && (
-        <div className="reauth-banner">
-          <div>
-            치지직 인증이 만료되어 후원 수신이 중단되었습니다. 재인증이 필요합니다.{' '}
-            <a href="/api/chzzk/oauth/start">치지직 재인증하기</a>
-          </div>
-          <div className="reauth-note">재인증 완료 후, 서버 프로세스를 재시작해야 후원 수신이 다시 시작됩니다.</div>
+    <div className="app-layout">
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <span className="sidebar-logo-icon">🎫</span>
+          <span className="sidebar-logo-text">이치방쿠지</span>
         </div>
-      )}
-      <div className="admin-header-row">
-        <h1 className="admin-title">이치방쿠지 관리자</h1>
-        <a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">
-          📖 사용법
-        </a>
-      </div>
-      <p className={`connection-status ${chzzkStatus}`}>
-        <span className="dot" />
-        치지직 연결 상태: <strong>{chzzkStatus}</strong>
-      </p>
-
-      <section className="panel">
-        <h2>이치방쿠지 기능</h2>
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={kujiEnabled}
-            onChange={(e) => {
-              setKujiEnabled(e.target.checked);
-              api.setKujiEnabled(e.target.checked);
-            }}
-          />
-          <span className="switch-track">
-            <span className="switch-thumb" />
-          </span>
-          <span className="switch-label">
-            {kujiEnabled ? '사용 중' : '일시정지됨 — 후원이 들어와도 번호가 자동 배정되지 않습니다'}
-          </span>
-        </label>
-      </section>
-
-      <section className="panel">
-        <h2>닉네임 표시 설정</h2>
-        <div className="radio-row">
-          <label>
-            <input
-              type="radio"
-              checked={nicknameMode === 'masked'}
-              onChange={() => {
-                setNicknameMode('masked');
-                api.setNicknameMode('masked');
-              }}
-            />
-            부분 마스킹
-          </label>
-          <label>
-            <input
-              type="radio"
-              checked={nicknameMode === 'full'}
-              onChange={() => {
-                setNicknameMode('full');
-                api.setNicknameMode('full');
-              }}
-            />
-            전체 노출
-          </label>
-        </div>
-      </section>
-
-      <section className="panel">
-        <h2>현재 회차</h2>
-        {session.active ? (
-          <>
-            <p className="session-meta">
-              <strong>{session.name}</strong> (장당 {session.ticketPrice}치즈)
-            </p>
-            <div className="ticket-grid">
-              {session.tickets?.map((t) => (
-                <div key={t.number} className={`ticket-cell ${t.status}`}>
-                  <div className="ticket-number">{t.number}</div>
-                  {t.status === 'sold' && <div className="ticket-owner">{t.ownerNickname}</div>}
-                </div>
-              ))}
-            </div>
+        <nav className="sidebar-nav">
+          {MENU_ITEMS.map((item) => (
             <button
-              className="danger-button"
-              onClick={() => api.closeSession().then(() => api.getSession().then(setSession))}
+              key={item.key}
+              className={`sidebar-item ${menu === item.key ? 'active' : ''}`}
+              onClick={() => setMenu(item.key)}
             >
-              회차 종료
+              <span className="sidebar-item-icon">{item.icon}</span>
+              {item.label}
+              {item.key === 'dashboard' && queue.length > 0 && <span className="sidebar-badge">{queue.length}</span>}
             </button>
-          </>
-        ) : (
-          <NewSessionForm onCreated={() => api.getSession().then(setSession)} />
-        )}
-      </section>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className={`connection-status ${chzzkStatus}`}>
+            <span className="dot" />
+            {STATUS_LABELS[chzzkStatus] ?? chzzkStatus}
+          </div>
+          <a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">
+            📖 사용법
+          </a>
+        </div>
+      </aside>
 
-      <section className="panel">
-        <h2>처리 필요 큐</h2>
-        {queue.length === 0 ? (
-          <p className="empty-hint">처리할 항목이 없습니다.</p>
-        ) : (
-          <ul className="queue-list">
-            {queue.map((q) => (
-              <li key={q.id} className="queue-item">
-                <span>
-                  <span className="queue-status">[{q.status}]</span>
-                  {q.donorNickname} · {q.amount}치즈 · "{q.rawMessage}"
+      <main className="content">
+        {chzzkStatus === 'needs_reauth' && (
+          <div className="reauth-banner">
+            치지직 인증이 만료되어 후원 수신이 중단되었습니다.{' '}
+            <a href="/api/chzzk/oauth/login">네이버로 다시 로그인</a>하면 즉시 복구됩니다.
+          </div>
+        )}
+
+        {menu === 'dashboard' && (
+          <>
+            <h1 className="page-title">대시보드</h1>
+            <div className="stat-row">
+              <div className="stat-card">
+                <div className="stat-label">치지직 연결</div>
+                <div className={`stat-value connection-status ${chzzkStatus}`}>
+                  <span className="dot" />
+                  {STATUS_LABELS[chzzkStatus] ?? chzzkStatus}
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">진행 중 회차</div>
+                <div className="stat-value">{session.active ? session.name || '이름 없음' : '없음'}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">판매 현황</div>
+                <div className="stat-value">
+                  {session.active
+                    ? `${session.tickets?.filter((t) => t.status === 'sold').length ?? 0} / ${session.tickets?.length ?? 0}`
+                    : '-'}
+                </div>
+              </div>
+            </div>
+
+            <section className="panel">
+              <h2>이치방쿠지 기능</h2>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={kujiEnabled}
+                  onChange={(e) => {
+                    setKujiEnabled(e.target.checked);
+                    api.setKujiEnabled(e.target.checked);
+                  }}
+                />
+                <span className="switch-track">
+                  <span className="switch-thumb" />
                 </span>
-                <button onClick={() => api.resolveQueueItem(q.id).then(() => api.getQueue().then(setQueue))}>
-                  처리완료
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                <span className="switch-label">
+                  {kujiEnabled ? '사용 중' : '일시정지됨 — 후원이 들어와도 번호가 자동 배정되지 않습니다'}
+                </span>
+              </label>
+            </section>
 
-      <section className="panel">
-        <h2>당첨자 목록</h2>
-        {winners.length === 0 ? (
-          <p className="empty-hint">아직 당첨자가 없습니다.</p>
-        ) : (
-          <ul className="queue-list">
-            {winners.map((w) => (
-              <li key={`${w.sessionId}-${w.number}`} className="winner-item">
-                <span className="winner-session">{w.sessionName}</span>
-                <span className="winner-number">{w.number}번</span>
-                <span className="winner-prize">{w.prizeName}</span>
-                <span className="winner-nickname">{w.ownerNickname}</span>
-                <span className="winner-time">{w.soldAt}</span>
-              </li>
-            ))}
-          </ul>
+            <section className="panel">
+              <h2>처리 필요 큐</h2>
+              {queue.length === 0 ? (
+                <p className="empty-hint">처리할 항목이 없습니다.</p>
+              ) : (
+                <ul className="queue-list">
+                  {queue.map((q) => (
+                    <li key={q.id} className="queue-item">
+                      <span>
+                        <span className="queue-status">[{q.status}]</span>
+                        {q.donorNickname} · {q.amount}치즈 · "{q.rawMessage}"
+                      </span>
+                      <button onClick={() => api.resolveQueueItem(q.id).then(() => api.getQueue().then(setQueue))}>
+                        처리완료
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
         )}
-      </section>
 
-      <section className="panel">
-        <h2>비밀번호 변경</h2>
-        <PasswordChangeForm />
-      </section>
+        {menu === 'kuji' && (
+          <>
+            <h1 className="page-title">이치방쿠지</h1>
+            <section className="panel">
+              <h2>현재 회차</h2>
+              {session.active ? (
+                <>
+                  <p className="session-meta">
+                    <strong>{session.name}</strong> (장당 {session.ticketPrice}치즈)
+                  </p>
+                  <div className="ticket-grid">
+                    {session.tickets?.map((t) => (
+                      <div key={t.number} className={`ticket-cell ${t.status}`}>
+                        <div className="ticket-number">{t.number}</div>
+                        {t.status === 'sold' && <div className="ticket-owner">{t.ownerNickname}</div>}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className="danger-button"
+                    onClick={() => api.closeSession().then(() => api.getSession().then(setSession))}
+                  >
+                    회차 종료
+                  </button>
+                </>
+              ) : (
+                <NewSessionForm onCreated={() => api.getSession().then(setSession)} />
+              )}
+            </section>
+          </>
+        )}
+
+        {menu === 'winners' && (
+          <>
+            <h1 className="page-title">당첨자</h1>
+            <section className="panel">
+              {winners.length === 0 ? (
+                <p className="empty-hint">아직 당첨자가 없습니다.</p>
+              ) : (
+                <ul className="queue-list">
+                  {winners.map((w) => (
+                    <li key={`${w.sessionId}-${w.number}`} className="winner-item">
+                      <span className="winner-session">{w.sessionName}</span>
+                      <span className="winner-number">{w.number}번</span>
+                      <span className="winner-prize">{w.prizeName}</span>
+                      <span className="winner-nickname">{w.ownerNickname}</span>
+                      <span className="winner-time">{w.soldAt}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
+
+        {menu === 'settings' && (
+          <>
+            <h1 className="page-title">설정</h1>
+            <section className="panel">
+              <h2>오버레이 닉네임 표시</h2>
+              <div className="radio-row">
+                <label>
+                  <input
+                    type="radio"
+                    checked={nicknameMode === 'masked'}
+                    onChange={() => {
+                      setNicknameMode('masked');
+                      api.setNicknameMode('masked');
+                    }}
+                  />
+                  부분 마스킹
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    checked={nicknameMode === 'full'}
+                    onChange={() => {
+                      setNicknameMode('full');
+                      api.setNicknameMode('full');
+                    }}
+                  />
+                  전체 노출
+                </label>
+              </div>
+            </section>
+
+            <section className="panel">
+              <h2>OBS 오버레이 주소</h2>
+              <p className="empty-hint">OBS의 브라우저 소스에 아래 주소를 등록하세요.</p>
+              <OverlayUrlCopy />
+            </section>
+          </>
+        )}
+      </main>
     </div>
   );
 }
 
-function PasswordChangeForm() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState<{ text: string; kind: 'error' | 'success' } | null>(null);
-
-  async function handleSubmit() {
-    setMessage(null);
-    if (newPassword !== confirmPassword) {
-      setMessage({ text: '새 비밀번호가 서로 일치하지 않습니다.', kind: 'error' });
-      return;
-    }
-    try {
-      await api.changePassword(currentPassword, newPassword);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setMessage({ text: '비밀번호가 변경되었습니다.', kind: 'success' });
-    } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.', kind: 'error' });
-    }
-  }
+function OverlayUrlCopy() {
+  const [copied, setCopied] = useState(false);
+  const url = `${window.location.origin}/overlay.html`;
 
   return (
-    <div className="new-session-form">
-      <input
-        type="password"
-        placeholder="현재 비밀번호"
-        value={currentPassword}
-        onChange={(e) => setCurrentPassword(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="새 비밀번호 (4자 이상)"
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="새 비밀번호 확인"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-      />
-      <button onClick={handleSubmit}>비밀번호 변경</button>
-      {message && <p className={message.kind === 'error' ? 'login-error' : 'form-success'}>{message.text}</p>}
+    <div className="overlay-url-row">
+      <code className="overlay-url">{url}</code>
+      <button
+        type="button"
+        onClick={() => {
+          navigator.clipboard.writeText(url).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          });
+        }}
+      >
+        {copied ? '복사됨!' : '복사'}
+      </button>
     </div>
   );
 }

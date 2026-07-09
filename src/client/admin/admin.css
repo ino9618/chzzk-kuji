@@ -1,20 +1,21 @@
-/* 빵떡-inspired warm bakery theme: cream background, white rounded cards,
-   honey-butter accent, warm brown text. The OBS overlay keeps its own dark
-   translucent styling (overlay.css) since it renders over gameplay. */
+/* CHZZK-style tone & manner: near-black surfaces, neon-green (#00ffa3)
+   brand accent, Pretendard type. Layout is a service-style shell with a
+   left sidebar (대시보드/이치방쿠지/당첨자/설정) and a content pane. */
 :root {
-  --bg: #fbf5e9;
-  --panel: #ffffff;
-  --panel-border: #f0e4cd;
-  --text: #3e3226;
-  --text-dim: #a28f76;
-  --accent: #f5a73b;
-  --accent-text: #422d00;
-  --success: #2fa96c;
-  --success-bg: rgba(47, 169, 108, 0.1);
-  --danger: #e5484d;
-  --danger-bg: rgba(229, 72, 77, 0.07);
-  --warning: #e8a33d;
-  --card-shadow: 0 2px 14px rgba(97, 76, 48, 0.08);
+  --bg: #141517;
+  --bg-deep: #0e0f10;
+  --panel: #1f2023;
+  --panel-border: #2e3033;
+  --text: #eaecee;
+  --text-dim: #9da1a8;
+  --accent: #00ffa3;
+  --accent-dim: rgba(0, 255, 163, 0.12);
+  --accent-text: #0b0c0d;
+  --success: #00ffa3;
+  --success-bg: rgba(0, 255, 163, 0.09);
+  --danger: #ff5454;
+  --danger-bg: rgba(255, 84, 84, 0.09);
+  --warning: #ffc84b;
 }
 
 * {
@@ -31,83 +32,46 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Pretendard', 'Pretendard Variable', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system,
+    BlinkMacSystemFont, sans-serif;
 }
 
-.admin-shell {
+/* ---------- Login screen ---------- */
+.login-screen {
   min-height: 100%;
-  padding: 32px;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.admin-header-row {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% -20%, rgba(0, 255, 163, 0.08), transparent 60%), var(--bg-deep);
+  padding: 24px;
 }
 
-.manual-link {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.manual-link:hover {
-  color: var(--text);
-  text-decoration: underline;
-}
-
-.admin-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  margin: 0 0 20px;
-  letter-spacing: -0.01em;
-}
-
-.admin-title::before {
-  content: '🎫 ';
-}
-
-/* Login screen */
 .login-card {
+  width: 100%;
   max-width: 360px;
-  margin: 15vh auto 0;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: 16px;
+  padding: 40px 32px;
   text-align: center;
-  box-shadow: var(--card-shadow);
+}
+
+.login-logo {
+  font-size: 2.4rem;
+  margin-bottom: 8px;
 }
 
 .login-card h1 {
-  font-size: 1.2rem;
-  margin: 0 0 20px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
 }
 
-.login-card input {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.login-subtitle {
   color: var(--text-dim);
-  font-size: 0.78rem;
-  margin: 14px 0;
-}
-
-.login-divider::before,
-.login-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--panel-border);
+  font-size: 0.85rem;
+  margin: 0 0 28px;
 }
 
 .naver-login-button {
@@ -116,18 +80,18 @@ body {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 10px 0;
-  border-radius: 8px;
+  padding: 12px 0;
+  border-radius: 10px;
   background: #03c75a;
   color: #fff;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-decoration: none;
-  transition: opacity 0.15s ease;
+  transition: filter 0.15s ease;
 }
 
 .naver-login-button:hover {
-  opacity: 0.85;
+  filter: brightness(1.1);
 }
 
 .naver-logo {
@@ -143,24 +107,257 @@ body {
   font-size: 0.8rem;
 }
 
+.login-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
 .form-success {
   color: var(--success);
   font-size: 0.85rem;
   margin: 4px 0 0;
 }
 
-.login-error {
-  color: var(--danger);
-  font-size: 0.85rem;
-  margin-top: 12px;
+/* ---------- App shell (sidebar + content) ---------- */
+.app-layout {
+  display: flex;
+  min-height: 100%;
 }
 
-/* Form controls */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-deep);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 20px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-logo-icon {
+  font-size: 1.2rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.sidebar-item.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.sidebar-item-icon {
+  font-size: 1rem;
+}
+
+.sidebar-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.manual-link {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.manual-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.content {
+  flex: 1;
+  padding: 32px 36px 48px;
+  max-width: 880px;
+}
+
+.page-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px;
+}
+
+/* ---------- Dashboard stat cards ---------- */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.stat-label {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* ---------- Connection status ---------- */
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 0;
+}
+
+.connection-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.connection-status.connected {
+  color: var(--accent);
+}
+
+.connection-status.connected .dot {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.connection-status.reconnecting .dot,
+.connection-status.needs_reauth .dot {
+  background: var(--warning);
+}
+
+.connection-status.disconnected .dot,
+.connection-status.not_configured .dot {
+  background: var(--text-dim);
+}
+
+/* ---------- Re-auth banner ---------- */
+.reauth-banner {
+  position: sticky;
+  top: 12px;
+  z-index: 1000;
+  background: var(--danger);
+  color: #fff;
+  padding: 13px 18px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.reauth-banner a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+
+.panel h2 {
+  font-size: 0.95rem;
+  margin: 0 0 16px;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.radio-row {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.radio-row input[type='radio'] {
+  accent-color: var(--accent);
+}
+
+/* ---------- Form controls ---------- */
 input[type='text'],
 input[type='password'],
 input[type='number'],
 textarea {
-  background: #ffffff;
+  background: var(--bg-deep);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   color: var(--text);
@@ -185,17 +382,23 @@ button {
   border-radius: 8px;
   padding: 10px 18px;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.05s ease;
+  transition: filter 0.15s ease, transform 0.05s ease;
 }
 
 button:hover {
-  opacity: 0.85;
+  filter: brightness(0.88);
 }
 
 button:active {
   transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 button.danger-button {
@@ -204,102 +407,7 @@ button.danger-button {
   border: 1px solid var(--danger);
 }
 
-/* Status banner */
-.reauth-banner {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: var(--danger);
-  color: #ffffff;
-  padding: 14px 18px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.reauth-banner a {
-  color: #ffffff;
-  text-decoration: underline;
-}
-
-.reauth-banner .reauth-note {
-  margin-top: 6px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  opacity: 0.85;
-}
-
-.connection-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--text-dim);
-  margin-bottom: 28px;
-}
-
-.connection-status .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-dim);
-}
-
-.connection-status.connected .dot {
-  background: var(--success);
-  box-shadow: 0 0 8px var(--success);
-}
-
-.connection-status.reconnecting .dot,
-.connection-status.needs_reauth .dot {
-  background: var(--warning);
-}
-
-.connection-status.disconnected .dot,
-.connection-status.not_configured .dot {
-  background: var(--text-dim);
-}
-
-.connection-status strong {
-  color: var(--text);
-  font-family: monospace;
-  font-weight: 600;
-}
-
-/* Panels/sections */
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  padding: 22px 24px;
-  margin-bottom: 20px;
-  box-shadow: var(--card-shadow);
-}
-
-.panel h2 {
-  font-size: 1rem;
-  margin: 0 0 16px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 700;
-}
-
-.radio-row {
-  display: flex;
-  gap: 20px;
-}
-
-.radio-row label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.92rem;
-  cursor: pointer;
-}
-
-/* New session form */
+/* ---------- New session form ---------- */
 .new-session-form {
   display: flex;
   flex-direction: column;
@@ -357,7 +465,6 @@ button.danger-button {
 .grade-builder-header {
   color: var(--text-dim);
   font-size: 0.75rem;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
@@ -425,10 +532,9 @@ button.danger-button {
 }
 
 .ticket-table-header {
-  background: #faf3e4;
+  background: var(--bg-deep);
   color: var(--text-dim);
   font-size: 0.78rem;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
@@ -453,7 +559,7 @@ button.danger-button {
   text-align: center;
 }
 
-/* On/off feature switch */
+/* ---------- Feature switch ---------- */
 .switch {
   display: inline-flex;
   align-items: center;
@@ -473,13 +579,13 @@ button.danger-button {
   width: 44px;
   height: 24px;
   flex-shrink: 0;
-  background: #e5d9c3;
+  background: #35373b;
   border-radius: 999px;
   transition: background 0.15s ease;
 }
 
 .switch input:checked ~ .switch-track {
-  background: var(--success);
+  background: var(--accent);
 }
 
 .switch-thumb {
@@ -491,7 +597,7 @@ button.danger-button {
   background: #fff;
   border-radius: 50%;
   transition: transform 0.15s ease;
-  box-shadow: 0 1px 3px rgba(97, 76, 48, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .switch input:checked ~ .switch-track .switch-thumb {
@@ -503,7 +609,7 @@ button.danger-button {
   color: var(--text-dim);
 }
 
-/* Active session ticket grid */
+/* ---------- Active session ticket grid ---------- */
 .session-meta {
   color: var(--text-dim);
   margin: 0 0 16px;
@@ -526,8 +632,8 @@ button.danger-button {
   padding: 10px 6px;
   text-align: center;
   font-size: 0.85rem;
-  border: 1px dashed #e2d4ba;
-  background: #fdf9f0;
+  border: 1px dashed #3a3d41;
+  background: var(--bg-deep);
 }
 
 .ticket-cell.available {
@@ -536,8 +642,8 @@ button.danger-button {
 
 .ticket-cell.sold {
   background: var(--success-bg);
-  border: 1px solid var(--success);
-  color: var(--success);
+  border: 1px solid var(--accent);
+  color: var(--accent);
 }
 
 .ticket-cell .ticket-number {
@@ -552,7 +658,7 @@ button.danger-button {
   word-break: break-all;
 }
 
-/* Queue */
+/* ---------- Queue & winners ---------- */
 .queue-list {
   list-style: none;
   margin: 0;
@@ -562,7 +668,8 @@ button.danger-button {
   gap: 10px;
 }
 
-.queue-list .empty-hint {
+.queue-list .empty-hint,
+.panel .empty-hint {
   color: var(--text-dim);
   font-size: 0.9rem;
 }
@@ -574,7 +681,7 @@ button.danger-button {
   gap: 12px;
   background: var(--danger-bg);
   border: 1px solid var(--danger);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px 14px;
   font-size: 0.88rem;
 }
@@ -597,8 +704,8 @@ button.danger-button {
   align-items: center;
   gap: 10px;
   background: var(--success-bg);
-  border: 1px solid var(--success);
-  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 163, 0.45);
+  border-radius: 10px;
   padding: 10px 14px;
   font-size: 0.88rem;
   flex-wrap: wrap;
@@ -611,7 +718,7 @@ button.danger-button {
 
 .winner-item .winner-number {
   font-weight: 700;
-  color: var(--success);
+  color: var(--accent);
   font-family: monospace;
 }
 
@@ -628,4 +735,75 @@ button.danger-button {
   margin-left: auto;
   color: var(--text-dim);
   font-size: 0.78rem;
+}
+
+/* ---------- Settings: overlay URL ---------- */
+.overlay-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.overlay-url {
+  flex: 1;
+  background: var(--bg-deep);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--accent);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* ---------- Narrow screens: sidebar becomes a top bar ---------- */
+@media (max-width: 720px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--panel-border);
+    gap: 8px;
+  }
+
+  .sidebar-logo {
+    padding: 0 8px 0 0;
+  }
+
+  .sidebar-logo-text {
+    display: none;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .sidebar-item {
+    white-space: nowrap;
+    padding: 8px 10px;
+  }
+
+  .sidebar-footer {
+    border-top: none;
+    padding: 0 0 0 8px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .sidebar-footer .manual-link {
+    display: none;
+  }
+
+  .content {
+    padding: 20px 16px 40px;
+  }
 }

@@ -148,30 +148,29 @@ async function main(): Promise<void> {
     );
   }
 
-  if (encryptionKey.length === 32 && process.env.CHZZK_CLIENT_ID && process.env.CHZZK_CLIENT_SECRET) {
-    app.use(
-      '/api/chzzk/oauth',
-      createChzzkOauthRouter(db, {
-        clientId: process.env.CHZZK_CLIENT_ID,
-        clientSecret: process.env.CHZZK_CLIENT_SECRET,
-        redirectUri: process.env.CHZZK_REDIRECT_URI ?? 'http://localhost:3000/api/chzzk/oauth/callback',
-        encryptionKey,
-      })
-    );
-  }
-
-  if (tokens && process.env.CHZZK_CLIENT_ID && process.env.CHZZK_CLIENT_SECRET) {
+  // Creates (or replaces) the donation socket with the given tokens.
+  // Called at boot when stored tokens exist, and again whenever the OAuth
+  // flow saves fresh tokens (first login / re-auth) so the connection
+  // starts immediately — no server restart needed.
+  let activeSocketClient: ChzzkSocketClient | undefined;
+  const startChzzkSocket = (t: { accessToken: string; refreshToken: string }) => {
+    if (!process.env.CHZZK_CLIENT_ID || !process.env.CHZZK_CLIENT_SECRET) return;
+    if (activeSocketClient) {
+      activeSocketClient.removeAllListeners();
+      activeSocketClient.disconnect();
+    }
     const socketClient = new ChzzkSocketClient({
       clientId: process.env.CHZZK_CLIENT_ID,
       clientSecret: process.env.CHZZK_CLIENT_SECRET,
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      accessToken: t.accessToken,
+      refreshToken: t.refreshToken,
       onTokensRefreshed: (newTokens) => {
         saveTokens(db, newTokens, encryptionKey).catch((err) =>
           console.error('Failed to persist refreshed CHZZK tokens:', err)
         );
       },
     });
+    activeSocketClient = socketClient;
 
     socketClient.on('status', (status) => {
       setChzzkStatus(status);
@@ -189,8 +188,27 @@ async function main(): Promise<void> {
     socketClient.connect().catch((err) => {
       console.error('Failed to connect to CHZZK session socket:', err);
     });
+  };
+
+  if (encryptionKey.length === 32 && process.env.CHZZK_CLIENT_ID && process.env.CHZZK_CLIENT_SECRET) {
+    app.use(
+      '/api/chzzk/oauth',
+      createChzzkOauthRouter(db, {
+        clientId: process.env.CHZZK_CLIENT_ID,
+        clientSecret: process.env.CHZZK_CLIENT_SECRET,
+        redirectUri: process.env.CHZZK_REDIRECT_URI ?? 'http://localhost:3000/api/chzzk/oauth/callback',
+        encryptionKey,
+        onTokensSaved: startChzzkSocket,
+      })
+    );
+  }
+
+  if (tokens) {
+    startChzzkSocket(tokens);
   } else {
-    console.warn('CHZZK credentials/tokens not configured yet — donation events will not be received.');
+    console.warn(
+      'CHZZK tokens not stored yet — donation events will start flowing after the first Naver login on /admin.html.'
+    );
   }
 
   const port = Number(process.env.PORT ?? 3000);

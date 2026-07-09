@@ -49,7 +49,7 @@ function routedFetch(overrides?: { me?: { channelId?: string; channelName?: stri
   });
 }
 
-function buildApp(fetchImpl: typeof fetch) {
+function buildApp(fetchImpl: typeof fetch, onTokensSaved?: (tokens: unknown) => void) {
   const app = express();
   app.use(cookieParser());
   app.use(
@@ -60,6 +60,7 @@ function buildApp(fetchImpl: typeof fetch) {
       redirectUri: 'http://localhost:3000/api/chzzk/oauth/callback',
       encryptionKey: key,
       fetchImpl,
+      onTokensSaved,
     })
   );
   // Probe route for asserting that a login flow issued a working admin cookie.
@@ -173,15 +174,44 @@ describe('Naver (CHZZK) login flow', () => {
     expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
   });
 
-  it('redirects to not_configured when no owner has been established yet', async () => {
-    const app = buildApp(routedFetch() as unknown as typeof fetch);
+  it('claims ownership on the very first login (no owner yet) and issues a session', async () => {
+    const onTokensSaved = vi.fn();
+    const app = buildApp(routedFetch() as unknown as typeof fetch, onTokensSaved);
 
     const state = await startLoginFlow(app);
     const callbackRes = await request(app).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state}`);
 
     expect(callbackRes.status).toBe(302);
-    expect(callbackRes.headers.location).toBe('/admin.html?login=not_configured');
-    expect(callbackRes.headers['set-cookie']).toBeUndefined();
+    expect(callbackRes.headers.location).toBe('/admin.html');
+    const cookies = callbackRes.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+
+    // The first channel to log in becomes the board's owner...
+    expect(await getSetting(db, 'owner_channel_id')).toBe('owner-1');
+    expect(await getSetting(db, 'owner_channel_name')).toBe('미노');
+    // ...their tokens are stored so the donation socket can start...
+    expect(decryptToken((await getSetting(db, 'chzzk_access_token'))!, key)).toBe('access-1');
+    // ...and the server is notified so it can hot-start the socket without a restart.
+    expect(onTokensSaved).toHaveBeenCalledWith({ accessToken: 'access-1', refreshToken: 'refresh-1' });
+
+    // A different channel can no longer claim or log in afterwards.
+    const app2 = buildApp(routedFetch({ me: { channelId: 'intruder', channelName: '침입자' } }) as unknown as typeof fetch);
+    const state2 = await startLoginFlow(app2);
+    const denied = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
+    expect(denied.headers.location).toBe('/admin.html?login=denied');
+  });
+
+  it('notifies onTokensSaved on the connect flow too', async () => {
+    const onTokensSaved = vi.fn();
+    const app = buildApp(routedFetch() as unknown as typeof fetch, onTokensSaved);
+    const token = 'test-token';
+    registerAdminToken(token);
+
+    const startRes = await request(app).get('/api/chzzk/oauth/start').set('Cookie', `admin_token=${token}`);
+    const state = new URL(startRes.headers.location).searchParams.get('state')!;
+    await request(app).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state}`);
+
+    expect(onTokensSaved).toHaveBeenCalledWith({ accessToken: 'access-1', refreshToken: 'refresh-1' });
   });
 
   it('redirects with login=error when the profile lookup fails during login', async () => {
