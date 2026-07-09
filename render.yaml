@@ -9,7 +9,10 @@ services:
     name: chzzk-kuji
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
+    # --include=dev is required because NODE_ENV=production (set below, and
+    # applied by Render during builds too) would otherwise make npm ci skip
+    # devDependencies — and the build tools (vite, typescript) live there.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:
