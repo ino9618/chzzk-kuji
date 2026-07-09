@@ -1,16 +1,20 @@
+/* 빵떡-inspired warm bakery theme: cream background, white rounded cards,
+   honey-butter accent, warm brown text. The OBS overlay keeps its own dark
+   translucent styling (overlay.css) since it renders over gameplay. */
 :root {
-  --bg: #0b0b0d;
-  --panel: #17171a;
-  --panel-border: #2a2a2e;
-  --text: #f2f2f2;
-  --text-dim: #9a9aa0;
-  --accent: #e8e8ec;
-  --accent-text: #0b0b0d;
-  --success: #3ddc84;
-  --success-bg: rgba(61, 220, 132, 0.12);
-  --danger: #ff5c5c;
-  --danger-bg: rgba(255, 92, 92, 0.12);
-  --warning: #f5c451;
+  --bg: #fbf5e9;
+  --panel: #ffffff;
+  --panel-border: #f0e4cd;
+  --text: #3e3226;
+  --text-dim: #a28f76;
+  --accent: #f5a73b;
+  --accent-text: #422d00;
+  --success: #2fa96c;
+  --success-bg: rgba(47, 169, 108, 0.1);
+  --danger: #e5484d;
+  --danger-bg: rgba(229, 72, 77, 0.07);
+  --warning: #e8a33d;
+  --card-shadow: 0 2px 14px rgba(97, 76, 48, 0.08);
 }
 
 * {
@@ -58,9 +62,13 @@ body {
 
 .admin-title {
   font-size: 1.6rem;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 20px;
   letter-spacing: -0.01em;
+}
+
+.admin-title::before {
+  content: '🎫 ';
 }
 
 /* Login screen */
@@ -69,9 +77,10 @@ body {
   margin: 15vh auto 0;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: 20px;
   padding: 32px;
   text-align: center;
+  box-shadow: var(--card-shadow);
 }
 
 .login-card h1 {
@@ -151,7 +160,7 @@ input[type='text'],
 input[type='password'],
 input[type='number'],
 textarea {
-  background: #0e0e11;
+  background: #ffffff;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   color: var(--text);
@@ -201,7 +210,7 @@ button.danger-button {
   top: 0;
   z-index: 1000;
   background: var(--danger);
-  color: #1a0000;
+  color: #ffffff;
   padding: 14px 18px;
   border-radius: 10px;
   margin-bottom: 20px;
@@ -210,7 +219,7 @@ button.danger-button {
 }
 
 .reauth-banner a {
-  color: #1a0000;
+  color: #ffffff;
   text-decoration: underline;
 }
 
@@ -262,9 +271,10 @@ button.danger-button {
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 22px 24px;
   margin-bottom: 20px;
+  box-shadow: var(--card-shadow);
 }
 
 .panel h2 {
@@ -415,7 +425,7 @@ button.danger-button {
 }
 
 .ticket-table-header {
-  background: #0e0e11;
+  background: #faf3e4;
   color: var(--text-dim);
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -463,7 +473,7 @@ button.danger-button {
   width: 44px;
   height: 24px;
   flex-shrink: 0;
-  background: #2a2a2e;
+  background: #e5d9c3;
   border-radius: 999px;
   transition: background 0.15s ease;
 }
@@ -481,6 +491,7 @@ button.danger-button {
   background: #fff;
   border-radius: 50%;
   transition: transform 0.15s ease;
+  box-shadow: 0 1px 3px rgba(97, 76, 48, 0.35);
 }
 
 .switch input:checked ~ .switch-track .switch-thumb {
@@ -511,12 +522,12 @@ button.danger-button {
 }
 
 .ticket-cell {
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px 6px;
   text-align: center;
   font-size: 0.85rem;
-  border: 1px solid var(--panel-border);
-  background: #101013;
+  border: 1px dashed #e2d4ba;
+  background: #fdf9f0;
 }
 
 .ticket-cell.available {
@@ -525,7 +536,7 @@ button.danger-button {
 
 .ticket-cell.sold {
   background: var(--success-bg);
-  border-color: var(--success);
+  border: 1px solid var(--success);
   color: var(--success);
 }
 

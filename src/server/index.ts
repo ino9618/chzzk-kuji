@@ -134,6 +134,20 @@ async function main(): Promise<void> {
   const encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY ?? '', 'hex');
   const tokens = encryptionKey.length === 32 ? await loadTokens(db, encryptionKey) : undefined;
 
+  // Spell out exactly which env vars block the CHZZK integration: a missing
+  // or malformed one otherwise surfaces only as a confusing "Cannot GET
+  // /api/chzzk/oauth/..." 404 with no clue in the logs.
+  const missingForOauth: string[] = [];
+  if (!process.env.CHZZK_CLIENT_ID) missingForOauth.push('CHZZK_CLIENT_ID');
+  if (!process.env.CHZZK_CLIENT_SECRET) missingForOauth.push('CHZZK_CLIENT_SECRET');
+  if (encryptionKey.length !== 32) missingForOauth.push('TOKEN_ENCRYPTION_KEY (must be 64 hex chars)');
+  if (missingForOauth.length > 0) {
+    console.warn(
+      `CHZZK OAuth routes are DISABLED — missing/invalid env vars: ${missingForOauth.join(', ')}. ` +
+        '/api/chzzk/oauth/* will return 404 until these are set.'
+    );
+  }
+
   if (encryptionKey.length === 32 && process.env.CHZZK_CLIENT_ID && process.env.CHZZK_CLIENT_SECRET) {
     app.use(
       '/api/chzzk/oauth',
