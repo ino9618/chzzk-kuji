@@ -122,6 +122,9 @@ export function App() {
 
   const soldCount = board.tickets?.filter((t) => t.status === 'sold').length ?? 0;
   const totalCount = board.tickets?.length ?? 0;
+  // Keep cells a readable size: up to 10 across for small boards, then wrap
+  // into balanced rows for larger ones (a 50-ticket board becomes ~12 cols).
+  const columns = Math.min(Math.max(totalCount, 1), totalCount > 30 ? 12 : 10);
 
   return (
     <div className="overlay-root">
@@ -155,7 +158,7 @@ export function App() {
         </div>
       )}
 
-      <div className="overlay-grid">
+      <div className="overlay-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 88px))` }}>
         {board.tickets?.map((t) => (
           <div
             key={t.number}

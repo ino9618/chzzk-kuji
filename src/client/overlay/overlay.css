@@ -120,10 +120,12 @@
   font-size: 0.78em;
 }
 
-/* Ticket board */
+/* Ticket board. Column count is set inline per board size (see App.tsx)
+   so a 5-ticket board isn't stretched across 10 columns and a 50-ticket
+   board wraps into balanced rows; the grid stays centered either way. */
 .overlay-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  justify-content: center;
   gap: 8px;
   padding: 12px 16px 16px;
 }
