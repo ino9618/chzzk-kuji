@@ -23,6 +23,25 @@ const STATUS_LABELS: Record<string, string> = {
   unknown: '확인 중',
 };
 
+// The donation log stores raw English status codes; the streamer sees these
+// live in the "처리 필요 큐", so map each to a short Korean label describing
+// what actually happened. 'processed' only lands in the queue on a PARTIAL
+// failure (e.g. a 2-ticket donation where one number was already sold), so
+// its label reflects that rather than "처리됨".
+const QUEUE_STATUS_LABELS: Record<string, string> = {
+  duplicate_rejected: '이미 팔린 번호',
+  amount_mismatch: '금액 안 맞음',
+  number_missing: '번호 미입력',
+  out_of_range: '범위 밖 번호',
+  session_inactive: '진행 중 회차 없음',
+  feature_disabled: '기능 정지 중',
+  processed: '일부 배정 실패',
+};
+
+function queueStatusLabel(status: string): string {
+  return QUEUE_STATUS_LABELS[status] ?? status;
+}
+
 export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -195,7 +214,7 @@ export function App() {
                   {queue.map((q) => (
                     <li key={q.id} className="queue-item">
                       <span>
-                        <span className="queue-status">[{q.status}]</span>
+                        <span className="queue-status">{queueStatusLabel(q.status)}</span>
                         {q.donorNickname} · {q.amount}치즈 · "{q.rawMessage}"
                       </span>
                       <button onClick={() => api.resolveQueueItem(q.id).then(() => api.getQueue().then(setQueue))}>
