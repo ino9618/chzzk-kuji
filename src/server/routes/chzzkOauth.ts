@@ -81,10 +81,11 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
         return;
       }
 
-      // Login flow: the first channel ever to log in claims the board;
-      // afterwards only that owner may sign in. A stranger completing OAuth
-      // gets no cookie, and their tokens must never overwrite the
-      // streamer's stored tokens.
+      // Login flow. The first channel ever to log in claims the board as
+      // owner. After that, the owner plus any channels on the allowlist may
+      // sign in; the owner can also arm a one-shot invite so the next new
+      // channel to log in is added. Everyone else is denied a cookie, and
+      // only the OWNER's tokens ever touch the donation socket.
       const me = await fetchUserMe({
         accessToken: tokens.accessToken,
         clientId: options.clientId,
@@ -92,18 +93,36 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
         fetchImpl: options.fetchImpl,
       });
       const owner = await getSetting(db, 'owner_channel_id');
-      if (owner && owner !== me.channelId) {
-        res.redirect('/admin.html?login=denied');
-        return;
-      }
+
       if (!owner) {
         await setSetting(db, 'owner_channel_id', me.channelId);
         await setSetting(db, 'owner_channel_name', me.channelName);
+      } else if (me.channelId !== owner) {
+        const members: Array<{ channelId: string; channelName: string }> = JSON.parse(
+          (await getSetting(db, 'allowed_members')) ?? '[]'
+        );
+        const alreadyMember = members.some((m) => m.channelId === me.channelId);
+        if (!alreadyMember) {
+          const inviteArmed = (await getSetting(db, 'pending_member_invite')) === 'true';
+          if (!inviteArmed) {
+            res.redirect('/admin.html?login=denied');
+            return;
+          }
+          members.push({ channelId: me.channelId, channelName: me.channelName });
+          await setSetting(db, 'allowed_members', JSON.stringify(members));
+          await setSetting(db, 'pending_member_invite', 'false');
+        }
       }
-      // Same account -> refreshing the stored tokens on every login is a
-      // free way to keep the 30-day refresh token from ever going stale.
-      await saveTokens(db, tokens, options.encryptionKey);
-      options.onTokensSaved?.(tokens);
+
+      const isOwner = !owner || me.channelId === owner;
+      if (isOwner) {
+        // Only the streamer's own account manages the donation socket.
+        // Refreshing the stored tokens on every owner login keeps the
+        // 30-day refresh token from ever going stale. A member login must
+        // never overwrite these.
+        await saveTokens(db, tokens, options.encryptionKey);
+        options.onTokensSaved?.(tokens);
+      }
       issueAdminSession(res);
       res.redirect('/admin.html');
     } catch {

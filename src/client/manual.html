@@ -6,7 +6,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
     />
-    <title>이치방쿠지 사용법</title>
+    <title>호갱 API 사용법</title>
     <style>
       /* Matches the admin dashboard's CHZZK-style dark theme. */
       :root {
@@ -95,7 +95,7 @@
   <body>
     <div class="manual-shell">
       <a class="back-link" href="/admin.html">← 관리자 화면으로 돌아가기</a>
-      <h1>이치방쿠지 사용법</h1>
+      <h1>호갱 API 사용법</h1>
       <p>치지직 후원과 연동해 번호별 상품을 자동으로 배정하는 프로그램입니다. 최초 설정이 끝났다면, 방송할 때마다 아래 순서대로 진행하세요.</p>
 
       <h2>1. 프로그램 켜기</h2>
@@ -164,11 +164,18 @@
         <strong>즉시 자동으로 복구</strong>됩니다. 서버를 재시작할 필요는 없습니다.
       </div>
 
-      <h2>로그인 방식 안내</h2>
+      <h2>로그인과 관리자 계정</h2>
       <p>
-        접속은 <strong>네이버 계정 로그인만</strong> 지원합니다. 처음 로그인한 치지직 계정이 소유자로 등록되고,
-        다른 계정의 로그인 시도는 자동으로 거부됩니다. 치지직 OAuth 장애 등으로 로그인이 불가능해질 때를 대비한
-        비상용 접근 방법은 프로젝트 README에 정리되어 있습니다.
+        접속은 <strong>네이버 계정 로그인만</strong> 지원합니다. 처음 로그인한 치지직 계정이 <strong>소유자</strong>로
+        등록됩니다. 매니저 등 다른 계정도 관리 화면을 쓰게 하려면, 소유자가 <strong>설정 > 관리자 계정</strong>에서
+        <strong>계정 추가</strong>를 누른 뒤 그 사람에게 같은 주소에서 네이버로 로그인하도록 안내하면 됩니다 —
+        추가된 계정은 목록에서 언제든 제거할 수 있습니다. 소유자가 아닌 계정의 로그인은 후원 수신 연결에는 영향을
+        주지 않습니다(소유자 계정만 치지직 소켓을 관리). 로그아웃은 왼쪽 메뉴 하단의 <strong>로그아웃</strong>
+        버튼을 쓰세요.
+      </p>
+      <p>
+        치지직 OAuth 장애 등으로 로그인이 아예 불가능해질 때를 대비한 비상용 접근 방법은 프로젝트 README에
+        정리되어 있습니다.
       </p>
     </div>
   </body>

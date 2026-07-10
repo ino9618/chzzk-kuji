@@ -129,7 +129,7 @@ export function App() {
   return (
     <div className="overlay-root">
       <div className="overlay-header">
-        <span className="overlay-header-title">🎫 {board.name || '이치방쿠지'}</span>
+        <span className="overlay-header-title">🎫 {board.name || '호갱 API'}</span>
         <span className="overlay-header-count">
           {soldCount} / {totalCount}
         </span>

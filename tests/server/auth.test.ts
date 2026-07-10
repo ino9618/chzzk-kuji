@@ -45,6 +45,18 @@ describe('admin auth', () => {
     const res = await request(app).get('/api/auth/whoami');
     expect(res.status).toBe(401);
   });
+
+  it('logout invalidates the session cookie', async () => {
+    const agent = request.agent(app);
+    await agent.post('/api/auth/login').send({ password: PASSWORD });
+    expect((await agent.get('/api/auth/whoami')).status).toBe(200);
+
+    const logoutRes = await agent.post('/api/auth/logout');
+    expect(logoutRes.status).toBe(200);
+
+    // The same cookie no longer authenticates after logout.
+    expect((await agent.get('/api/auth/whoami')).status).toBe(401);
+  });
 });
 
 describe('POST /api/auth/password', () => {

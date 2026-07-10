@@ -170,3 +170,34 @@ describe('kuji-enabled setting', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('member management', () => {
+  it('lists the owner and members, arms/cancels an invite, and removes a member', async () => {
+    const { setSetting } = await import('../../src/server/db');
+    await setSetting(db, 'owner_channel_id', 'owner-1');
+    await setSetting(db, 'owner_channel_name', '방장');
+    await setSetting(db, 'allowed_members', JSON.stringify([{ channelId: 'mod-1', channelName: '매니저' }]));
+
+    const listRes = await agent.get('/api/admin/members');
+    expect(listRes.status).toBe(200);
+    expect(listRes.body.owner).toEqual({ channelId: 'owner-1', channelName: '방장' });
+    expect(listRes.body.members).toEqual([{ channelId: 'mod-1', channelName: '매니저' }]);
+    expect(listRes.body.pendingInvite).toBe(false);
+
+    await agent.post('/api/admin/members/invite');
+    expect((await agent.get('/api/admin/members')).body.pendingInvite).toBe(true);
+
+    await agent.post('/api/admin/members/invite/cancel');
+    expect((await agent.get('/api/admin/members')).body.pendingInvite).toBe(false);
+
+    const delRes = await agent.delete('/api/admin/members/mod-1');
+    expect(delRes.status).toBe(200);
+    expect((await agent.get('/api/admin/members')).body.members).toEqual([]);
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/admin/members');
+    expect(res.status).toBe(401);
+  });
+});

@@ -28,6 +28,11 @@ export function isValidAdminToken(token: string | undefined): boolean {
   return !!token && validTokens.has(token);
 }
 
+/** Invalidates a session token (logout). No-op if the token is unknown. */
+export function revokeAdminToken(token: string | undefined): void {
+  if (token) validTokens.delete(token);
+}
+
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   const token = req.cookies?.admin_token;
   if (!isValidAdminToken(token)) {

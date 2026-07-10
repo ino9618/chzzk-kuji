@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { requireAdmin, issueAdminSession } from '../middleware/adminAuth';
+import { requireAdmin, issueAdminSession, revokeAdminToken } from '../middleware/adminAuth';
 import { getSetting, setSetting, type Db } from '../db';
 
 const MIN_PASSWORD_LENGTH = 4;
@@ -21,6 +21,12 @@ export function createAuthRouter(db: Db): Router {
 
   router.get('/whoami', requireAdmin, (_req, res) => {
     res.json({ authenticated: true });
+  });
+
+  router.post('/logout', (req, res) => {
+    revokeAdminToken(req.cookies?.admin_token);
+    res.clearCookie('admin_token');
+    res.json({ ok: true });
   });
 
   router.post('/password', requireAdmin, async (req, res) => {

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { api, type SessionState, type QueueEntry, type Winner } from './api';
+import { api, type SessionState, type QueueEntry, type Winner, type MembersState } from './api';
 import './admin.css';
 
+const BRAND = '호갱 API';
 const socket = io({ autoConnect: false });
 
 type MenuKey = 'dashboard' | 'kuji' | 'winners' | 'settings';
@@ -69,7 +70,8 @@ export function App() {
     });
     const params = new URLSearchParams(window.location.search);
     const login = params.get('login');
-    if (login === 'denied') setLoginError('이 채널의 관리자 계정이 아닙니다.');
+    if (login === 'denied')
+      setLoginError('등록된 관리자 계정이 아닙니다. 소유자가 설정 > 관리자 계정에서 초대해야 로그인할 수 있습니다.');
     else if (login === 'error') setLoginError('네이버 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
     if (params.size > 0) window.history.replaceState(null, '', '/admin.html');
   }, []);
@@ -103,7 +105,7 @@ export function App() {
       <div className="login-screen">
         <div className="login-card">
           <div className="login-logo">🎫</div>
-          <h1>이치방쿠지</h1>
+          <h1>{BRAND}</h1>
           <p className="login-subtitle">치지직 후원 연동 뽑기 보드</p>
           {oauthAvailable ? (
             <a className="naver-login-button" href="/api/chzzk/oauth/login">
@@ -126,7 +128,7 @@ export function App() {
       <aside className="sidebar">
         <div className="sidebar-logo">
           <span className="sidebar-logo-icon">🎫</span>
-          <span className="sidebar-logo-text">이치방쿠지</span>
+          <span className="sidebar-logo-text">{BRAND}</span>
         </div>
         <nav className="sidebar-nav">
           {MENU_ITEMS.map((item) => (
@@ -149,6 +151,15 @@ export function App() {
           <a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">
             📖 사용법
           </a>
+          <button
+            className="logout-button"
+            onClick={async () => {
+              await api.logout();
+              window.location.href = '/admin.html';
+            }}
+          >
+            로그아웃
+          </button>
         </div>
       </aside>
 
@@ -319,9 +330,63 @@ export function App() {
               <p className="empty-hint">OBS의 브라우저 소스에 아래 주소를 등록하세요.</p>
               <OverlayUrlCopy />
             </section>
+
+            <section className="panel">
+              <h2>관리자 계정</h2>
+              <MemberManager />
+            </section>
           </>
         )}
       </main>
+    </div>
+  );
+}
+
+function MemberManager() {
+  const [state, setState] = useState<MembersState | null>(null);
+
+  const refresh = () => api.getMembers().then(setState);
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  if (!state) return <p className="empty-hint">불러오는 중…</p>;
+
+  return (
+    <div className="member-manager">
+      <ul className="member-list">
+        {state.owner && (
+          <li className="member-item">
+            <span className="member-name">{state.owner.channelName || state.owner.channelId}</span>
+            <span className="member-badge owner">소유자</span>
+          </li>
+        )}
+        {state.members.map((m) => (
+          <li key={m.channelId} className="member-item">
+            <span className="member-name">{m.channelName || m.channelId}</span>
+            <button
+              className="member-remove"
+              onClick={() => api.removeMember(m.channelId).then(refresh)}
+            >
+              제거
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {state.pendingInvite ? (
+        <div className="invite-armed">
+          <p className="empty-hint">
+            초대 대기 중 — 다음에 네이버로 로그인하는 계정이 관리자로 추가됩니다. 해당 계정으로 이 주소에서
+            로그인하도록 안내하세요.
+          </p>
+          <button className="danger-button" onClick={() => api.cancelInvite().then(refresh)}>
+            초대 취소
+          </button>
+        </div>
+      ) : (
+        <button onClick={() => api.inviteMember().then(refresh)}>+ 계정 추가</button>
+      )}
     </div>
   );
 }

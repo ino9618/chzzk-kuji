@@ -226,3 +226,47 @@ describe('Naver (CHZZK) login flow', () => {
     expect(callbackRes.headers['set-cookie']).toBeUndefined();
   });
 });
+
+describe('multi-account allowlist', () => {
+  it('lets a channel on the allowlist log in (without touching the owner tokens)', async () => {
+    await setSetting(db, 'owner_channel_id', 'owner-1');
+    await setSetting(db, 'allowed_members', JSON.stringify([{ channelId: 'mod-1', channelName: '매니저' }]));
+    const onTokensSaved = vi.fn();
+    const app = buildApp(routedFetch({ me: { channelId: 'mod-1', channelName: '매니저' } }) as unknown as typeof fetch, onTokensSaved);
+
+    const state = await startLoginFlow(app);
+    const res = await request(app).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state}`);
+
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/admin.html');
+    expect(res.headers['set-cookie']).toBeDefined();
+    // A member is NOT the streamer: their tokens must not overwrite the
+    // owner's donation-socket tokens, and the socket is not restarted.
+    expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
+    expect(onTokensSaved).not.toHaveBeenCalled();
+  });
+
+  it('adds the next new login to the allowlist when an invite is armed, then denies others', async () => {
+    await setSetting(db, 'owner_channel_id', 'owner-1');
+    await setSetting(db, 'pending_member_invite', 'true');
+    const app = buildApp(routedFetch({ me: { channelId: 'mod-2', channelName: '스탭' } }) as unknown as typeof fetch);
+
+    const state = await startLoginFlow(app);
+    const res = await request(app).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state}`);
+
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/admin.html');
+    expect(res.headers['set-cookie']).toBeDefined();
+
+    // The invite is one-shot: consumed and the member is now on the list.
+    expect(await getSetting(db, 'pending_member_invite')).toBe('false');
+    const members = JSON.parse((await getSetting(db, 'allowed_members'))!);
+    expect(members).toEqual([{ channelId: 'mod-2', channelName: '스탭' }]);
+
+    // A different new account is now denied (invite already consumed).
+    const app2 = buildApp(routedFetch({ me: { channelId: 'stranger', channelName: '남' } }) as unknown as typeof fetch);
+    const state2 = await startLoginFlow(app2);
+    const denied = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
+    expect(denied.headers.location).toBe('/admin.html?login=denied');
+  });
+});
