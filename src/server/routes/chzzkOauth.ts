@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import type { Request, Response } from 'express';
 import { getAuthorizeUrl, exchangeCodeForToken, fetchUserMe, saveTokens } from '../chzzkAuth';
 import { requireAdmin, requireOwner, issueAdminSession } from '../middleware/adminAuth';
-import { getSetting, setSetting, type Db } from '../db';
+import { setSetting, type Db } from '../db';
 
 export interface ChzzkOauthRouterOptions {
   clientId: string;
@@ -81,33 +81,21 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
         return;
       }
 
-      // Login flow. The first channel ever to log in claims the board as
-      // owner. Every verified CHZZK account may sign in, but only the owner's
-      // tokens ever touch the donation socket.
+      // Single-streamer mode: the account that completes Naver login becomes
+      // the linked CHZZK owner immediately. This keeps admin authentication
+      // and the donation socket on the same account.
       const me = await fetchUserMe({
         accessToken: tokens.accessToken,
         clientId: options.clientId,
         clientSecret: options.clientSecret,
         fetchImpl: options.fetchImpl,
       });
-      const owner = await getSetting(db, 'owner_channel_id');
-
-      if (!owner) {
-        await setSetting(db, 'owner_channel_id', me.channelId);
-        await setSetting(db, 'owner_channel_name', me.channelName);
-      }
-
-      const isOwner = !owner || me.channelId === owner;
-      if (isOwner) {
-        // Only the streamer's own account manages the donation socket.
-        // Refreshing the stored tokens on every owner login keeps the
-        // 30-day refresh token from ever going stale. A member login must
-        // never overwrite these.
-        await saveTokens(db, tokens, options.encryptionKey);
-        options.onTokensSaved?.(tokens);
-      }
+      await setSetting(db, 'owner_channel_id', me.channelId);
+      await setSetting(db, 'owner_channel_name', me.channelName);
+      await saveTokens(db, tokens, options.encryptionKey);
+      options.onTokensSaved?.(tokens);
       issueAdminSession(res, {
-        role: isOwner ? 'owner' : 'member',
+        role: 'owner',
         channelId: me.channelId,
         channelName: me.channelName,
       });

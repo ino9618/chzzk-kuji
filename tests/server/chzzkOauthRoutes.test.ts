@@ -171,7 +171,7 @@ describe('Naver (CHZZK) login flow', () => {
     expect(decryptToken((await getSetting(db, 'chzzk_access_token'))!, key)).toBe('access-1');
   });
 
-  it('issues an admin session to a different channel without replacing owner tokens', async () => {
+  it('replaces the linked owner and tokens with the account that logs in', async () => {
     await setSetting(db, 'owner_channel_id', 'someone-else');
     const app = buildApp(routedFetch() as unknown as typeof fetch);
 
@@ -182,9 +182,9 @@ describe('Naver (CHZZK) login flow', () => {
     expect(callbackRes.headers.location).toBe('/admin.html');
     expect(callbackRes.headers['set-cookie']).toBeDefined();
     const probeRes = await request(app).get('/probe').set('Cookie', callbackRes.headers['set-cookie']);
-    expect(probeRes.body.admin).toEqual({ role: 'member', channelId: 'owner-1', channelName: '미노' });
-    // Tokens of another administrator must never overwrite the streamer's stored tokens.
-    expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
+    expect(probeRes.body.admin).toEqual({ role: 'owner', channelId: 'owner-1', channelName: '미노' });
+    expect(await getSetting(db, 'owner_channel_id')).toBe('owner-1');
+    expect(decryptToken((await getSetting(db, 'chzzk_access_token'))!, key)).toBe('access-1');
   });
 
   it('claims ownership on the very first login (no owner yet) and issues a session', async () => {
@@ -207,12 +207,13 @@ describe('Naver (CHZZK) login flow', () => {
     // ...and the server is notified so it can hot-start the socket without a restart.
     expect(onTokensSaved).toHaveBeenCalledWith({ accessToken: 'access-1', refreshToken: 'refresh-1' });
 
-    // A different channel can log in, but cannot replace the claimed owner.
+    // A later login replaces the linked owner in single-streamer mode.
     const app2 = buildApp(routedFetch({ me: { channelId: 'intruder', channelName: '침입자' } }) as unknown as typeof fetch);
     const state2 = await startLoginFlow(app2);
     const otherLogin = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
     expect(otherLogin.headers.location).toBe('/admin.html');
-    expect(await getSetting(db, 'owner_channel_id')).toBe('owner-1');
+    expect(await getSetting(db, 'owner_channel_id')).toBe('intruder');
+    expect(await getSetting(db, 'owner_channel_name')).toBe('침입자');
   });
 
   it('notifies onTokensSaved on the connect flow too', async () => {
@@ -241,8 +242,8 @@ describe('Naver (CHZZK) login flow', () => {
   });
 });
 
-describe('open multi-account login', () => {
-  it('lets any channel log in without touching the owner tokens', async () => {
+describe('single-streamer account switching', () => {
+  it('uses the latest logged-in account for the donation socket', async () => {
     await setSetting(db, 'owner_channel_id', 'owner-1');
     const onTokensSaved = vi.fn();
     const app = buildApp(routedFetch({ me: { channelId: 'mod-1', channelName: '매니저' } }) as unknown as typeof fetch, onTokensSaved);
@@ -254,11 +255,9 @@ describe('open multi-account login', () => {
     expect(res.headers.location).toBe('/admin.html');
     expect(res.headers['set-cookie']).toBeDefined();
     const probeRes = await request(app).get('/probe').set('Cookie', res.headers['set-cookie']);
-    expect(probeRes.body.admin).toEqual({ role: 'member', channelId: 'mod-1', channelName: '매니저' });
-    // A member is NOT the streamer: their tokens must not overwrite the
-    // owner's donation-socket tokens, and the socket is not restarted.
-    expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
-    expect(onTokensSaved).not.toHaveBeenCalled();
+    expect(probeRes.body.admin).toEqual({ role: 'owner', channelId: 'mod-1', channelName: '매니저' });
+    expect(await getSetting(db, 'owner_channel_id')).toBe('mod-1');
+    expect(onTokensSaved).toHaveBeenCalledWith({ accessToken: 'access-1', refreshToken: 'refresh-1' });
   });
 
   it('allows consecutive new accounts without an invite', async () => {
@@ -278,5 +277,6 @@ describe('open multi-account login', () => {
     const nextLogin = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
     expect(nextLogin.headers.location).toBe('/admin.html');
     expect(nextLogin.headers['set-cookie']).toBeDefined();
+    expect(await getSetting(db, 'owner_channel_id')).toBe('stranger');
   });
 });
