@@ -1,62 +1,29 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { api, type SessionState, type QueueEntry, type Winner } from './api';
-import { BrandMark } from './components/BrandMark';
-import { BookIcon, DashboardIcon, LogoutIcon, SettingsIcon, TicketIcon, TrophyIcon } from './components/Icons';
+import type { AdminPage } from './adminModel';
+import { AppShell } from './components/AppShell';
+import { ConfirmDialog } from './components/ConfirmDialog';
 import { LoginScreen } from './components/LoginScreen';
-import { Mascot } from './components/Mascot';
+import { OperationsPage } from './pages/OperationsPage';
+import { TicketBoardPage } from './pages/TicketBoardPage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
-
-type MenuKey = 'dashboard' | 'kuji' | 'winners' | 'settings';
-
-const MENU_ITEMS = [
-  { key: 'dashboard' as const, label: '대시보드', icon: DashboardIcon },
-  { key: 'kuji' as const, label: '이치방쿠지', icon: TicketIcon },
-  { key: 'winners' as const, label: '당첨자', icon: TrophyIcon },
-  { key: 'settings' as const, label: '설정', icon: SettingsIcon },
-];
-
-const STATUS_LABELS: Record<string, string> = {
-  connected: '연결됨',
-  reconnecting: '재연결 중',
-  disconnected: '연결 끊김',
-  not_configured: '미연결',
-  needs_reauth: '재인증 필요',
-  unknown: '확인 중',
-};
-
-// The donation log stores raw English status codes; the streamer sees these
-// live in the "처리 필요 큐", so map each to a short Korean label describing
-// what actually happened. 'processed' only lands in the queue on a PARTIAL
-// failure (e.g. a 2-ticket donation where one number was already sold), so
-// its label reflects that rather than "처리됨".
-const QUEUE_STATUS_LABELS: Record<string, string> = {
-  duplicate_rejected: '이미 팔린 번호',
-  amount_mismatch: '금액 안 맞음',
-  number_missing: '번호 미입력',
-  out_of_range: '범위 밖 번호',
-  session_inactive: '진행 중 회차 없음',
-  feature_disabled: '기능 정지 중',
-  processed: '일부 배정 실패',
-};
-
-function queueStatusLabel(status: string): string {
-  return QUEUE_STATUS_LABELS[status] ?? status;
-}
 
 export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [oauthAvailable, setOauthAvailable] = useState(true);
-  const [menu, setMenu] = useState<MenuKey>('dashboard');
+  const [page, setPage] = useState<AdminPage>('operations');
   const [session, setSession] = useState<SessionState>({ active: false });
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [winners, setWinners] = useState<Winner[]>([]);
   const [nicknameMode, setNicknameMode] = useState<'masked' | 'full'>('masked');
   const [chzzkStatus, setChzzkStatus] = useState('unknown');
   const [kujiEnabled, setKujiEnabled] = useState(true);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [closingSession, setClosingSession] = useState(false);
 
   // Restore an existing session (e.g. right after the Naver OAuth callback
   // set the cookie, or on a page refresh), surface OAuth error messages
@@ -105,45 +72,29 @@ export function App() {
     return <LoginScreen oauthAvailable={oauthAvailable} loginError={loginError} />;
   }
 
-  return (
-    <div className="app-layout">
-      <aside className="sidebar">
-        <div className="sidebar-logo">
-          <BrandMark />
-        </div>
-        <nav className="sidebar-nav">
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button key={item.key} className={`sidebar-item ${menu === item.key ? 'active' : ''}`} onClick={() => setMenu(item.key)}>
-                <span className="sidebar-item-icon"><Icon /></span>
-                {item.label}
-                {item.key === 'dashboard' && queue.length > 0 && <span className="sidebar-badge">{queue.length}</span>}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="sidebar-footer">
-          <div className={`connection-status ${chzzkStatus}`}>
-            <span className="dot" />
-            {STATUS_LABELS[chzzkStatus] ?? chzzkStatus}
-          </div>
-          <a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">
-            <BookIcon /> 사용법
-          </a>
-          <button
-            className="logout-button"
-            onClick={async () => {
-              await api.logout();
-              window.location.href = '/admin.html';
-            }}
-          >
-            <LogoutIcon /> 로그아웃
-          </button>
-        </div>
-      </aside>
+  const logout = async () => {
+    await api.logout();
+    window.location.href = '/admin.html';
+  };
 
-      <main className="content">
+  const resolveQueue = async (id: number) => {
+    await api.resolveQueueItem(id);
+    setQueue(await api.getQueue());
+  };
+
+  const closeSession = async () => {
+    setClosingSession(true);
+    try {
+      await api.closeSession();
+      setSession(await api.getSession());
+      setCloseDialogOpen(false);
+    } finally {
+      setClosingSession(false);
+    }
+  };
+
+  return (
+    <AppShell page={page} onNavigate={setPage} status={chzzkStatus} onLogout={logout}>
         {chzzkStatus === 'needs_reauth' && (
           <div className="reauth-banner">
             치지직 인증이 만료되어 후원 수신이 중단되었습니다.{' '}
@@ -151,110 +102,11 @@ export function App() {
           </div>
         )}
 
-        {menu === 'dashboard' && (
-          <>
-            <h1 className="page-title">대시보드</h1>
-            <div className="stat-row">
-              <div className="stat-card">
-                <div className="stat-label">치지직 연결</div>
-                <div className={`stat-value connection-status ${chzzkStatus}`}>
-                  <span className="dot" />
-                  {STATUS_LABELS[chzzkStatus] ?? chzzkStatus}
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">진행 중 회차</div>
-                <div className="stat-value">{session.active ? session.name || '이름 없음' : '없음'}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">판매 현황</div>
-                <div className="stat-value">
-                  {session.active
-                    ? `${session.tickets?.filter((t) => t.status === 'sold').length ?? 0} / ${session.tickets?.length ?? 0}`
-                    : '-'}
-                </div>
-              </div>
-            </div>
+        {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} onToggleKuji={(enabled) => { setKujiEnabled(enabled); api.setKujiEnabled(enabled); }} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
 
-            <section className="panel">
-              <h2>이치방쿠지 기능</h2>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={kujiEnabled}
-                  onChange={(e) => {
-                    setKujiEnabled(e.target.checked);
-                    api.setKujiEnabled(e.target.checked);
-                  }}
-                />
-                <span className="switch-track">
-                  <span className="switch-thumb" />
-                </span>
-                <span className="switch-label">
-                  {kujiEnabled ? '사용 중' : '일시정지됨 — 후원이 들어와도 번호가 자동 배정되지 않습니다'}
-                </span>
-              </label>
-            </section>
+        {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
 
-            <section className="panel">
-              <h2>처리 필요 큐</h2>
-              {queue.length === 0 ? (
-                <div className="queue-empty">
-                  <Mascot state="waiting" className="queue-empty-mascot" />
-                  <p>처리할 항목이 없습니다.</p>
-                </div>
-              ) : (
-                <ul className="queue-list">
-                  {queue.map((q) => (
-                    <li key={q.id} className="queue-item">
-                      <span>
-                        <span className="queue-status">{queueStatusLabel(q.status)}</span>
-                        {q.donorNickname} · {q.amount}치즈 · "{q.rawMessage}"
-                      </span>
-                      <button onClick={() => api.resolveQueueItem(q.id).then(() => api.getQueue().then(setQueue))}>
-                        처리완료
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </>
-        )}
-
-        {menu === 'kuji' && (
-          <>
-            <h1 className="page-title">이치방쿠지</h1>
-            <section className="panel">
-              <h2>현재 회차</h2>
-              {session.active ? (
-                <>
-                  <p className="session-meta">
-                    <strong>{session.name}</strong> (장당 {session.ticketPrice}치즈)
-                  </p>
-                  <div className="ticket-grid">
-                    {session.tickets?.map((t) => (
-                      <div key={t.number} className={`ticket-cell ${t.status}`}>
-                        <div className="ticket-number">{t.number}</div>
-                        {t.status === 'sold' && <div className="ticket-owner">{t.ownerNickname}</div>}
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    className="danger-button"
-                    onClick={() => api.closeSession().then(() => api.getSession().then(setSession))}
-                  >
-                    회차 종료
-                  </button>
-                </>
-              ) : (
-                <NewSessionForm onCreated={() => api.getSession().then(setSession)} />
-              )}
-            </section>
-          </>
-        )}
-
-        {menu === 'winners' && (
+        {page === 'winners' && (
           <>
             <h1 className="page-title">당첨자</h1>
             <section className="panel">
@@ -277,9 +129,13 @@ export function App() {
           </>
         )}
 
-        {menu === 'settings' && (
+        {page === 'session-setup' && (
+          <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><section className="panel">{session.active ? <p className="empty-hint">현재 회차가 진행 중입니다. 간편 운영에서 회차를 종료한 뒤 새 회차를 만들 수 있습니다.</p> : <NewSessionForm onCreated={() => api.getSession().then((next) => { setSession(next); setPage('board'); })} />}</section></div>
+        )}
+
+        {page === 'overlay' && (
           <>
-            <h1 className="page-title">설정</h1>
+            <h1 className="page-title">오버레이</h1>
             <section className="panel">
               <h2>오버레이 닉네임 표시</h2>
               <div className="radio-row">
@@ -316,8 +172,11 @@ export function App() {
 
           </>
         )}
-      </main>
-    </div>
+
+        {page === 'more' && <div className="admin-page"><header className="page-header"><h1>기타 설정</h1></header><section className="panel"><a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">사용법 열기</a><button className="logout-button" onClick={logout}>로그아웃</button></section></div>}
+
+        <ConfirmDialog open={closeDialogOpen} title="회차를 종료할까요?" description={`${session.name || '현재 회차'}를 종료하면 되돌릴 수 없습니다.`} confirmLabel="회차 종료" pending={closingSession} onConfirm={closeSession} onCancel={() => setCloseDialogOpen(false)} />
+    </AppShell>
   );
 }
 

@@ -120,7 +120,7 @@ Expected: all shell tests pass.
 - Consumes: session, queue, connection status, feature toggle, model functions, API callbacks.
 - Produces: sequential operations workflow and filtered ticket board.
 
-- [ ] **Step 1: Write failing operations tests**
+- [x] **Step 1: Write failing operations tests**
 
 ```tsx
 expect(renderOperations({ session: { active: false } })).toContain('새 회차 만들기');
@@ -128,25 +128,25 @@ expect(renderOperations({ session: activeSession, queue: issueQueue })).toContai
 expect(renderBoard(activeSession, 'sold')).not.toContain('판매 가능');
 ```
 
-- [ ] **Step 2: Confirm the tests fail**
+- [x] **Step 2: Confirm the tests fail**
 
 Run: `npm test -- --run tests/client/operationsPage.test.tsx`
 
 Expected: FAIL because the page components do not exist.
 
-- [ ] **Step 3: Implement 간편 운영**
+- [x] **Step 3: Implement 간편 운영**
 
 Render summary status followed by connection, feature, current session, attention queue, and finish sections. A missing session navigates to `session-setup`. Queue actions expose pending/success/error feedback and preserve rows on failure.
 
-- [ ] **Step 4: Implement the ticket board**
+- [x] **Step 4: Implement the ticket board**
 
 Render session summary and segmented filters `전체`, `판매 가능`, `판매 완료`. Sold tickets show owner nickname with `title`; no active session shows a setup action.
 
-- [ ] **Step 5: Integrate pages into App**
+- [x] **Step 5: Integrate pages into App**
 
 Keep authentication, fetches, and Socket.IO subscriptions in `App.tsx`. Replace old dashboard and kuji branches with `OperationsPage` and `TicketBoardPage`.
 
-- [ ] **Step 6: Run operations tests**
+- [x] **Step 6: Run operations tests**
 
 Run: `npm test -- --run tests/client/operationsPage.test.tsx`
 
