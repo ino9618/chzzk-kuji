@@ -84,12 +84,16 @@ describe('parseSocketIoEventPacket', () => {
  */
 class FakeEioSocket extends EventEmitter {
   static instances: FakeEioSocket[] = [];
+  sent: string[] = [];
   constructor(public uri: string, public opts: Record<string, unknown>) {
     super();
     FakeEioSocket.instances.push(this);
   }
   close() {
     this.emit('close');
+  }
+  send(data: string) {
+    this.sent.push(data);
   }
   /** Simulates receiving a Socket.IO EVENT packet wrapping the given inner payload. */
   simulateMessage(payload: unknown) {
@@ -129,6 +133,17 @@ async function waitForInstance(index: number): Promise<FakeEioSocket> {
 }
 
 describe('ChzzkSocketClient', () => {
+  it('sends the Socket.IO root namespace CONNECT frame after Engine.IO opens', async () => {
+    FakeEioSocket.instances = [];
+    const fetchImpl = fakeFetchSequence([{ ok: true, json: async () => ({ content: { url: 'https://fake.example/sessions/abc?auth=xyz' } }) }]);
+    const client = new ChzzkSocketClient({ clientId: 'cid', clientSecret: 'secret', accessToken: 'token', refreshToken: 'refresh', fetchImpl: fetchImpl as unknown as typeof fetch, EioSocketImpl: FakeEioSocket as any });
+    client.connect().catch(() => undefined);
+    const socket = await waitForInstance(0);
+    socket.emit('open');
+    expect(socket.sent).toEqual(['0']);
+    client.disconnect();
+  });
+
   it('fetches a socket URL, connects, and subscribes to donation events', async () => {
     FakeEioSocket.instances = [];
     const fetchImpl = fakeFetchSequence([

@@ -61,6 +61,7 @@ export function parseSocketIoEventPacket(raw: unknown): unknown | null {
 }
 
 export interface EioSocketLike extends EventEmitter {
+  send(data: string): void;
   close(): void;
 }
 
@@ -88,6 +89,7 @@ export class ChzzkSocketClient extends EventEmitter {
   private needsReauth = false;
   private accessToken: string;
   private refreshToken: string;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private options: ChzzkSocketClientOptions) {
     super();
@@ -200,6 +202,10 @@ export class ChzzkSocketClient extends EventEmitter {
           });
           this.socket = socket;
 
+          // engine.io-client exposes the transport layer only. Complete the
+          // Socket.IO root-namespace handshake that io.connect() normally sends.
+          socket.once('open', () => socket.send('0'));
+
           socket.on('message', (raw: unknown) => {
             const unwrapped = parseSocketIoEventPacket(raw);
             if (!unwrapped) return;
@@ -211,7 +217,10 @@ export class ChzzkSocketClient extends EventEmitter {
                   this.emit('status', 'connected');
                   resolve();
                 })
-                .catch(reject);
+                .catch((err) => {
+                  socket.close();
+                  reject(err);
+                });
               return;
             }
 
@@ -269,8 +278,10 @@ export class ChzzkSocketClient extends EventEmitter {
       this.emit('status', 'disconnected');
       return;
     }
+    if (this.reconnectTimer) return;
     this.emit('status', 'reconnecting');
-    setTimeout(() => {
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
       this.connectOnce().catch(() => {
         /* connectOnce() already arms the next retry via scheduleReconnect() */
       });
@@ -279,6 +290,8 @@ export class ChzzkSocketClient extends EventEmitter {
 
   disconnect(): void {
     this.shouldReconnect = false;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
     this.socket?.close();
   }
 }
