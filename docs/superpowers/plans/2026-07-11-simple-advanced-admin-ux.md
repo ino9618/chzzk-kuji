@@ -205,7 +205,7 @@ Expected: all selected tests pass.
 - Consumes: winners, nickname mode, overlay URL, logout callback.
 - Produces: searchable grouped winners, two-row overlay settings, low-frequency actions.
 
-- [ ] **Step 1: Write failing detail-page tests**
+- [x] **Step 1: Write failing detail-page tests**
 
 ```tsx
 expect(renderWinners('홍길동')).toContain('홍길동');
@@ -214,21 +214,21 @@ expect(renderOverlay()).toContain('OBS 브라우저 소스');
 expect(renderMore()).toContain('사용법');
 ```
 
-- [ ] **Step 2: Confirm the tests fail**
+- [x] **Step 2: Confirm the tests fail**
 
 Run: `npm test -- --run tests/client/detailPages.test.tsx`
 
 Expected: FAIL because detail page components do not exist.
 
-- [ ] **Step 3: Implement detail pages**
+- [x] **Step 3: Implement detail pages**
 
 Group winners by session and format `soldAt` with `ko-KR` in `Asia/Seoul`. Overlay page provides copy and preview commands plus nickname setting feedback. More page provides manual and logout actions without duplicating connection controls.
 
-- [ ] **Step 4: Integrate all routes**
+- [x] **Step 4: Integrate all routes**
 
 Wire `winners`, `overlay`, and `more` page branches. Ensure mobile MoreSheet and desktop sidebar point to the same page keys.
 
-- [ ] **Step 5: Run detail tests**
+- [x] **Step 5: Run detail tests**
 
 Run: `npm test -- --run tests/client/detailPages.test.tsx`
 

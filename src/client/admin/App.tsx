@@ -8,6 +8,9 @@ import { LoginScreen } from './components/LoginScreen';
 import { OperationsPage } from './pages/OperationsPage';
 import { TicketBoardPage } from './pages/TicketBoardPage';
 import { SessionSetupPage } from './pages/SessionSetupPage';
+import { WinnersPage } from './pages/WinnersPage';
+import { OverlaySettingsPage } from './pages/OverlaySettingsPage';
+import { MorePage } from './pages/MorePage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -107,72 +110,13 @@ export function App() {
 
         {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
 
-        {page === 'winners' && (
-          <>
-            <h1 className="page-title">당첨자</h1>
-            <section className="panel">
-              {winners.length === 0 ? (
-                <p className="empty-hint">아직 당첨자가 없습니다.</p>
-              ) : (
-                <ul className="queue-list">
-                  {winners.map((w) => (
-                    <li key={`${w.sessionId}-${w.number}`} className="winner-item">
-                      <span className="winner-session">{w.sessionName}</span>
-                      <span className="winner-number">{w.number}번</span>
-                      <span className="winner-prize">{w.prizeName}</span>
-                      <span className="winner-nickname">{w.ownerNickname}</span>
-                      <span className="winner-time">{w.soldAt}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </>
-        )}
+        {page === 'winners' && <WinnersPage winners={winners} />}
 
         {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={() => api.getSession().then((next) => { setSession(next); setPage('board'); })} />)}
 
-        {page === 'overlay' && (
-          <>
-            <h1 className="page-title">오버레이</h1>
-            <section className="panel">
-              <h2>오버레이 닉네임 표시</h2>
-              <div className="radio-row">
-                <label>
-                  <input
-                    type="radio"
-                    checked={nicknameMode === 'masked'}
-                    onChange={() => {
-                      setNicknameMode('masked');
-                      api.setNicknameMode('masked');
-                    }}
-                  />
-                  부분 마스킹
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    checked={nicknameMode === 'full'}
-                    onChange={() => {
-                      setNicknameMode('full');
-                      api.setNicknameMode('full');
-                    }}
-                  />
-                  전체 노출
-                </label>
-              </div>
-            </section>
+        {page === 'overlay' && <OverlaySettingsPage nicknameMode={nicknameMode} onSetNicknameMode={async (mode) => { await api.setNicknameMode(mode); setNicknameMode(mode); }} />}
 
-            <section className="panel">
-              <h2>OBS 오버레이 주소</h2>
-              <p className="empty-hint">OBS의 브라우저 소스에 아래 주소를 등록하세요.</p>
-              <OverlayUrlCopy />
-            </section>
-
-          </>
-        )}
-
-        {page === 'more' && <div className="admin-page"><header className="page-header"><h1>기타 설정</h1></header><section className="panel"><a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">사용법 열기</a><button className="logout-button" onClick={logout}>로그아웃</button></section></div>}
+        {page === 'more' && <MorePage onLogout={logout} />}
 
         <ConfirmDialog open={closeDialogOpen} title="회차를 종료할까요?" description={`${session.name || '현재 회차'}를 종료하면 되돌릴 수 없습니다.`} confirmLabel="회차 종료" pending={closingSession} onConfirm={closeSession} onCancel={() => setCloseDialogOpen(false)} />
     </AppShell>
