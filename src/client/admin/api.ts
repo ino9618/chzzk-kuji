@@ -41,6 +41,10 @@ export interface Winner {
 
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
+  if (res.status === 401) {
+    window.location.href = '/admin.html';
+    throw new Error('Admin session expired');
+  }
   if (!res.ok) throw new Error(`Request to ${url} failed with ${res.status}`);
   return res.json() as Promise<T>;
 }

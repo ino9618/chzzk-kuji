@@ -72,7 +72,7 @@ export function SessionSetupPage({ onCreate, onCreated }: SessionSetupPageProps)
       <section className="setup-section">
         <h2><span>1</span> 기본 정보</h2>
         <div className="form-grid">
-          <label>회차 이름<input ref={nameRef} value={name} aria-invalid={Boolean(errors.name)} onChange={(event) => setName(event.target.value)} placeholder="예: 7월 이치방쿠지" />{errors.name && <small className="field-error">{errors.name}</small>}</label>
+          <label>회차 이름<input ref={nameRef} type="text" value={name} aria-invalid={Boolean(errors.name)} onChange={(event) => setName(event.target.value)} placeholder="예: 7월 이치방쿠지" />{errors.name && <small className="field-error">{errors.name}</small>}</label>
           <label>장당 가격<div className="input-suffix"><input ref={priceRef} type="number" min={1} value={ticketPrice} aria-invalid={Boolean(errors.ticketPrice)} onChange={(event) => setTicketPrice(Number(event.target.value))} /><span>치즈</span></div>{errors.ticketPrice && <small className="field-error">{errors.ticketPrice}</small>}</label>
         </div>
       </section>
@@ -80,7 +80,7 @@ export function SessionSetupPage({ onCreate, onCreated }: SessionSetupPageProps)
         <h2><span>2</span> 상품 구성</h2>
         <div className="prize-table">
           <div className="prize-table-head"><span>등급</span><span>상품명</span><span>수량</span><span /></div>
-          {groups.map((group, index) => <div className="prize-row" key={index}><input ref={index === 0 ? groupRef : undefined} aria-label={`${index + 1}번 상품 등급`} value={group.grade} onChange={(event) => updateGroup(index, 'grade', event.target.value)} placeholder="A" /><input aria-label={`${index + 1}번 상품명`} value={group.prizeName} onChange={(event) => updateGroup(index, 'prizeName', event.target.value)} placeholder="상품명" /><input aria-label={`${index + 1}번 수량`} type="number" min={1} value={group.count} onChange={(event) => updateGroup(index, 'count', Number(event.target.value))} /><button className="icon-button" aria-label={`${index + 1}번 상품 삭제`} onClick={() => setGroups((current) => current.filter((_, groupIndex) => groupIndex !== index))}><TrashIcon /></button></div>)}
+          {groups.map((group, index) => <div className="prize-row" key={index}><input ref={index === 0 ? groupRef : undefined} type="text" aria-label={`${index + 1}번 상품 등급`} value={group.grade} onChange={(event) => updateGroup(index, 'grade', event.target.value)} placeholder="A" /><input type="text" aria-label={`${index + 1}번 상품명`} value={group.prizeName} onChange={(event) => updateGroup(index, 'prizeName', event.target.value)} placeholder="상품명" /><input aria-label={`${index + 1}번 수량`} type="number" min={1} value={group.count} onChange={(event) => updateGroup(index, 'count', Number(event.target.value))} /><button className="icon-button" aria-label={`${index + 1}번 상품 삭제`} onClick={() => setGroups((current) => current.filter((_, groupIndex) => groupIndex !== index))}><TrashIcon /></button></div>)}
           {errors.groups && <small className="field-error">{errors.groups}</small>}
         </div>
         <button className="secondary-button add-prize-button" onClick={() => setGroups((current) => [...current, { grade: '', prizeName: '', count: 1 }])}><PlusIcon />상품 추가</button>

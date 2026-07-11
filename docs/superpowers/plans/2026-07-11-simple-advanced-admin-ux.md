@@ -244,34 +244,34 @@ Expected: all detail-page tests pass.
 **Interfaces:**
 - Produces faithful desktop and mobile layouts matching Task 2 concept.
 
-- [ ] **Step 1: Implement the final design tokens and layout**
+- [x] **Step 1: Implement the final design tokens and layout**
 
 Define app shell tracks, page width, section spacing, setting rows, segmented controls, summary status, dialog, mobile sheet, and stable navigation dimensions. Use maximum `8px` panel radius and avoid nested cards.
 
-- [ ] **Step 2: Implement responsive and accessibility states**
+- [x] **Step 2: Implement responsive and accessibility states**
 
 At `720px` and below, switch to bottom navigation and sheet. Ensure 44px primary controls, wrapped overlay URLs, visible focus, non-color status labels, and reduced-motion rules.
 
-- [ ] **Step 3: Update documentation**
+- [x] **Step 3: Update documentation**
 
 Document 간편 운영 as the default, the six detailed destinations, mobile More menu, and the session-creation sequence. Remove instructions tied to the old four-menu layout.
 
-- [ ] **Step 4: Run full verification**
+- [x] **Step 4: Run full verification**
 
 Run: `npm test -- --run && npm run build`
 
 Expected: all tests pass and both Vite and server TypeScript builds exit 0.
 
-- [ ] **Step 5: Start the local client and server**
+- [x] **Step 5: Start the local client and server**
 
 Run: `npm run dev`
 
 Expected: server on `3000` and Vite client on `5173` with no fatal startup error.
 
-- [ ] **Step 6: Capture desktop and mobile states**
+- [x] **Step 6: Capture desktop and mobile states**
 
 Use Playwright at `1280x800` and `390x844` for operations ready/warning/idle states, ticket filters, session setup errors, winners search, overlay settings, confirmation dialog, and mobile MoreSheet.
 
-- [ ] **Step 7: Compare against the accepted concept**
+- [x] **Step 7: Compare against the accepted concept**
 
 Inspect concept and implementation screenshots with `view_image`. Check exact copy, menu grouping, workflow order, typography, palette, setting rows, control dimensions, overflow, overlap, focus, and mascot restraint. Fix every material mismatch.
