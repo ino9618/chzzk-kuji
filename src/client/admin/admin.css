@@ -53,6 +53,18 @@
 .log-message { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .log-result { font-weight: 700; color: var(--success); }
 .log-result.attention { color: var(--warning); }
+.preflight-badge { padding: 8px 12px; border: 1px solid var(--panel-border); border-radius: 8px; font-size: .75rem; font-weight: 800; }
+.preflight-badge.ready { color: var(--success); background: var(--success-bg); }
+.preflight-badge.attention { color: var(--warning); }
+.preflight-checks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.preflight-checks > div { display: flex; gap: 12px; min-height: 92px; padding: 18px; border: 1px solid var(--panel-border); background: var(--panel); }
+.preflight-checks > div > span { display: grid; place-items: center; flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--bg-deep); color: var(--warning); font-weight: 900; }
+.preflight-checks > div.ready > span { color: var(--success); }
+.preflight-checks strong { font-size: .8rem; }
+.preflight-checks p { margin: 6px 0 0; color: var(--text-dim); font-size: .72rem; }
+.test-donation-form { display: grid; grid-template-columns: minmax(180px, .7fr) minmax(260px, 1.3fr) auto; align-items: end; gap: 12px; padding: 18px; }
+.test-donation-form label { display: grid; gap: 7px; color: var(--text-dim); font-size: .72rem; font-weight: 700; }
+.test-donation-form input { min-height: 40px; background: var(--bg-deep); border: 1px solid var(--panel-border); border-radius: 8px; color: var(--text); padding: 0 11px; }
 
 * {
   box-sizing: border-box;

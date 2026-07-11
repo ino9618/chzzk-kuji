@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterTickets, filterWinners, getOperationsStatus } from '../../src/client/admin/adminModel';
+import { filterTickets, filterWinners, getOperationsStatus, validateTestDonation } from '../../src/client/admin/adminModel';
 import type { Ticket, Winner } from '../../src/client/admin/api';
 
 describe('getOperationsStatus', () => {
@@ -36,6 +36,19 @@ describe('filterTickets', () => {
     expect(filterTickets(tickets, 'all')).toHaveLength(2);
     expect(filterTickets(tickets, 'available').map((ticket) => ticket.number)).toEqual([1]);
     expect(filterTickets(tickets, 'sold').map((ticket) => ticket.number)).toEqual([2]);
+  });
+});
+
+describe('validateTestDonation', () => {
+  const session = { active: true as const, ticketPrice: 1000, tickets };
+  it('accepts matching amounts and available numbers without changing state', () => {
+    expect(validateTestDonation(session, 1000, '1번').ok).toBe(true);
+    expect(tickets[0].status).toBe('available');
+  });
+  it('rejects amount, count, and unavailable-number mismatches', () => {
+    expect(validateTestDonation(session, 1500, '1번').ok).toBe(false);
+    expect(validateTestDonation(session, 2000, '1번').ok).toBe(false);
+    expect(validateTestDonation(session, 1000, '2번').ok).toBe(false);
   });
 });
 

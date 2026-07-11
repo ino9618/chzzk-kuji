@@ -1,6 +1,6 @@
 import type { Ticket, Winner } from './api';
 
-export type AdminPage = 'operations' | 'board' | 'winners' | 'log' | 'connection' | 'settings' | 'session-setup' | 'overlay' | 'more';
+export type AdminPage = 'operations' | 'preflight' | 'board' | 'winners' | 'log' | 'connection' | 'settings' | 'session-setup' | 'overlay' | 'more';
 export type TicketFilter = 'all' | 'available' | 'sold';
 
 export interface OperationsStatusInput {
@@ -55,4 +55,15 @@ export function filterWinners(winners: Winner[], query: string): Winner[] {
       .toLocaleLowerCase('ko-KR')
       .includes(normalizedQuery)
   );
+}
+
+export function validateTestDonation(session: import('./api').SessionState, amount: number, message: string): { ok: boolean; message: string } {
+  if (!session.active || !session.ticketPrice || !session.tickets) return { ok: false, message: '진행 중인 회차가 필요합니다.' };
+  if (!Number.isFinite(amount) || amount < 1 || amount % session.ticketPrice !== 0) return { ok: false, message: `후원 금액은 ${session.ticketPrice.toLocaleString('ko-KR')}치즈의 배수여야 합니다.` };
+  const numbers = (message.match(/\d+/g) ?? []).map(Number);
+  const expected = amount / session.ticketPrice;
+  if (numbers.length !== expected) return { ok: false, message: `${expected}개의 번호를 입력해야 합니다. 현재 ${numbers.length}개가 인식됩니다.` };
+  const unavailable = numbers.filter((number) => !session.tickets?.some((ticket) => ticket.number === number && ticket.status === 'available'));
+  if (unavailable.length > 0) return { ok: false, message: `${unavailable.join(', ')}번은 판매할 수 없는 번호입니다.` };
+  return { ok: true, message: `${numbers.join(', ')}번이 정상적으로 배정될 조건입니다. 실제 판매 내역은 변경되지 않았습니다.` };
 }

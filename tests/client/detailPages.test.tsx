@@ -6,6 +6,7 @@ import { MorePage } from '../../src/client/admin/pages/MorePage';
 import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
 import { BasicSettingsPage } from '../../src/client/admin/pages/BasicSettingsPage';
 import { OperationsLogPage } from '../../src/client/admin/pages/OperationsLogPage';
+import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPreflightPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -55,5 +56,15 @@ describe('OperationsLogPage', () => {
     expect(html).toContain('1번 3번');
     expect(html).toContain('CSV 내보내기');
     expect(html).toContain('정상 처리');
+  });
+});
+
+describe('BroadcastPreflightPage', () => {
+  it('shows readiness checks and a safe donation test', () => {
+    const html = renderToStaticMarkup(<BroadcastPreflightPage chzzkStatus="connected" kujiEnabled session={{ active: true, name: '테스트 회차', ticketPrice: 1000, tickets: [{ number: 1, prizeName: 'A상', status: 'available', ownerNickname: null }] }} />);
+    expect(html).toContain('방송 준비 완료');
+    expect(html).toContain('모의 후원 검사');
+    expect(html).toContain('실제 번호를 판매 처리하지 않고');
+    expect(html).toContain('오버레이 미리보기');
   });
 });
