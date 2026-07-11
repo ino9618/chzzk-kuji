@@ -2,18 +2,12 @@ import { EventEmitter } from 'node:events';
 import type { DonationEvent } from './donationProcessor';
 import { refreshAccessToken, type TokenResponse } from './chzzkAuth';
 
-// TODO(verify): Field names below (donationType, channelId, donatorChannelId, donatorNickname,
-// payAmount, donationText) are a best-effort match to CHZZK's official docs + community-sourced
-// message-format gist. The outer transport/framing (Engine.IO v3 + Socket.IO EVENT packets) was
-// confirmed against a live account; these inner donation field names have NOT been confirmed
-// against a real donation yet. Before production, trigger one real test donation and log the raw
-// unwrapped payload to verify field names match exactly.
 interface RawDonationData {
   donationType: 'CHAT' | 'VIDEO';
   channelId: string;
   donatorChannelId: string;
   donatorNickname: string;
-  payAmount: number;
+  payAmount: string | number;
   donationText: string;
 }
 
@@ -22,11 +16,12 @@ export function parseDonationPayload(raw: unknown): DonationEvent | null {
   const envelope = raw as { type?: unknown; data?: unknown };
   if (envelope.type !== 'DONATION' || !envelope.data || typeof envelope.data !== 'object') return null;
   const data = envelope.data as RawDonationData;
-  if (typeof data.payAmount !== 'number') return null;
+  const amount = Number(data.payAmount);
+  if (!Number.isFinite(amount) || amount < 0) return null;
   return {
     channelId: data.donatorChannelId,
     nickname: data.donatorNickname || '익명',
-    amount: data.payAmount,
+    amount,
     message: data.donationText ?? '',
   };
 }
@@ -51,15 +46,18 @@ export function parseSocketIoEventPacket(raw: unknown): unknown | null {
     return null;
   }
   if (!Array.isArray(arr) || arr.length < 1) return null;
+  const eventType = typeof arr[0] === 'string' ? arr[0] : undefined;
   const payload = arr[1] ?? arr[0];
+  let parsedPayload = payload;
   if (typeof payload === 'string') {
     try {
-      return JSON.parse(payload);
+      parsedPayload = JSON.parse(payload);
     } catch {
       return null;
     }
   }
-  return payload;
+  if (parsedPayload && typeof parsedPayload === 'object' && 'type' in parsedPayload) return parsedPayload;
+  return eventType ? { type: eventType, data: parsedPayload } : parsedPayload;
 }
 
 export interface EioSocketLike extends EventEmitter {

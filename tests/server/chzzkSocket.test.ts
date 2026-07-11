@@ -23,6 +23,12 @@ describe('parseDonationPayload', () => {
     });
   });
 
+  it('parses payAmount as the string documented by the official CHZZK API', () => {
+    expect(parseDonationPayload({ type: 'DONATION', data: { donationType: 'CHAT', channelId: 'streamer', donatorChannelId: 'viewer', donatorNickname: '실사용자', payAmount: '1000', donationText: '1번' } })).toEqual({
+      channelId: 'viewer', nickname: '실사용자', amount: 1000, message: '1번',
+    });
+  });
+
   it('defaults an anonymous donation nickname to 익명', () => {
     const raw = {
       type: 'DONATION',
@@ -52,6 +58,11 @@ describe('parseSocketIoEventPacket', () => {
   it('unwraps a Socket.IO EVENT packet as observed against a live CHZZK account', () => {
     const raw = '2["SYSTEM","{\\"type\\":\\"connected\\",\\"data\\":{\\"sessionKey\\":\\"abc-123\\"}}"]';
     expect(parseSocketIoEventPacket(raw)).toEqual({ type: 'connected', data: { sessionKey: 'abc-123' } });
+  });
+
+  it('preserves the official Socket.IO event name around a direct donation body', () => {
+    const raw = '2["DONATION","{\\"donationType\\":\\"CHAT\\",\\"payAmount\\":\\"1000\\",\\"donationText\\":\\"1번\\"}"]';
+    expect(parseSocketIoEventPacket(raw)).toEqual({ type: 'DONATION', data: { donationType: 'CHAT', payAmount: '1000', donationText: '1번' } });
   });
 
   it('returns null for a bare Engine.IO control packet (e.g. "0" CONNECT ack)', () => {
