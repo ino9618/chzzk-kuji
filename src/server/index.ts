@@ -185,6 +185,9 @@ async function main(): Promise<void> {
       setChzzkStatus(status);
       broadcastConnectionStatus(io, status);
     });
+    socketClient.on('connection_error', (err) => {
+      console.error('CHZZK session connection error:', err instanceof Error ? err.message : err);
+    });
 
     socketClient.on('donation', (event) => {
       (async () => {

@@ -36,6 +36,7 @@ export function parseDonationPayload(raw: unknown): DonationEvent | null {
  * succeeds.
  */
 export function parseSocketIoEventPacket(raw: unknown): unknown | null {
+  if (raw && typeof raw === 'object') return raw;
   const text = typeof raw === 'string' ? raw : raw == null ? '' : String(raw);
   const match = text.match(/^2\d*(\[.*\])$/s);
   if (!match) return null;
@@ -201,6 +202,10 @@ export class ChzzkSocketClient extends EventEmitter {
             transports: ['polling', 'websocket'],
           });
           this.socket = socket;
+          const connectionTimeout = setTimeout(() => {
+            socket.close();
+            reject(new Error('Timed out waiting for CHZZK Socket.IO session handshake'));
+          }, 10000);
 
           // engine.io-client exposes the transport layer only. Complete the
           // Socket.IO root-namespace handshake that io.connect() normally sends.
@@ -212,6 +217,7 @@ export class ChzzkSocketClient extends EventEmitter {
 
             const envelope = unwrapped as { type?: string; data?: { sessionKey?: string } };
             if (envelope.type === 'connected' && envelope.data?.sessionKey) {
+              clearTimeout(connectionTimeout);
               this.subscribeDonation(envelope.data.sessionKey)
                 .then(() => {
                   this.emit('status', 'connected');
@@ -231,12 +237,15 @@ export class ChzzkSocketClient extends EventEmitter {
           });
 
           socket.on('close', () => {
+            clearTimeout(connectionTimeout);
             this.socket = null;
             this.scheduleReconnect();
           });
 
-          socket.on('error', () => {
-            // 'close' fires after 'error' on engine.io-client; no separate handling needed.
+          socket.on('error', (err) => {
+            clearTimeout(connectionTimeout);
+            socket.close();
+            reject(err instanceof Error ? err : new Error(String(err)));
           });
         })
         .catch(reject);
@@ -249,7 +258,8 @@ export class ChzzkSocketClient extends EventEmitter {
     // 'disconnected'/'needs_reauth' status where relevant) when
     // shouldReconnect is false, so this doesn't cause double-scheduling
     // when the close handler above already handled it.
-    attempt.catch(() => {
+    attempt.catch((err) => {
+      this.emit('connection_error', err);
       this.scheduleReconnect();
     });
 
@@ -297,9 +307,48 @@ export class ChzzkSocketClient extends EventEmitter {
 }
 
 function getDefaultEioSocketConstructor(): EioSocketConstructor {
-  // engine.io-client v3 is CommonJS and exposes its Socket class as a
-  // property of the default export (not a named ESM export).
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const eio = require('engine.io-client');
-  return eio.Socket as EioSocketConstructor;
+  return SocketIoV2Adapter as EioSocketConstructor;
+}
+
+class SocketIoV2Adapter extends EventEmitter implements EioSocketLike {
+  private socket: any;
+
+  constructor(uri: string, opts: Record<string, unknown>) {
+    super();
+    // CHZZK officially supports socket.io-client through 2.0.3. Keep this
+    // isolated from the browser's v4 client used by the admin dashboard.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const io = require('socket.io-client-v2');
+    this.socket = io(uri, {
+      path: opts.path,
+      query: opts.query,
+      transports: ['websocket'],
+      reconnection: false,
+      forceNew: true,
+      timeout: 3000,
+    });
+    this.socket.on('connect', () => this.emit('open'));
+    this.socket.on('SYSTEM', (payload: unknown) => this.forward('SYSTEM', payload));
+    this.socket.on('DONATION', (payload: unknown) => this.forward('DONATION', payload));
+    this.socket.on('disconnect', () => this.emit('close'));
+    this.socket.on('connect_error', (err: unknown) => this.emit('error', err));
+    this.socket.on('error', (err: unknown) => this.emit('error', err));
+  }
+
+  private forward(eventType: string, payload: unknown): void {
+    let parsed = payload;
+    if (typeof payload === 'string') {
+      try { parsed = JSON.parse(payload); } catch { return; }
+    }
+    if (parsed && typeof parsed === 'object' && 'type' in parsed) this.emit('message', parsed);
+    else this.emit('message', { type: eventType, data: parsed });
+  }
+
+  send(): void {
+    // socket.io-client performs the namespace handshake itself.
+  }
+
+  close(): void {
+    this.socket.disconnect();
+  }
 }
