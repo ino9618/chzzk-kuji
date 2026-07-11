@@ -17,10 +17,11 @@ describe('WinnersPage', () => {
 
 describe('detail settings pages', () => {
   it('renders the linked CHZZK channel and connection guidance', () => {
-    const html = renderToStaticMarkup(<ConnectionPage connection={{ status: 'connected', channelId: 'channel-1', channelName: '테스트 채널', lastEventAt: null }} onRefresh={vi.fn(async () => undefined)} />);
+    const html = renderToStaticMarkup(<ConnectionPage connection={{ status: 'connected', channelId: 'channel-1', channelName: '테스트 채널', lastEventAt: null }} onRefresh={vi.fn(async () => undefined)} onDisconnect={vi.fn(async () => undefined)} />);
     expect(html).toContain('테스트 채널');
     expect(html).toContain('스트림키 불필요');
     expect(html).toContain('정상 연결');
+    expect(html).toContain('연결 해제');
   });
 
   it('renders overlay controls', () => {

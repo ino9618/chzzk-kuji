@@ -59,6 +59,7 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db): void {
 
 export interface AppOptions {
   adminPasswordHash: string;
+  disconnectChzzk?: () => Promise<void> | void;
 }
 
 export async function createApp(db: Db, options: AppOptions) {
@@ -88,7 +89,7 @@ export async function createApp(db: Db, options: AppOptions) {
   }
 
   app.use('/api/auth', createAuthRouter(db));
-  app.use('/api/admin', createAdminRouter(db, { getChzzkStatus: () => chzzkStatus }));
+  app.use('/api/admin', createAdminRouter(db, { getChzzkStatus: () => chzzkStatus, disconnectChzzk: options.disconnectChzzk }));
   app.use('/api/overlay', createOverlayRouter(db));
 
   return {
@@ -119,7 +120,8 @@ async function main(): Promise<void> {
     await setSetting(db, 'admin_password_hash', adminPasswordHash);
   }
 
-  const { app, setChzzkStatus } = await createApp(db, { adminPasswordHash });
+  let disconnectActiveChzzk = () => undefined;
+  const { app, setChzzkStatus } = await createApp(db, { adminPasswordHash, disconnectChzzk: () => disconnectActiveChzzk() });
 
   if (process.env.NODE_ENV === 'production') {
     const path = require('node:path') as typeof import('node:path');
@@ -153,6 +155,13 @@ async function main(): Promise<void> {
   // flow saves fresh tokens (first login / re-auth) so the connection
   // starts immediately — no server restart needed.
   let activeSocketClient: ChzzkSocketClient | undefined;
+  disconnectActiveChzzk = () => {
+    activeSocketClient?.removeAllListeners();
+    activeSocketClient?.disconnect();
+    activeSocketClient = undefined;
+    setChzzkStatus('not_configured');
+    broadcastConnectionStatus(io, 'not_configured');
+  };
   const startChzzkSocket = (t: { accessToken: string; refreshToken: string }) => {
     if (!process.env.CHZZK_CLIENT_ID || !process.env.CHZZK_CLIENT_SECRET) return;
     if (activeSocketClient) {

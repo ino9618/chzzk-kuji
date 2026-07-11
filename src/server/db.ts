@@ -383,3 +383,7 @@ export async function setSetting(db: Db, key: string, value: string): Promise<vo
     value,
   ]);
 }
+
+export async function deleteSetting(db: Db, key: string): Promise<void> {
+  await db.query(`DELETE FROM settings WHERE key = $1`, [key]);
+}

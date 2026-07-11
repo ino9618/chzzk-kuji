@@ -10,12 +10,15 @@ import {
   listAllWinners,
   getSetting,
   setSetting,
+  deleteSetting,
   type Db,
 } from '../db';
 import { requireAdmin } from '../middleware/adminAuth';
+import { requireOwner } from '../middleware/adminAuth';
 
 export interface AdminRouterDeps {
   getChzzkStatus: () => 'connected' | 'disconnected' | 'reconnecting' | 'not_configured' | 'needs_reauth';
+  disconnectChzzk?: () => Promise<void> | void;
 }
 
 export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
@@ -103,6 +106,17 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
       channelName: channelName ?? null,
       lastEventAt: recentEvents[0]?.createdAt ?? null,
     });
+  });
+
+  router.post('/chzzk-connection/disconnect', requireOwner, async (_req, res) => {
+    await deps.disconnectChzzk?.();
+    await Promise.all([
+      deleteSetting(db, 'chzzk_access_token'),
+      deleteSetting(db, 'chzzk_refresh_token'),
+      deleteSetting(db, 'owner_channel_id'),
+      deleteSetting(db, 'owner_channel_name'),
+    ]);
+    res.json({ ok: true });
   });
 
   router.get('/kuji-enabled', async (_req, res) => {

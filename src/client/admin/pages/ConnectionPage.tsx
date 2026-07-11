@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ChzzkConnection } from '../api';
 import { InlineFeedback } from '../components/InlineFeedback';
 import { SettingRow } from '../components/SettingRow';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const labels: Record<string, string> = {
   connected: '정상 연결',
@@ -12,9 +13,12 @@ const labels: Record<string, string> = {
   unknown: '확인 중',
 };
 
-export function ConnectionPage({ connection, onRefresh }: { connection: ChzzkConnection; onRefresh: () => Promise<void> }) {
+export function ConnectionPage({ connection, onRefresh, onDisconnect }: { connection: ChzzkConnection; onRefresh: () => Promise<void>; onDisconnect: () => Promise<void> }) {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
+  const [disconnectOpen, setDisconnectOpen] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnectError, setDisconnectError] = useState(false);
   const refresh = async () => {
     setRefreshing(true);
     setRefreshError(false);
@@ -23,6 +27,11 @@ export function ConnectionPage({ connection, onRefresh }: { connection: ChzzkCon
   const eventTime = connection.lastEventAt
     ? new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(connection.lastEventAt))
     : '아직 수신된 후원이 없습니다.';
+  const disconnect = async () => {
+    setDisconnecting(true);
+    setDisconnectError(false);
+    try { await onDisconnect(); setDisconnectOpen(false); } catch { setDisconnectError(true); } finally { setDisconnecting(false); }
+  };
 
   return (
     <div className="admin-page connection-page">
@@ -35,8 +44,11 @@ export function ConnectionPage({ connection, onRefresh }: { connection: ChzzkCon
         <SettingRow title="최근 후원 수신" description="서버가 마지막으로 후원 이벤트를 처리한 시각입니다."><span>{eventTime}</span></SettingRow>
         <SettingRow title="연결 방식" description="방송 송출과 분리된 치지직 API 연결입니다."><span>스트림키 불필요</span></SettingRow>
         <SettingRow title="계정 재연결" description="인증 만료 또는 채널 변경이 필요할 때 사용합니다."><a className="button-link" href="/api/chzzk/oauth/start">네이버로 다시 연결</a></SettingRow>
+        {connection.channelId && <SettingRow title="계정 연결 해제" description="후원 수신을 중단하고 저장된 치지직 인증 정보를 삭제합니다." danger><button className="danger-solid-button" onClick={() => setDisconnectOpen(true)}>연결 해제</button></SettingRow>}
       </section>
       {refreshError && <InlineFeedback tone="error">연결 상태를 새로고침하지 못했습니다.</InlineFeedback>}
+      {disconnectError && <InlineFeedback tone="error">계정 연결을 해제하지 못했습니다.</InlineFeedback>}
+      <ConfirmDialog open={disconnectOpen} title="치지직 연결을 해제할까요?" description="후원 수신이 즉시 중단됩니다. 회차와 상품, 당첨 기록은 삭제되지 않습니다." confirmLabel="연결 해제" pending={disconnecting} onConfirm={disconnect} onCancel={() => setDisconnectOpen(false)} />
     </div>
   );
 }

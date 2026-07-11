@@ -145,7 +145,7 @@ export function App() {
       {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} kujiPending={savingKuji} onToggleKuji={toggleKuji} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
       {page === 'winners' && <WinnersPage winners={winners} />}
-      {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} />}
+      {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} onDisconnect={async () => { await api.disconnectChzzk(); const next = { status: 'not_configured', channelId: null, channelName: null, lastEventAt: connection.lastEventAt }; setConnection(next); setChzzkStatus(next.status); }} />}
       {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={refreshCreatedSession} />)}
       {page === 'overlay' && <OverlaySettingsPage nicknameMode={nicknameMode} onSetNicknameMode={async (mode) => { await api.setNicknameMode(mode); setNicknameMode(mode); }} />}
       {page === 'more' && <MorePage onLogout={logout} />}

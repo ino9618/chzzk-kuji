@@ -75,6 +75,7 @@ export const api = {
     jsonFetch('/api/admin/nickname-mode', { method: 'POST', body: JSON.stringify({ mode }) }),
   getChzzkStatus: () => jsonFetch<{ status: string }>('/api/admin/chzzk-status'),
   getChzzkConnection: () => jsonFetch<ChzzkConnection>('/api/admin/chzzk-connection'),
+  disconnectChzzk: () => jsonFetch<{ ok: true }>('/api/admin/chzzk-connection/disconnect', { method: 'POST' }),
   getKujiEnabled: () => jsonFetch<{ enabled: boolean }>('/api/admin/kuji-enabled'),
   setKujiEnabled: (enabled: boolean) =>
     jsonFetch('/api/admin/kuji-enabled', { method: 'POST', body: JSON.stringify({ enabled }) }),

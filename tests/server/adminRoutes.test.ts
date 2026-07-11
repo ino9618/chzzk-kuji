@@ -180,4 +180,16 @@ describe('chzzk connection summary', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: 'not_configured', channelId: 'owner-1', channelName: '테스트 채널', lastEventAt: null });
   });
+
+  it('removes stored tokens and owner information on disconnect', async () => {
+    const { getSetting, setSetting } = await import('../../src/server/db');
+    await setSetting(db, 'owner_channel_id', 'owner-1');
+    await setSetting(db, 'owner_channel_name', '테스트 채널');
+    await setSetting(db, 'chzzk_access_token', 'encrypted-access');
+    await setSetting(db, 'chzzk_refresh_token', 'encrypted-refresh');
+    const res = await agent.post('/api/admin/chzzk-connection/disconnect');
+    expect(res.status).toBe(200);
+    expect(await getSetting(db, 'owner_channel_id')).toBeUndefined();
+    expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
+  });
 });
