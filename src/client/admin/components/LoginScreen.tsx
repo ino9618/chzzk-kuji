@@ -16,7 +16,7 @@ export function LoginScreen({ oauthAvailable, loginError }: { oauthAvailable: bo
           ) : (
             <p className="login-error">서버의 치지직 연동 설정을 확인해 주세요.</p>
           )}
-          {oauthAvailable && <p className="login-access-note">모든 네이버 계정으로 로그인할 수 있습니다.</p>}
+          {oauthAvailable && <p className="login-access-note">후원을 받는 스트리머의 네이버 계정으로 로그인하세요.</p>}
           {loginError && <p className="login-error">{loginError}</p>}
         </section>
       </div>

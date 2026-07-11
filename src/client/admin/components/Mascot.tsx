@@ -15,11 +15,11 @@ const sources: Record<MascotState, string> = {
 };
 
 const labels: Record<MascotState, string> = {
-  default: '손을 흔드는 캡슐 뽑기통 마스코트',
-  face: '캡슐 뽑기통 마스코트 얼굴',
-  success: '기뻐하는 캡슐 뽑기통 마스코트',
-  waiting: '기다리는 캡슐 뽑기통 마스코트',
-  warning: '걱정하는 캡슐 뽑기통 마스코트',
+  default: '인사하는 추첨 티켓 안내원',
+  face: '추첨 티켓 안내원 얼굴',
+  success: '당첨 티켓을 든 안내원',
+  waiting: '기록을 확인하는 추첨 안내원',
+  warning: '주의 카드를 든 추첨 안내원',
 };
 
 export function Mascot({ state = 'default', className = '' }: { state?: MascotState; className?: string }) {
