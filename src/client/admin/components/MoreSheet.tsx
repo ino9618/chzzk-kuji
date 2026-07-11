@@ -4,6 +4,7 @@ import { BookIcon, CloseIcon, LogoutIcon, MonitorIcon, SettingsIcon, SlidersIcon
 
 export function MoreSheet({ open, onClose, onNavigate, onLogout }: { open: boolean; onClose: () => void; onNavigate: (page: AdminPage) => void; onLogout: () => void }) {
   const firstActionRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -12,6 +13,14 @@ export function MoreSheet({ open, onClose, onNavigate, onLogout }: { open: boole
     firstActionRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
+      if (event.key === 'Tab') {
+        const focusable = Array.from(sheetRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])') ?? []);
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
     };
     document.addEventListener('keydown', onKeyDown);
     return () => {
@@ -23,7 +32,7 @@ export function MoreSheet({ open, onClose, onNavigate, onLogout }: { open: boole
   if (!open) return null;
   return (
     <div className="sheet-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="more-sheet" role="dialog" aria-modal="true" aria-label="더보기 메뉴">
+      <section ref={sheetRef} className="more-sheet" role="dialog" aria-modal="true" aria-label="더보기 메뉴">
         <div className="sheet-handle" />
         <button className="sheet-close" aria-label="더보기 닫기" onClick={onClose}><CloseIcon /></button>
         <button ref={firstActionRef} onClick={() => onNavigate('session-setup')}><SettingsIcon />회차 설정</button>

@@ -9,7 +9,8 @@ interface OperationsPageProps {
   queue: QueueEntry[];
   chzzkStatus: string;
   kujiEnabled: boolean;
-  onToggleKuji: (enabled: boolean) => void;
+  kujiPending?: boolean;
+  onToggleKuji: (enabled: boolean) => Promise<void> | void;
   onNavigateSetup: () => void;
   onNavigateBoard: () => void;
   onResolveQueue: (id: number) => Promise<void>;
@@ -37,7 +38,7 @@ export function OperationsPage(props: OperationsPageProps) {
           <span className={`row-status ${props.chzzkStatus}`}><span className="dot" />{props.chzzkStatus === 'connected' ? '연결됨' : '확인 필요'}</span>
         </SettingRow>
         <SettingRow title="이치방쿠지 상태" description="후원 메시지의 번호를 자동으로 배정합니다.">
-          <label className="switch compact"><input type="checkbox" checked={props.kujiEnabled} onChange={(event) => props.onToggleKuji(event.target.checked)} /><span className="switch-track"><span className="switch-thumb" /></span><span>{props.kujiEnabled ? '사용 중' : '일시정지'}</span></label>
+          <label className="switch compact"><input type="checkbox" checked={props.kujiEnabled} disabled={props.kujiPending} onChange={(event) => props.onToggleKuji(event.target.checked)} /><span className="switch-track"><span className="switch-thumb" /></span><span>{props.kujiPending ? '저장 중' : props.kujiEnabled ? '사용 중' : '일시정지'}</span></label>
         </SettingRow>
         <SettingRow title="현재 회차"><CurrentSessionSummary session={props.session} onNavigateSetup={props.onNavigateSetup} onNavigateBoard={props.onNavigateBoard} /></SettingRow>
       </section>

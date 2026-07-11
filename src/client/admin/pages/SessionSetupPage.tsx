@@ -5,7 +5,7 @@ import { PlusIcon, TrashIcon } from '../components/Icons';
 
 interface SessionSetupPageProps {
   onCreate: (payload: { name: string; ticketPrice: number; numberRangeMin: number; numberRangeMax: number; tickets: TicketDraft[] }) => Promise<void>;
-  onCreated: () => void;
+  onCreated: () => Promise<void>;
 }
 
 function shuffle<T>(items: T[]): T[] {
@@ -34,9 +34,9 @@ export function SessionSetupPage({ onCreate, onCreated }: SessionSetupPageProps)
 
   const generatedTickets = useMemo(() => buildTickets(groups), [groups]);
   const manualTickets = manualText.trim()
-    ? manualText.split('\n').map((line, index) => {
+    ? manualText.split('\n').filter((line) => line.trim()).map((line) => {
         const [number, prizeName, prizeGrade] = line.split(',').map((value) => value.trim());
-        return { number: Number(number) || index + 1, prizeName: prizeName || '상품', prizeGrade: prizeGrade || undefined };
+        return { number: Number(number), prizeName, prizeGrade: prizeGrade || undefined };
       })
     : null;
   const tickets = manualTickets ?? generatedTickets;
@@ -46,19 +46,22 @@ export function SessionSetupPage({ onCreate, onCreated }: SessionSetupPageProps)
   };
 
   const submit = async () => {
-    const nextErrors = validateSessionDraft({ name, ticketPrice, groups });
+    const nextErrors = validateSessionDraft({ name, ticketPrice, groups: manualTickets ? [{ grade: '', prizeName: manualTickets[0]?.prizeName || '', count: manualTickets.length }] : groups });
+    if (manualTickets && (manualTickets.some((ticket) => !Number.isInteger(ticket.number) || ticket.number < 1 || !ticket.prizeName) || new Set(manualTickets.map((ticket) => ticket.number)).size !== manualTickets.length)) {
+      nextErrors.groups = '직접 편집에는 1 이상의 중복되지 않는 번호와 상품명이 필요합니다.';
+    }
     setErrors(nextErrors);
     if (nextErrors.name) nameRef.current?.focus();
     else if (nextErrors.ticketPrice) priceRef.current?.focus();
     else if (nextErrors.groups) groupRef.current?.focus();
     if (Object.keys(nextErrors).length > 0) return;
 
-    const randomized = shuffle(tickets).map((ticket, index) => ({ ...ticket, number: index + 1 }));
+    const finalized = manualTickets ?? shuffle(generatedTickets).map((ticket, index) => ({ ...ticket, number: index + 1 }));
     setPending(true);
     setSubmitError('');
     try {
-      await onCreate({ name: name.trim(), ticketPrice, numberRangeMin: 1, numberRangeMax: randomized.length, tickets: randomized });
-      onCreated();
+      await onCreate({ name: name.trim(), ticketPrice, numberRangeMin: Math.min(...finalized.map((ticket) => ticket.number)), numberRangeMax: Math.max(...finalized.map((ticket) => ticket.number)), tickets: finalized });
+      await onCreated();
     } catch {
       setSubmitError('회차를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {

@@ -8,8 +8,12 @@ export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode }: { nickn
   const url = typeof window === 'undefined' ? '/overlay.html' : `${window.location.origin}/overlay.html`;
 
   const copy = async () => {
-    await navigator.clipboard.writeText(url);
-    setFeedback('오버레이 주소를 복사했습니다.');
+    try {
+      await navigator.clipboard.writeText(url);
+      setFeedback('오버레이 주소를 복사했습니다.');
+    } catch {
+      setFeedback('오버레이 주소를 복사하지 못했습니다.');
+    }
   };
   const setMode = async (mode: 'masked' | 'full') => {
     setPending(true);

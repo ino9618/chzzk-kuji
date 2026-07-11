@@ -30,6 +30,8 @@ export function App() {
   const [loadError, setLoadError] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [closingSession, setClosingSession] = useState(false);
+  const [mutationError, setMutationError] = useState('');
+  const [savingKuji, setSavingKuji] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/whoami', { credentials: 'include' }).then((response) => {
@@ -95,23 +97,48 @@ export function App() {
   };
   const closeSession = async () => {
     setClosingSession(true);
+    setMutationError('');
     try {
       await api.closeSession();
-      setSession(await api.getSession());
+      setSession({ active: false });
       setCloseDialogOpen(false);
+      try { setSession(await api.getSession()); } catch { setLoadError(true); }
+    } catch {
+      setMutationError('회차를 종료하지 못했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setClosingSession(false);
     }
+  };
+  const toggleKuji = async (enabled: boolean) => {
+    setSavingKuji(true);
+    setMutationError('');
+    try {
+      await api.setKujiEnabled(enabled);
+      setKujiEnabled(enabled);
+    } catch {
+      setMutationError('이치방쿠지 상태를 저장하지 못했습니다.');
+    } finally {
+      setSavingKuji(false);
+    }
+  };
+  const refreshCreatedSession = async () => {
+    try {
+      setSession(await api.getSession());
+    } catch {
+      setLoadError(true);
+    }
+    setPage('board');
   };
 
   return (
     <AppShell page={page} onNavigate={setPage} status={chzzkStatus} onLogout={logout}>
       {loadError && <div className="load-error"><InlineFeedback tone="error">일부 정보를 불러오지 못했습니다.</InlineFeedback><button onClick={loadData}>다시 시도</button></div>}
+      {mutationError && <InlineFeedback tone="error">{mutationError}</InlineFeedback>}
       {chzzkStatus === 'needs_reauth' && <div className="reauth-banner">치지직 인증이 만료되어 후원 수신이 중단되었습니다. <a href="/api/chzzk/oauth/login">네이버로 다시 로그인</a>하면 즉시 복구됩니다.</div>}
-      {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} onToggleKuji={(enabled) => { setKujiEnabled(enabled); api.setKujiEnabled(enabled); }} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
+      {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} kujiPending={savingKuji} onToggleKuji={toggleKuji} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
       {page === 'winners' && <WinnersPage winners={winners} />}
-      {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={() => api.getSession().then((next) => { setSession(next); setPage('board'); })} />)}
+      {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={refreshCreatedSession} />)}
       {page === 'overlay' && <OverlaySettingsPage nicknameMode={nicknameMode} onSetNicknameMode={async (mode) => { await api.setNicknameMode(mode); setNicknameMode(mode); }} />}
       {page === 'more' && <MorePage onLogout={logout} />}
       <ConfirmDialog open={closeDialogOpen} title="회차를 종료할까요?" description={`${session.name || '현재 회차'}를 종료하면 되돌릴 수 없습니다.`} confirmLabel="회차 종료" pending={closingSession} onConfirm={closeSession} onCancel={() => setCloseDialogOpen(false)} />
