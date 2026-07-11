@@ -7,6 +7,7 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 import { LoginScreen } from './components/LoginScreen';
 import { OperationsPage } from './pages/OperationsPage';
 import { TicketBoardPage } from './pages/TicketBoardPage';
+import { SessionSetupPage } from './pages/SessionSetupPage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -129,9 +130,7 @@ export function App() {
           </>
         )}
 
-        {page === 'session-setup' && (
-          <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><section className="panel">{session.active ? <p className="empty-hint">현재 회차가 진행 중입니다. 간편 운영에서 회차를 종료한 뒤 새 회차를 만들 수 있습니다.</p> : <NewSessionForm onCreated={() => api.getSession().then((next) => { setSession(next); setPage('board'); })} />}</section></div>
-        )}
+        {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={() => api.getSession().then((next) => { setSession(next); setPage('board'); })} />)}
 
         {page === 'overlay' && (
           <>

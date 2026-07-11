@@ -165,28 +165,28 @@ Expected: all operations tests pass.
 - Produces: `buildTickets(groups): TicketDraft[]`
 - Consumes: existing `api.createSession` and `api.closeSession`.
 
-- [ ] **Step 1: Write failing form tests**
+- [x] **Step 1: Write failing form tests**
 
 ```ts
 expect(validateSessionDraft(emptyDraft).name).toBe('회차 이름을 입력해 주세요.');
 expect(buildTickets([{ grade: 'A', prizeName: '상품', count: 2 }])).toHaveLength(2);
 ```
 
-- [ ] **Step 2: Confirm the form tests fail**
+- [x] **Step 2: Confirm the form tests fail**
 
 Run: `npm test -- --run tests/client/sessionForm.test.ts`
 
 Expected: FAIL because form helpers do not exist.
 
-- [ ] **Step 3: Implement form helpers and setup page**
+- [x] **Step 3: Implement form helpers and setup page**
 
 Render sections for basic info, prize groups, and number review. Keep direct ticket editing in a native disclosure element. On invalid submit, render inline errors and focus the first invalid field. On success, create the session then navigate to `board`.
 
-- [ ] **Step 4: Add close-session confirmation**
+- [x] **Step 4: Add close-session confirmation**
 
 Open `ConfirmDialog` from the operations finish section. Confirm calls `api.closeSession`; cancel performs no request. Pending state disables both actions.
 
-- [ ] **Step 5: Run form and operations tests**
+- [x] **Step 5: Run form and operations tests**
 
 Run: `npm test -- --run tests/client/sessionForm.test.ts tests/client/operationsPage.test.tsx`
 
