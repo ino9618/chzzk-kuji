@@ -27,6 +27,7 @@ const operationsItems = [
 ];
 
 const settingsItems = [
+  { page: 'connection' as const, label: '치지직 연결', icon: SlidersIcon },
   { page: 'session-setup' as const, label: '회차 설정', icon: SettingsIcon },
   { page: 'overlay' as const, label: '오버레이', icon: MonitorIcon },
   { page: 'more' as const, label: '기타 설정', icon: SlidersIcon },

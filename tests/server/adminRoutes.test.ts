@@ -170,3 +170,14 @@ describe('kuji-enabled setting', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('chzzk connection summary', () => {
+  it('returns the linked owner and current connection state', async () => {
+    const { setSetting } = await import('../../src/server/db');
+    await setSetting(db, 'owner_channel_id', 'owner-1');
+    await setSetting(db, 'owner_channel_name', '테스트 채널');
+    const res = await agent.get('/api/admin/chzzk-connection');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: 'not_configured', channelId: 'owner-1', channelName: '테스트 채널', lastEventAt: null });
+  });
+});

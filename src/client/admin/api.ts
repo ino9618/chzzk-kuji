@@ -39,6 +39,13 @@ export interface Winner {
   soldAt: string;
 }
 
+export interface ChzzkConnection {
+  status: string;
+  channelId: string | null;
+  channelName: string | null;
+  lastEventAt: string | null;
+}
+
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
   if (res.status === 401) {
@@ -67,6 +74,7 @@ export const api = {
   setNicknameMode: (mode: 'masked' | 'full') =>
     jsonFetch('/api/admin/nickname-mode', { method: 'POST', body: JSON.stringify({ mode }) }),
   getChzzkStatus: () => jsonFetch<{ status: string }>('/api/admin/chzzk-status'),
+  getChzzkConnection: () => jsonFetch<ChzzkConnection>('/api/admin/chzzk-connection'),
   getKujiEnabled: () => jsonFetch<{ enabled: boolean }>('/api/admin/kuji-enabled'),
   setKujiEnabled: (enabled: boolean) =>
     jsonFetch('/api/admin/kuji-enabled', { method: 'POST', body: JSON.stringify({ enabled }) }),

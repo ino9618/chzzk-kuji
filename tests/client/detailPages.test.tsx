@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { WinnersPage } from '../../src/client/admin/pages/WinnersPage';
 import { OverlaySettingsPage } from '../../src/client/admin/pages/OverlaySettingsPage';
 import { MorePage } from '../../src/client/admin/pages/MorePage';
+import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -15,6 +16,13 @@ describe('WinnersPage', () => {
 });
 
 describe('detail settings pages', () => {
+  it('renders the linked CHZZK channel and connection guidance', () => {
+    const html = renderToStaticMarkup(<ConnectionPage connection={{ status: 'connected', channelId: 'channel-1', channelName: '테스트 채널', lastEventAt: null }} onRefresh={vi.fn(async () => undefined)} />);
+    expect(html).toContain('테스트 채널');
+    expect(html).toContain('스트림키 불필요');
+    expect(html).toContain('정상 연결');
+  });
+
   it('renders overlay controls', () => {
     const html = renderToStaticMarkup(<OverlaySettingsPage nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} />);
     expect(html).toContain('OBS 브라우저 소스');

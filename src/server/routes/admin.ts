@@ -91,6 +91,20 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
     res.json({ status: deps.getChzzkStatus() });
   });
 
+  router.get('/chzzk-connection', async (_req, res) => {
+    const [channelId, channelName, recentEvents] = await Promise.all([
+      getSetting(db, 'owner_channel_id'),
+      getSetting(db, 'owner_channel_name'),
+      listDonationLog(db, 1),
+    ]);
+    res.json({
+      status: deps.getChzzkStatus(),
+      channelId: channelId ?? null,
+      channelName: channelName ?? null,
+      lastEventAt: recentEvents[0]?.createdAt ?? null,
+    });
+  });
+
   router.get('/kuji-enabled', async (_req, res) => {
     res.json({ enabled: (await getSetting(db, 'kuji_enabled')) !== 'false' });
   });
