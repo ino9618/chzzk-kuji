@@ -2,7 +2,7 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import type { Request, Response } from 'express';
 import { getAuthorizeUrl, exchangeCodeForToken, fetchUserMe, saveTokens } from '../chzzkAuth';
-import { requireAdmin, issueAdminSession } from '../middleware/adminAuth';
+import { requireAdmin, requireOwner, issueAdminSession } from '../middleware/adminAuth';
 import { getSetting, setSetting, type Db } from '../db';
 
 export interface ChzzkOauthRouterOptions {
@@ -25,8 +25,8 @@ export interface ChzzkOauthRouterOptions {
  * - 'connect': admin-authenticated flow that re-links the streamer's account
  *   (stores tokens + records the channel as the board's owner)
  * - 'login': unauthenticated "네이버 계정으로 로그인". The very first channel
- *   to log in claims ownership of the board; afterwards only that channel is
- *   ever granted an admin session.
+ *   to log in claims ownership of the board; every verified account receives
+ *   an admin session, while only the owner can replace donation-socket tokens.
  */
 const pendingStates = new Map<string, 'connect' | 'login'>();
 
@@ -39,7 +39,7 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
     res.redirect(getAuthorizeUrl(options.clientId, options.redirectUri, state));
   };
 
-  router.get('/start', requireAdmin, startAuth('connect'));
+  router.get('/start', requireAdmin, requireOwner, startAuth('connect'));
   router.get('/login', startAuth('login'));
 
   router.get('/callback', async (req, res) => {
@@ -82,10 +82,8 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
       }
 
       // Login flow. The first channel ever to log in claims the board as
-      // owner. After that, the owner plus any channels on the allowlist may
-      // sign in; the owner can also arm a one-shot invite so the next new
-      // channel to log in is added. Everyone else is denied a cookie, and
-      // only the OWNER's tokens ever touch the donation socket.
+      // owner. Every verified CHZZK account may sign in, but only the owner's
+      // tokens ever touch the donation socket.
       const me = await fetchUserMe({
         accessToken: tokens.accessToken,
         clientId: options.clientId,
@@ -97,21 +95,6 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
       if (!owner) {
         await setSetting(db, 'owner_channel_id', me.channelId);
         await setSetting(db, 'owner_channel_name', me.channelName);
-      } else if (me.channelId !== owner) {
-        const members: Array<{ channelId: string; channelName: string }> = JSON.parse(
-          (await getSetting(db, 'allowed_members')) ?? '[]'
-        );
-        const alreadyMember = members.some((m) => m.channelId === me.channelId);
-        if (!alreadyMember) {
-          const inviteArmed = (await getSetting(db, 'pending_member_invite')) === 'true';
-          if (!inviteArmed) {
-            res.redirect('/admin.html?login=denied');
-            return;
-          }
-          members.push({ channelId: me.channelId, channelName: me.channelName });
-          await setSetting(db, 'allowed_members', JSON.stringify(members));
-          await setSetting(db, 'pending_member_invite', 'false');
-        }
       }
 
       const isOwner = !owner || me.channelId === owner;
@@ -123,7 +106,11 @@ export function createChzzkOauthRouter(db: Db, options: ChzzkOauthRouterOptions)
         await saveTokens(db, tokens, options.encryptionKey);
         options.onTokensSaved?.(tokens);
       }
-      issueAdminSession(res);
+      issueAdminSession(res, {
+        role: isOwner ? 'owner' : 'member',
+        channelId: me.channelId,
+        channelName: me.channelName,
+      });
       res.redirect('/admin.html');
     } catch {
       if (purpose === 'login') {

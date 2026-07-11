@@ -101,39 +101,5 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
     res.json({ enabled });
   });
 
-  // Admin-account allowlist: the owner (first channel to log in) plus any
-  // members added via a one-shot invite. See the login callback for how a
-  // channel actually gets onto the list.
-  router.get('/members', async (_req, res) => {
-    const ownerChannelId = await getSetting(db, 'owner_channel_id');
-    const ownerChannelName = await getSetting(db, 'owner_channel_name');
-    const members = JSON.parse((await getSetting(db, 'allowed_members')) ?? '[]');
-    const pendingInvite = (await getSetting(db, 'pending_member_invite')) === 'true';
-    res.json({
-      owner: ownerChannelId ? { channelId: ownerChannelId, channelName: ownerChannelName ?? '' } : null,
-      members,
-      pendingInvite,
-    });
-  });
-
-  router.post('/members/invite', async (_req, res) => {
-    await setSetting(db, 'pending_member_invite', 'true');
-    res.json({ pendingInvite: true });
-  });
-
-  router.post('/members/invite/cancel', async (_req, res) => {
-    await setSetting(db, 'pending_member_invite', 'false');
-    res.json({ pendingInvite: false });
-  });
-
-  router.delete('/members/:channelId', async (req, res) => {
-    const members: Array<{ channelId: string; channelName: string }> = JSON.parse(
-      (await getSetting(db, 'allowed_members')) ?? '[]'
-    );
-    const next = members.filter((m) => m.channelId !== req.params.channelId);
-    await setSetting(db, 'allowed_members', JSON.stringify(next));
-    res.json({ members: next });
-  });
-
   return router;
 }

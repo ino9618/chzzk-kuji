@@ -1,10 +1,18 @@
 import crypto from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 
-const validTokens = new Set<string>();
+export interface AdminPrincipal {
+  role: 'owner' | 'member';
+  channelId?: string;
+  channelName?: string;
+}
 
-export function registerAdminToken(token: string): void {
-  validTokens.add(token);
+const validTokens = new Map<string, AdminPrincipal>();
+
+const emergencyOwner: AdminPrincipal = { role: 'owner' };
+
+export function registerAdminToken(token: string, principal: AdminPrincipal = emergencyOwner): void {
+  validTokens.set(token, principal);
 }
 
 /**
@@ -14,9 +22,9 @@ export function registerAdminToken(token: string): void {
  * production (Railway and similar hosts are HTTPS-only behind a proxy —
  * the server sets `trust proxy` so Express knows the connection is secure).
  */
-export function issueAdminSession(res: Response): void {
+export function issueAdminSession(res: Response, principal: AdminPrincipal = emergencyOwner): void {
   const token = crypto.randomBytes(32).toString('hex');
-  validTokens.add(token);
+  validTokens.set(token, principal);
   res.cookie('admin_token', token, {
     httpOnly: true,
     sameSite: 'lax',
@@ -37,6 +45,15 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   const token = req.cookies?.admin_token;
   if (!isValidAdminToken(token)) {
     res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+  res.locals.admin = validTokens.get(token)!;
+  next();
+}
+
+export function requireOwner(_req: Request, res: Response, next: NextFunction): void {
+  if ((res.locals.admin as AdminPrincipal | undefined)?.role !== 'owner') {
+    res.status(403).json({ error: 'owner_required' });
     return;
   }
   next();

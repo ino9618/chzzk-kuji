@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { api, type SessionState, type QueueEntry, type Winner, type MembersState } from './api';
+import { api, type SessionState, type QueueEntry, type Winner } from './api';
+import { BrandMark } from './components/BrandMark';
+import { BookIcon, DashboardIcon, LogoutIcon, SettingsIcon, TicketIcon, TrophyIcon } from './components/Icons';
+import { LoginScreen } from './components/LoginScreen';
+import { Mascot } from './components/Mascot';
 import './admin.css';
 
-const BRAND = '호갱 API';
 const socket = io({ autoConnect: false });
 
 type MenuKey = 'dashboard' | 'kuji' | 'winners' | 'settings';
 
-const MENU_ITEMS: Array<{ key: MenuKey; label: string; icon: string }> = [
-  { key: 'dashboard', label: '대시보드', icon: '📊' },
-  { key: 'kuji', label: '이치방쿠지', icon: '🎫' },
-  { key: 'winners', label: '당첨자', icon: '🏆' },
-  { key: 'settings', label: '설정', icon: '⚙️' },
+const MENU_ITEMS = [
+  { key: 'dashboard' as const, label: '대시보드', icon: DashboardIcon },
+  { key: 'kuji' as const, label: '이치방쿠지', icon: TicketIcon },
+  { key: 'winners' as const, label: '당첨자', icon: TrophyIcon },
+  { key: 'settings' as const, label: '설정', icon: SettingsIcon },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -70,9 +73,7 @@ export function App() {
     });
     const params = new URLSearchParams(window.location.search);
     const login = params.get('login');
-    if (login === 'denied')
-      setLoginError('등록된 관리자 계정이 아닙니다. 소유자가 설정 > 관리자 계정에서 초대해야 로그인할 수 있습니다.');
-    else if (login === 'error') setLoginError('네이버 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    if (login === 'error') setLoginError('네이버 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
     if (params.size > 0) window.history.replaceState(null, '', '/admin.html');
   }, []);
 
@@ -101,47 +102,26 @@ export function App() {
   }, [loggedIn]);
 
   if (!loggedIn) {
-    return (
-      <div className="login-screen">
-        <div className="login-card">
-          <div className="login-logo">🎫</div>
-          <h1>{BRAND}</h1>
-          <p className="login-subtitle">치지직 후원 연동 뽑기 보드</p>
-          {oauthAvailable ? (
-            <a className="naver-login-button" href="/api/chzzk/oauth/login">
-              <span className="naver-logo">N</span> 네이버 계정으로 로그인
-            </a>
-          ) : (
-            <p className="login-error">
-              서버에 치지직 연동 설정(CHZZK_CLIENT_ID/SECRET, TOKEN_ENCRYPTION_KEY)이 없어 로그인할 수 없습니다.
-              환경변수를 확인해주세요.
-            </p>
-          )}
-          {loginError && <p className="login-error">{loginError}</p>}
-        </div>
-      </div>
-    );
+    return <LoginScreen oauthAvailable={oauthAvailable} loginError={loginError} />;
   }
 
   return (
     <div className="app-layout">
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <span className="sidebar-logo-icon">🎫</span>
-          <span className="sidebar-logo-text">{BRAND}</span>
+          <BrandMark />
         </div>
         <nav className="sidebar-nav">
-          {MENU_ITEMS.map((item) => (
-            <button
-              key={item.key}
-              className={`sidebar-item ${menu === item.key ? 'active' : ''}`}
-              onClick={() => setMenu(item.key)}
-            >
-              <span className="sidebar-item-icon">{item.icon}</span>
-              {item.label}
-              {item.key === 'dashboard' && queue.length > 0 && <span className="sidebar-badge">{queue.length}</span>}
-            </button>
-          ))}
+          {MENU_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button key={item.key} className={`sidebar-item ${menu === item.key ? 'active' : ''}`} onClick={() => setMenu(item.key)}>
+                <span className="sidebar-item-icon"><Icon /></span>
+                {item.label}
+                {item.key === 'dashboard' && queue.length > 0 && <span className="sidebar-badge">{queue.length}</span>}
+              </button>
+            );
+          })}
         </nav>
         <div className="sidebar-footer">
           <div className={`connection-status ${chzzkStatus}`}>
@@ -149,7 +129,7 @@ export function App() {
             {STATUS_LABELS[chzzkStatus] ?? chzzkStatus}
           </div>
           <a className="manual-link" href="/manual.html" target="_blank" rel="noreferrer">
-            📖 사용법
+            <BookIcon /> 사용법
           </a>
           <button
             className="logout-button"
@@ -158,7 +138,7 @@ export function App() {
               window.location.href = '/admin.html';
             }}
           >
-            로그아웃
+            <LogoutIcon /> 로그아웃
           </button>
         </div>
       </aside>
@@ -219,7 +199,10 @@ export function App() {
             <section className="panel">
               <h2>처리 필요 큐</h2>
               {queue.length === 0 ? (
-                <p className="empty-hint">처리할 항목이 없습니다.</p>
+                <div className="queue-empty">
+                  <Mascot state="waiting" className="queue-empty-mascot" />
+                  <p>처리할 항목이 없습니다.</p>
+                </div>
               ) : (
                 <ul className="queue-list">
                   {queue.map((q) => (
@@ -331,62 +314,9 @@ export function App() {
               <OverlayUrlCopy />
             </section>
 
-            <section className="panel">
-              <h2>관리자 계정</h2>
-              <MemberManager />
-            </section>
           </>
         )}
       </main>
-    </div>
-  );
-}
-
-function MemberManager() {
-  const [state, setState] = useState<MembersState | null>(null);
-
-  const refresh = () => api.getMembers().then(setState);
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  if (!state) return <p className="empty-hint">불러오는 중…</p>;
-
-  return (
-    <div className="member-manager">
-      <ul className="member-list">
-        {state.owner && (
-          <li className="member-item">
-            <span className="member-name">{state.owner.channelName || state.owner.channelId}</span>
-            <span className="member-badge owner">소유자</span>
-          </li>
-        )}
-        {state.members.map((m) => (
-          <li key={m.channelId} className="member-item">
-            <span className="member-name">{m.channelName || m.channelId}</span>
-            <button
-              className="member-remove"
-              onClick={() => api.removeMember(m.channelId).then(refresh)}
-            >
-              제거
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {state.pendingInvite ? (
-        <div className="invite-armed">
-          <p className="empty-hint">
-            초대 대기 중 — 다음에 네이버로 로그인하는 계정이 관리자로 추가됩니다. 해당 계정으로 이 주소에서
-            로그인하도록 안내하세요.
-          </p>
-          <button className="danger-button" onClick={() => api.cancelInvite().then(refresh)}>
-            초대 취소
-          </button>
-        </div>
-      ) : (
-        <button onClick={() => api.inviteMember().then(refresh)}>+ 계정 추가</button>
-      )}
     </div>
   );
 }

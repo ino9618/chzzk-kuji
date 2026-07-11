@@ -2,15 +2,18 @@
    brand accent, Pretendard type. Layout is a service-style shell with a
    left sidebar (대시보드/이치방쿠지/당첨자/설정) and a content pane. */
 :root {
-  --bg: #141517;
-  --bg-deep: #0e0f10;
-  --panel: #1f2023;
-  --panel-border: #2e3033;
-  --text: #eaecee;
-  --text-dim: #9da1a8;
+  --bg: #111315;
+  --bg-deep: #0b0d0e;
+  --panel: #191c1f;
+  --panel-border: #30353a;
+  --border-strong: #454b51;
+  --text: #f1f4f2;
+  --text-dim: #a4aaa7;
   --accent: #00ffa3;
   --accent-dim: rgba(0, 255, 163, 0.12);
   --accent-text: #0b0c0d;
+  --capsule-yellow: #ffd438;
+  --capsule-coral: #ff7a70;
   --success: #00ffa3;
   --success-bg: rgba(0, 255, 163, 0.09);
   --danger: #ff5454;
@@ -51,7 +54,7 @@ body {
   max-width: 360px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 40px 32px;
   text-align: center;
 }
@@ -81,7 +84,7 @@ body {
   gap: 8px;
   width: 100%;
   padding: 12px 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #03c75a;
   color: #fff;
   font-weight: 700;
@@ -112,6 +115,14 @@ body {
   font-size: 0.85rem;
   margin-top: 16px;
   line-height: 1.5;
+}
+
+.login-access-note {
+  margin: 14px 0 0;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .form-success {
@@ -167,7 +178,7 @@ body {
   width: 100%;
   padding: 11px 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-dim);
   font-size: 0.92rem;
@@ -237,74 +248,6 @@ body {
   filter: none;
 }
 
-/* Member management (settings) */
-.member-manager {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.member-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.member-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-deep);
-  border: 0.5px solid var(--panel-border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.9rem;
-}
-
-.member-name {
-  font-weight: 500;
-}
-
-.member-badge.owner {
-  background: var(--accent-dim);
-  color: var(--accent);
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 2px 10px;
-  border-radius: 999px;
-}
-
-.member-remove {
-  margin-left: auto;
-  background: transparent;
-  color: var(--danger);
-  border: 0.5px solid var(--danger);
-  padding: 5px 12px;
-  font-size: 0.8rem;
-}
-
-.member-remove:hover {
-  filter: none;
-  background: var(--danger-bg);
-}
-
-.invite-armed {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 0.5px solid var(--border-accent, var(--accent));
-  border-radius: 10px;
-  background: var(--accent-dim);
-}
-
-.invite-armed .empty-hint {
-  color: var(--text);
-}
-
 .content {
   flex: 1;
   padding: 32px 36px 48px;
@@ -314,8 +257,157 @@ body {
 .page-title {
   font-size: 1.45rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   margin: 0 0 20px;
+}
+
+/* ---------- Mascot redesign ---------- */
+.mascot {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.login-screen {
+  background: var(--bg-deep);
+  padding: 32px;
+}
+
+.login-composition {
+  width: min(880px, 100%);
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: minmax(280px, 1.15fr) minmax(320px, 0.85fr);
+  align-items: center;
+  gap: 64px;
+}
+
+.login-mascot {
+  width: min(430px, 100%);
+  justify-self: end;
+  filter: drop-shadow(0 22px 36px rgba(0, 0, 0, 0.32));
+  animation: mascot-arrive 500ms ease-out both;
+}
+
+.login-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 36px 32px;
+}
+
+.login-panel h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.brand-mark {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.brand-mascot {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+}
+
+.sidebar-logo {
+  padding: 0 10px 22px;
+  letter-spacing: 0;
+}
+
+.sidebar-item-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.manual-link,
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.manual-link svg,
+.logout-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.content {
+  width: 100%;
+  max-width: 1120px;
+  padding: 36px 40px 56px;
+}
+
+.stat-card,
+.panel,
+.reauth-banner,
+.queue-item,
+.winner-item,
+.ticket-cell,
+.grade-builder,
+.ticket-table {
+  border-radius: 8px;
+}
+
+.stat-card {
+  min-height: 104px;
+  padding: 18px;
+}
+
+.panel {
+  padding: 22px 24px;
+}
+
+.queue-empty {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  color: var(--text-dim);
+}
+
+.queue-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.queue-empty-mascot {
+  width: 118px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--capsule-yellow);
+  outline-offset: 3px;
+}
+
+@keyframes mascot-arrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ---------- Dashboard stat cards ---------- */
@@ -329,7 +421,7 @@ body {
 .stat-card {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 16px 18px;
 }
 
@@ -390,7 +482,7 @@ body {
   background: var(--danger);
   color: #fff;
   padding: 13px 18px;
-  border-radius: 12px;
+  border-radius: 8px;
   margin-bottom: 20px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -406,7 +498,7 @@ body {
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 22px 24px;
   margin-bottom: 16px;
 }
@@ -531,7 +623,7 @@ button.danger-button {
 
 .grade-builder {
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -602,7 +694,7 @@ button.danger-button {
 
 .ticket-table {
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -712,7 +804,7 @@ button.danger-button {
 }
 
 .ticket-cell {
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 6px;
   text-align: center;
   font-size: 0.85rem;
@@ -765,7 +857,7 @@ button.danger-button {
   gap: 12px;
   background: var(--danger-bg);
   border: 1px solid var(--danger);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 14px;
   font-size: 0.88rem;
 }
@@ -789,7 +881,7 @@ button.danger-button {
   gap: 10px;
   background: var(--success-bg);
   border: 1px solid rgba(0, 255, 163, 0.45);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 14px;
   font-size: 0.88rem;
   flex-wrap: wrap;
@@ -840,54 +932,121 @@ button.danger-button {
   white-space: nowrap;
 }
 
-/* ---------- Narrow screens: sidebar becomes a top bar ---------- */
+/* ---------- Narrow screens: sidebar becomes bottom navigation ---------- */
 @media (max-width: 720px) {
   .app-layout {
-    flex-direction: column;
+    display: block;
   }
 
   .sidebar {
     width: 100%;
-    height: auto;
-    position: static;
+    height: 68px;
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
     flex-direction: row;
-    align-items: center;
-    padding: 10px 12px;
+    align-items: stretch;
+    padding: 7px 8px max(7px, env(safe-area-inset-bottom));
     border-right: none;
-    border-bottom: 1px solid var(--panel-border);
-    gap: 8px;
+    border-top: 1px solid var(--panel-border);
+    gap: 4px;
   }
 
   .sidebar-logo {
-    padding: 0 8px 0 0;
-  }
-
-  .sidebar-logo-text {
     display: none;
   }
 
   .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     flex-direction: row;
-    overflow-x: auto;
+    flex: 1;
+    gap: 2px;
   }
 
   .sidebar-item {
-    white-space: nowrap;
-    padding: 8px 10px;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 2px;
+    font-size: 0.68rem;
+    white-space: normal;
+    text-align: center;
   }
 
   .sidebar-footer {
     border-top: none;
-    padding: 0 0 0 8px;
-    flex-direction: row;
-    align-items: center;
+    padding: 0;
+    width: 44px;
+    justify-content: center;
   }
 
-  .sidebar-footer .manual-link {
+  .sidebar-footer .manual-link,
+  .sidebar-footer .connection-status {
     display: none;
   }
 
+  .logout-button {
+    width: 40px;
+    height: 100%;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+    border: 0;
+  }
+
   .content {
-    padding: 20px 16px 40px;
+    padding: 24px 16px 96px;
+  }
+
+  .login-screen {
+    padding: 20px;
+  }
+
+  .login-composition {
+    min-height: 100%;
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 12px;
+  }
+
+  .login-mascot {
+    width: min(230px, 66vw);
+    justify-self: center;
+  }
+
+  .login-panel {
+    width: 100%;
+    max-width: 390px;
+    justify-self: center;
+    padding: 28px 22px;
+  }
+
+  .stat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    min-height: 88px;
+  }
+
+  .new-session-form .field-row,
+  .overlay-url-row,
+  .radio-row {
+    flex-direction: column;
+  }
+
+  .grade-builder-header,
+  .grade-builder-row {
+    grid-template-columns: 52px minmax(0, 1fr) 64px 28px;
+  }
+
+  .winner-time {
+    width: 100%;
+    margin-left: 0 !important;
   }
 }

@@ -65,7 +65,7 @@ function buildApp(fetchImpl: typeof fetch, onTokensSaved?: (tokens: unknown) => 
   );
   // Probe route for asserting that a login flow issued a working admin cookie.
   app.get('/probe', requireAdmin, (_req, res) => {
-    res.json({ ok: true });
+    res.json({ ok: true, admin: res.locals.admin });
   });
   return app;
 }
@@ -92,6 +92,16 @@ describe('GET /api/chzzk/oauth/start', () => {
     const app = buildApp(vi.fn() as unknown as typeof fetch);
     const res = await request(app).get('/api/chzzk/oauth/start');
     expect(res.status).toBe(401);
+  });
+
+  it('rejects a member session so only the owner can replace the linked channel', async () => {
+    const app = buildApp(vi.fn() as unknown as typeof fetch);
+    const token = 'member-token';
+    registerAdminToken(token, { role: 'member', channelId: 'mod-1', channelName: '매니저' });
+
+    const res = await request(app).get('/api/chzzk/oauth/start').set('Cookie', `admin_token=${token}`);
+
+    expect(res.status).toBe(403);
   });
 });
 
@@ -155,12 +165,13 @@ describe('Naver (CHZZK) login flow', () => {
 
     const probeRes = await request(app).get('/probe').set('Cookie', cookies);
     expect(probeRes.status).toBe(200);
+    expect(probeRes.body.admin).toEqual({ role: 'owner', channelId: 'owner-1', channelName: '미노' });
 
     // A successful owner login also refreshes the stored tokens.
     expect(decryptToken((await getSetting(db, 'chzzk_access_token'))!, key)).toBe('access-1');
   });
 
-  it('denies login (no cookie) when the channel does not match the owner', async () => {
+  it('issues an admin session to a different channel without replacing owner tokens', async () => {
     await setSetting(db, 'owner_channel_id', 'someone-else');
     const app = buildApp(routedFetch() as unknown as typeof fetch);
 
@@ -168,9 +179,11 @@ describe('Naver (CHZZK) login flow', () => {
     const callbackRes = await request(app).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state}`);
 
     expect(callbackRes.status).toBe(302);
-    expect(callbackRes.headers.location).toBe('/admin.html?login=denied');
-    expect(callbackRes.headers['set-cookie']).toBeUndefined();
-    // Tokens of a stranger must never overwrite the streamer's stored tokens.
+    expect(callbackRes.headers.location).toBe('/admin.html');
+    expect(callbackRes.headers['set-cookie']).toBeDefined();
+    const probeRes = await request(app).get('/probe').set('Cookie', callbackRes.headers['set-cookie']);
+    expect(probeRes.body.admin).toEqual({ role: 'member', channelId: 'owner-1', channelName: '미노' });
+    // Tokens of another administrator must never overwrite the streamer's stored tokens.
     expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
   });
 
@@ -194,11 +207,12 @@ describe('Naver (CHZZK) login flow', () => {
     // ...and the server is notified so it can hot-start the socket without a restart.
     expect(onTokensSaved).toHaveBeenCalledWith({ accessToken: 'access-1', refreshToken: 'refresh-1' });
 
-    // A different channel can no longer claim or log in afterwards.
+    // A different channel can log in, but cannot replace the claimed owner.
     const app2 = buildApp(routedFetch({ me: { channelId: 'intruder', channelName: '침입자' } }) as unknown as typeof fetch);
     const state2 = await startLoginFlow(app2);
-    const denied = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
-    expect(denied.headers.location).toBe('/admin.html?login=denied');
+    const otherLogin = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
+    expect(otherLogin.headers.location).toBe('/admin.html');
+    expect(await getSetting(db, 'owner_channel_id')).toBe('owner-1');
   });
 
   it('notifies onTokensSaved on the connect flow too', async () => {
@@ -227,10 +241,9 @@ describe('Naver (CHZZK) login flow', () => {
   });
 });
 
-describe('multi-account allowlist', () => {
-  it('lets a channel on the allowlist log in (without touching the owner tokens)', async () => {
+describe('open multi-account login', () => {
+  it('lets any channel log in without touching the owner tokens', async () => {
     await setSetting(db, 'owner_channel_id', 'owner-1');
-    await setSetting(db, 'allowed_members', JSON.stringify([{ channelId: 'mod-1', channelName: '매니저' }]));
     const onTokensSaved = vi.fn();
     const app = buildApp(routedFetch({ me: { channelId: 'mod-1', channelName: '매니저' } }) as unknown as typeof fetch, onTokensSaved);
 
@@ -240,15 +253,16 @@ describe('multi-account allowlist', () => {
     expect(res.status).toBe(302);
     expect(res.headers.location).toBe('/admin.html');
     expect(res.headers['set-cookie']).toBeDefined();
+    const probeRes = await request(app).get('/probe').set('Cookie', res.headers['set-cookie']);
+    expect(probeRes.body.admin).toEqual({ role: 'member', channelId: 'mod-1', channelName: '매니저' });
     // A member is NOT the streamer: their tokens must not overwrite the
     // owner's donation-socket tokens, and the socket is not restarted.
     expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
     expect(onTokensSaved).not.toHaveBeenCalled();
   });
 
-  it('adds the next new login to the allowlist when an invite is armed, then denies others', async () => {
+  it('allows consecutive new accounts without an invite', async () => {
     await setSetting(db, 'owner_channel_id', 'owner-1');
-    await setSetting(db, 'pending_member_invite', 'true');
     const app = buildApp(routedFetch({ me: { channelId: 'mod-2', channelName: '스탭' } }) as unknown as typeof fetch);
 
     const state = await startLoginFlow(app);
@@ -258,15 +272,11 @@ describe('multi-account allowlist', () => {
     expect(res.headers.location).toBe('/admin.html');
     expect(res.headers['set-cookie']).toBeDefined();
 
-    // The invite is one-shot: consumed and the member is now on the list.
-    expect(await getSetting(db, 'pending_member_invite')).toBe('false');
-    const members = JSON.parse((await getSetting(db, 'allowed_members'))!);
-    expect(members).toEqual([{ channelId: 'mod-2', channelName: '스탭' }]);
-
-    // A different new account is now denied (invite already consumed).
+    // A different new account is also admitted without an invite.
     const app2 = buildApp(routedFetch({ me: { channelId: 'stranger', channelName: '남' } }) as unknown as typeof fetch);
     const state2 = await startLoginFlow(app2);
-    const denied = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
-    expect(denied.headers.location).toBe('/admin.html?login=denied');
+    const nextLogin = await request(app2).get(`/api/chzzk/oauth/callback?code=auth-code&state=${state2}`);
+    expect(nextLogin.headers.location).toBe('/admin.html');
+    expect(nextLogin.headers['set-cookie']).toBeDefined();
   });
 });

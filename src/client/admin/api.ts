@@ -39,17 +39,6 @@ export interface Winner {
   soldAt: string;
 }
 
-export interface MemberChannel {
-  channelId: string;
-  channelName: string;
-}
-
-export interface MembersState {
-  owner: MemberChannel | null;
-  members: MemberChannel[];
-  pendingInvite: boolean;
-}
-
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
   if (!res.ok) throw new Error(`Request to ${url} failed with ${res.status}`);
@@ -77,10 +66,5 @@ export const api = {
   getKujiEnabled: () => jsonFetch<{ enabled: boolean }>('/api/admin/kuji-enabled'),
   setKujiEnabled: (enabled: boolean) =>
     jsonFetch('/api/admin/kuji-enabled', { method: 'POST', body: JSON.stringify({ enabled }) }),
-  getMembers: () => jsonFetch<MembersState>('/api/admin/members'),
-  inviteMember: () => jsonFetch('/api/admin/members/invite', { method: 'POST' }),
-  cancelInvite: () => jsonFetch('/api/admin/members/invite/cancel', { method: 'POST' }),
-  removeMember: (channelId: string) =>
-    jsonFetch(`/api/admin/members/${encodeURIComponent(channelId)}`, { method: 'DELETE' }),
   logout: () => jsonFetch('/api/auth/logout', { method: 'POST' }),
 };
