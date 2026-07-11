@@ -79,15 +79,15 @@ Expected: all model tests pass.
 - Produces: `ConfirmDialog({ open, title, description, confirmLabel, onConfirm, onCancel })`
 - Produces: reusable setting and feedback primitives.
 
-- [ ] **Step 1: Generate the approved full-screen concept**
+- [x] **Step 1: Generate the approved full-screen concept**
 
 Generate coordinated desktop `1280x800` screens for 간편 운영 and 회차 설정 plus mobile `390x844` screens for 간편 운영 and 더보기. Preserve exact information architecture from the spec, existing mascot, charcoal surfaces, neon green with yellow/coral support, flat panels, and code-native Korean text.
 
-- [ ] **Step 2: Inspect concept details**
+- [x] **Step 2: Inspect concept details**
 
 Verify menu grouping, status hierarchy, setting-row anatomy, button labels, mobile navigation, no nested cards, no decorative gradients, and no copied 빵떡이 branding.
 
-- [ ] **Step 3: Write failing shell tests**
+- [x] **Step 3: Write failing shell tests**
 
 ```tsx
 const html = renderToStaticMarkup(<AppShell page="operations" onNavigate={vi.fn()} status="connected"><p>내용</p></AppShell>);
@@ -96,11 +96,11 @@ expect(html).toContain('간편 운영');
 expect(html).toContain('더보기');
 ```
 
-- [ ] **Step 4: Implement the app shell and shared primitives**
+- [x] **Step 4: Implement the app shell and shared primitives**
 
 Desktop renders grouped sidebar navigation. Mobile renders four stable bottom-navigation buttons and `MoreSheet`. `ConfirmDialog` uses `role="dialog"`, labelled title/description, initial confirm-button focus, Escape cancellation, and focus restoration.
 
-- [ ] **Step 5: Run shell tests**
+- [x] **Step 5: Run shell tests**
 
 Run: `npm test -- --run tests/client/adminShell.test.tsx`
 
