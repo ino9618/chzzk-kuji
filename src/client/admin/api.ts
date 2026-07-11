@@ -46,6 +46,12 @@ export interface ChzzkConnection {
   lastEventAt: string | null;
 }
 
+export interface BasicSettings {
+  kujiEnabled: boolean;
+  defaultTicketPrice: number;
+  nicknameMode: 'masked' | 'full';
+}
+
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
   if (res.status === 401) {
@@ -73,6 +79,8 @@ export const api = {
   getNicknameMode: () => jsonFetch<{ mode: 'masked' | 'full' }>('/api/admin/nickname-mode'),
   setNicknameMode: (mode: 'masked' | 'full') =>
     jsonFetch('/api/admin/nickname-mode', { method: 'POST', body: JSON.stringify({ mode }) }),
+  getBasicSettings: () => jsonFetch<BasicSettings>('/api/admin/basic-settings'),
+  setBasicSettings: (settings: BasicSettings) => jsonFetch<BasicSettings>('/api/admin/basic-settings', { method: 'POST', body: JSON.stringify(settings) }),
   getChzzkStatus: () => jsonFetch<{ status: string }>('/api/admin/chzzk-status'),
   getChzzkConnection: () => jsonFetch<ChzzkConnection>('/api/admin/chzzk-connection'),
   disconnectChzzk: () => jsonFetch<{ ok: true }>('/api/admin/chzzk-connection/disconnect', { method: 'POST' }),

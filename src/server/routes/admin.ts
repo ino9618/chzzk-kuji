@@ -90,6 +90,29 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
     res.json({ mode });
   });
 
+  router.get('/basic-settings', async (_req, res) => {
+    const [enabled, price, mode] = await Promise.all([
+      getSetting(db, 'kuji_enabled'),
+      getSetting(db, 'default_ticket_price'),
+      getSetting(db, 'nickname_display_mode'),
+    ]);
+    res.json({ kujiEnabled: enabled !== 'false', defaultTicketPrice: Number(price) || 1000, nicknameMode: mode ?? 'masked' });
+  });
+
+  router.post('/basic-settings', async (req, res) => {
+    const { kujiEnabled, defaultTicketPrice, nicknameMode } = req.body as { kujiEnabled?: unknown; defaultTicketPrice?: unknown; nicknameMode?: unknown };
+    if (typeof kujiEnabled !== 'boolean' || !Number.isInteger(defaultTicketPrice) || Number(defaultTicketPrice) < 1 || !['masked', 'full'].includes(String(nicknameMode))) {
+      res.status(400).json({ error: 'invalid_basic_settings' });
+      return;
+    }
+    await db.transaction(async (tx) => {
+      await setSetting(tx, 'kuji_enabled', kujiEnabled ? 'true' : 'false');
+      await setSetting(tx, 'default_ticket_price', String(defaultTicketPrice));
+      await setSetting(tx, 'nickname_display_mode', String(nicknameMode));
+    });
+    res.json({ kujiEnabled, defaultTicketPrice, nicknameMode });
+  });
+
   router.get('/chzzk-status', (_req, res) => {
     res.json({ status: deps.getChzzkStatus() });
   });

@@ -4,6 +4,7 @@ import { WinnersPage } from '../../src/client/admin/pages/WinnersPage';
 import { OverlaySettingsPage } from '../../src/client/admin/pages/OverlaySettingsPage';
 import { MorePage } from '../../src/client/admin/pages/MorePage';
 import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
+import { BasicSettingsPage } from '../../src/client/admin/pages/BasicSettingsPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -16,6 +17,13 @@ describe('WinnersPage', () => {
 });
 
 describe('detail settings pages', () => {
+  it('renders shared basic settings and donation guidance', () => {
+    const html = renderToStaticMarkup(<BasicSettingsPage settings={{ kujiEnabled: true, defaultTicketPrice: 2500, nicknameMode: 'masked' }} onSave={vi.fn(async () => undefined)} />);
+    expect(html).toContain('기본 장당 가격');
+    expect(html).toContain('2500');
+    expect(html).toContain('2장 구매');
+  });
+
   it('renders the linked CHZZK channel and connection guidance', () => {
     const html = renderToStaticMarkup(<ConnectionPage connection={{ status: 'connected', channelId: 'channel-1', channelName: '테스트 채널', lastEventAt: null }} onRefresh={vi.fn(async () => undefined)} onDisconnect={vi.fn(async () => undefined)} />);
     expect(html).toContain('테스트 채널');

@@ -193,3 +193,17 @@ describe('chzzk connection summary', () => {
     expect(await getSetting(db, 'chzzk_access_token')).toBeUndefined();
   });
 });
+
+describe('basic settings', () => {
+  it('returns defaults and saves all shared settings together', async () => {
+    expect((await agent.get('/api/admin/basic-settings')).body).toEqual({ kujiEnabled: true, defaultTicketPrice: 1000, nicknameMode: 'masked' });
+    const saved = await agent.post('/api/admin/basic-settings').send({ kujiEnabled: false, defaultTicketPrice: 2500, nicknameMode: 'full' });
+    expect(saved.status).toBe(200);
+    expect((await agent.get('/api/admin/basic-settings')).body).toEqual({ kujiEnabled: false, defaultTicketPrice: 2500, nicknameMode: 'full' });
+  });
+
+  it('rejects invalid ticket prices', async () => {
+    const res = await agent.post('/api/admin/basic-settings').send({ kujiEnabled: true, defaultTicketPrice: 0, nicknameMode: 'masked' });
+    expect(res.status).toBe(400);
+  });
+});

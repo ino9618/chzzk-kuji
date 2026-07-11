@@ -6,6 +6,7 @@ import { PlusIcon, TrashIcon } from '../components/Icons';
 interface SessionSetupPageProps {
   onCreate: (payload: { name: string; ticketPrice: number; numberRangeMin: number; numberRangeMax: number; tickets: TicketDraft[] }) => Promise<void>;
   onCreated: () => Promise<void>;
+  defaultTicketPrice?: number;
 }
 
 function shuffle<T>(items: T[]): T[] {
@@ -17,9 +18,9 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-export function SessionSetupPage({ onCreate, onCreated }: SessionSetupPageProps) {
+export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 1000 }: SessionSetupPageProps) {
   const [name, setName] = useState('');
-  const [ticketPrice, setTicketPrice] = useState(1000);
+  const [ticketPrice, setTicketPrice] = useState(defaultTicketPrice);
   const [groups, setGroups] = useState<PrizeGroup[]>([
     { grade: 'A', prizeName: '', count: 1 },
     { grade: 'B', prizeName: '', count: 2 },

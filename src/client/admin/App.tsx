@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { api, type ChzzkConnection, type SessionState, type QueueEntry, type Winner } from './api';
+import { api, type BasicSettings, type ChzzkConnection, type SessionState, type QueueEntry, type Winner } from './api';
 import type { AdminPage } from './adminModel';
 import { AppShell } from './components/AppShell';
 import { ConfirmDialog } from './components/ConfirmDialog';
@@ -13,6 +13,7 @@ import { SessionSetupPage } from './pages/SessionSetupPage';
 import { TicketBoardPage } from './pages/TicketBoardPage';
 import { WinnersPage } from './pages/WinnersPage';
 import { ConnectionPage } from './pages/ConnectionPage';
+import { BasicSettingsPage } from './pages/BasicSettingsPage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -29,6 +30,7 @@ export function App() {
   const [chzzkStatus, setChzzkStatus] = useState('unknown');
   const [connection, setConnection] = useState<ChzzkConnection>({ status: 'unknown', channelId: null, channelName: null, lastEventAt: null });
   const [kujiEnabled, setKujiEnabled] = useState(true);
+  const [basicSettings, setBasicSettings] = useState<BasicSettings>({ kujiEnabled: true, defaultTicketPrice: 1000, nicknameMode: 'masked' });
   const [loadError, setLoadError] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [closingSession, setClosingSession] = useState(false);
@@ -49,22 +51,22 @@ export function App() {
 
   const loadData = useCallback(async () => {
     try {
-      const [nextSession, nextQueue, nextWinners, nickname, status, connectionInfo, enabled] = await Promise.all([
+      const [nextSession, nextQueue, nextWinners, basics, status, connectionInfo] = await Promise.all([
         api.getSession(),
         api.getQueue(),
         api.getWinners(),
-        api.getNicknameMode(),
+        api.getBasicSettings(),
         api.getChzzkStatus(),
         api.getChzzkConnection(),
-        api.getKujiEnabled(),
       ]);
       setSession(nextSession);
       setQueue(nextQueue);
       setWinners(nextWinners);
-      setNicknameMode(nickname.mode);
+      setNicknameMode(basics.nicknameMode);
       setChzzkStatus(status.status);
       setConnection(connectionInfo);
-      setKujiEnabled(enabled.enabled);
+      setKujiEnabled(basics.kujiEnabled);
+      setBasicSettings(basics);
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -122,6 +124,7 @@ export function App() {
     try {
       await api.setKujiEnabled(enabled);
       setKujiEnabled(enabled);
+      setBasicSettings((current) => ({ ...current, kujiEnabled: enabled }));
     } catch {
       setMutationError('이치방쿠지 상태를 저장하지 못했습니다.');
     } finally {
@@ -146,8 +149,9 @@ export function App() {
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
       {page === 'winners' && <WinnersPage winners={winners} />}
       {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} onDisconnect={async () => { await api.disconnectChzzk(); const next = { status: 'not_configured', channelId: null, channelName: null, lastEventAt: connection.lastEventAt }; setConnection(next); setChzzkStatus(next.status); }} />}
-      {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={refreshCreatedSession} />)}
-      {page === 'overlay' && <OverlaySettingsPage nicknameMode={nicknameMode} onSetNicknameMode={async (mode) => { await api.setNicknameMode(mode); setNicknameMode(mode); }} />}
+      {page === 'settings' && <BasicSettingsPage settings={basicSettings} onSave={async (next) => { const saved = await api.setBasicSettings(next); setBasicSettings(saved); setKujiEnabled(saved.kujiEnabled); setNicknameMode(saved.nicknameMode); }} />}
+      {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={refreshCreatedSession} defaultTicketPrice={basicSettings.defaultTicketPrice} />)}
+      {page === 'overlay' && <OverlaySettingsPage nicknameMode={nicknameMode} onSetNicknameMode={async (mode) => { await api.setNicknameMode(mode); setNicknameMode(mode); setBasicSettings((current) => ({ ...current, nicknameMode: mode })); }} />}
       {page === 'more' && <MorePage onLogout={logout} />}
       <ConfirmDialog open={closeDialogOpen} title="회차를 종료할까요?" description={`${session.name || '현재 회차'}를 종료하면 되돌릴 수 없습니다.`} confirmLabel="회차 종료" pending={closingSession} onConfirm={closeSession} onCancel={() => setCloseDialogOpen(false)} />
     </AppShell>
