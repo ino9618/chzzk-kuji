@@ -14,6 +14,7 @@ import { TicketBoardPage } from './pages/TicketBoardPage';
 import { WinnersPage } from './pages/WinnersPage';
 import { ConnectionPage } from './pages/ConnectionPage';
 import { BasicSettingsPage } from './pages/BasicSettingsPage';
+import { OperationsLogPage } from './pages/OperationsLogPage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -26,6 +27,7 @@ export function App() {
   const [session, setSession] = useState<SessionState>({ active: false });
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [winners, setWinners] = useState<Winner[]>([]);
+  const [log, setLog] = useState<QueueEntry[]>([]);
   const [nicknameMode, setNicknameMode] = useState<'masked' | 'full'>('masked');
   const [chzzkStatus, setChzzkStatus] = useState('unknown');
   const [connection, setConnection] = useState<ChzzkConnection>({ status: 'unknown', channelId: null, channelName: null, lastEventAt: null });
@@ -51,10 +53,11 @@ export function App() {
 
   const loadData = useCallback(async () => {
     try {
-      const [nextSession, nextQueue, nextWinners, basics, status, connectionInfo] = await Promise.all([
+      const [nextSession, nextQueue, nextWinners, nextLog, basics, status, connectionInfo] = await Promise.all([
         api.getSession(),
         api.getQueue(),
         api.getWinners(),
+        api.getLog(),
         api.getBasicSettings(),
         api.getChzzkStatus(),
         api.getChzzkConnection(),
@@ -62,6 +65,7 @@ export function App() {
       setSession(nextSession);
       setQueue(nextQueue);
       setWinners(nextWinners);
+      setLog(nextLog);
       setNicknameMode(basics.nicknameMode);
       setChzzkStatus(status.status);
       setConnection(connectionInfo);
@@ -81,7 +85,10 @@ export function App() {
       api.getSession().then(setSession);
       api.getWinners().then(setWinners);
     });
-    socket.on('queue:update', () => api.getQueue().then(setQueue));
+    socket.on('queue:update', () => {
+      api.getQueue().then(setQueue);
+      api.getLog().then(setLog);
+    });
     socket.on('connection:status', (status) => {
       setChzzkStatus(status);
       setConnection((current) => ({ ...current, status }));
@@ -148,6 +155,7 @@ export function App() {
       {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} kujiPending={savingKuji} onToggleKuji={toggleKuji} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
       {page === 'winners' && <WinnersPage winners={winners} />}
+      {page === 'log' && <OperationsLogPage entries={log} />}
       {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} onDisconnect={async () => { await api.disconnectChzzk(); const next = { status: 'not_configured', channelId: null, channelName: null, lastEventAt: connection.lastEventAt }; setConnection(next); setChzzkStatus(next.status); }} />}
       {page === 'settings' && <BasicSettingsPage settings={basicSettings} onSave={async (next) => { const saved = await api.setBasicSettings(next); setBasicSettings(saved); setKujiEnabled(saved.kujiEnabled); setNicknameMode(saved.nicknameMode); }} />}
       {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={refreshCreatedSession} defaultTicketPrice={basicSettings.defaultTicketPrice} />)}

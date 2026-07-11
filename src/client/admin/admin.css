@@ -44,6 +44,15 @@
 .connection-value code { color: var(--text-dim); font-size: 0.72rem; }
 .settings-price { width: 180px; }
 .settings-price input { width: 100%; }
+.log-header-actions { display: flex; align-items: center; gap: 10px; }
+.log-toolbar { margin-bottom: 14px; }
+.log-table { border: 1px solid var(--panel-border); background: var(--panel); overflow: hidden; }
+.log-row { display: grid; grid-template-columns: 120px minmax(120px, .8fr) 110px minmax(160px, 1.4fr) minmax(130px, .8fr); align-items: center; min-height: 52px; padding: 0 18px; border-bottom: 1px solid var(--panel-border); gap: 14px; font-size: .78rem; }
+.log-row:last-child { border-bottom: 0; }
+.log-head { min-height: 40px; background: var(--bg-deep); color: var(--text-dim); font-size: .7rem; font-weight: 700; }
+.log-message { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-result { font-weight: 700; color: var(--success); }
+.log-result.attention { color: var(--warning); }
 
 * {
   box-sizing: border-box;

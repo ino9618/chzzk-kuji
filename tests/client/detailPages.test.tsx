@@ -5,6 +5,7 @@ import { OverlaySettingsPage } from '../../src/client/admin/pages/OverlaySetting
 import { MorePage } from '../../src/client/admin/pages/MorePage';
 import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
 import { BasicSettingsPage } from '../../src/client/admin/pages/BasicSettingsPage';
+import { OperationsLogPage } from '../../src/client/admin/pages/OperationsLogPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -44,5 +45,15 @@ describe('detail settings pages', () => {
     expect(html).toContain('사용법');
     expect(html).toContain('로그아웃');
     expect(html).not.toContain('치지직 연결');
+  });
+});
+
+describe('OperationsLogPage', () => {
+  it('renders donation details, filters, and export action', () => {
+    const html = renderToStaticMarkup(<OperationsLogPage entries={[{ id: 1, donorNickname: '후원자', donorChannelId: 'channel-1', amount: 2000, rawMessage: '1번 3번', status: 'processed', createdAt: '2026-07-11T00:00:00.000Z', needsAttention: false }]} />);
+    expect(html).toContain('후원자');
+    expect(html).toContain('1번 3번');
+    expect(html).toContain('CSV 내보내기');
+    expect(html).toContain('정상 처리');
   });
 });

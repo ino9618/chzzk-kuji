@@ -26,6 +26,9 @@ export interface QueueEntry {
   rawMessage: string;
   status: string;
   createdAt: string;
+  outcomes?: string;
+  needsAttention?: boolean;
+  resolved?: boolean;
 }
 
 export interface Winner {

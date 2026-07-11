@@ -3,6 +3,7 @@ import type { AdminPage } from '../adminModel';
 import { BrandMark } from './BrandMark';
 import {
   DashboardIcon,
+  BookIcon,
   MoreIcon,
   MonitorIcon,
   SettingsIcon,
@@ -24,6 +25,7 @@ const operationsItems = [
   { page: 'operations' as const, label: '간편 운영', icon: DashboardIcon },
   { page: 'board' as const, label: '판매 번호판', icon: TicketIcon },
   { page: 'winners' as const, label: '당첨 내역', icon: TrophyIcon },
+  { page: 'log' as const, label: '운영 기록', icon: BookIcon },
 ];
 
 const settingsItems = [
