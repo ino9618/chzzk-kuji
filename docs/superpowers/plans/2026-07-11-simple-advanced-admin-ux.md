@@ -34,7 +34,7 @@
 - Produces: `filterTickets(tickets, filter): Ticket[]`
 - Produces: `filterWinners(winners, query): Winner[]`
 
-- [ ] **Step 1: Write failing model tests**
+- [x] **Step 1: Write failing model tests**
 
 ```ts
 expect(getOperationsStatus({ connected: true, enabled: true, active: true, issueCount: 0 }).label)
@@ -45,17 +45,17 @@ expect(filterTickets(tickets, 'available').every((ticket) => ticket.status === '
 expect(filterWinners(winners, '홍길동')).toHaveLength(1);
 ```
 
-- [ ] **Step 2: Run the model test and confirm failure**
+- [x] **Step 2: Run the model test and confirm failure**
 
 Run: `npm test -- --run tests/client/adminModel.test.ts`
 
 Expected: FAIL because `adminModel.ts` does not exist.
 
-- [ ] **Step 3: Implement pure model functions**
+- [x] **Step 3: Implement pure model functions**
 
 `getOperationsStatus` returns warning for disconnected, disabled, or non-empty issue queue; idle for no active session; ready otherwise. Ticket filtering supports `all`, `available`, `sold`. Winner search is case-insensitive and matches nickname, prize, session name, and number text.
 
-- [ ] **Step 4: Run the model tests**
+- [x] **Step 4: Run the model tests**
 
 Run: `npm test -- --run tests/client/adminModel.test.ts`
 
