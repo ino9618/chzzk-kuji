@@ -107,4 +107,30 @@ describe('admin-room broadcast scoping (integration)', () => {
     // The initial connection also emits a board:update, so we expect at least our broadcast.
     expect(received).toContainEqual({ board: 'public-data' });
   });
+
+  it('lets an authenticated admin trigger a public overlay test without allowing public clients to trigger one', async () => {
+    const token = 'overlay-admin-token';
+    registerAdminToken(token);
+    adminClient = ioClient(`http://localhost:${port}`, { transports: ['websocket'], extraHeaders: { Cookie: `admin_token=${token}` } });
+    publicClient = ioClient(`http://localhost:${port}`, { transports: ['websocket'] });
+    await Promise.all([
+      new Promise<void>((resolve) => adminClient.on('connect', resolve)),
+      new Promise<void>((resolve) => publicClient.on('connect', resolve)),
+    ]);
+
+    const received: unknown[] = [];
+    publicClient.on('overlay:test', (payload) => received.push(payload));
+    const denied = await publicClient.emitWithAck('overlay:test', { number: 99 });
+    expect(denied).toEqual({ ok: false, error: 'unauthorized' });
+
+    const accepted = await adminClient.emitWithAck('overlay:test', {
+      number: 7,
+      grade: 'A',
+      prizeName: '테스트 상품',
+      nickname: '테스트 후원자',
+    });
+    expect(accepted).toEqual({ ok: true });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(received).toContainEqual({ number: 7, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자' });
+  });
 });

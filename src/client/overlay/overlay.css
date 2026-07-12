@@ -56,12 +56,17 @@
 }
 
 .overlay-header-title {
+  min-width: 0;
+  overflow: hidden;
   font-weight: 800;
   font-size: 0.95rem;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .overlay-header-count {
+  flex: 0 0 auto;
   font-family: monospace;
   font-weight: 700;
   font-size: 0.9rem;
@@ -77,6 +82,8 @@
 }
 
 .grade-legend-item {
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -103,7 +110,11 @@
 }
 
 .grade-legend-name {
+  min-width: 0;
+  overflow: hidden;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .grade-legend-count {
@@ -131,6 +142,12 @@
 }
 
 .overlay-cell {
+  min-width: 0;
+  min-height: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 10px 6px;
   text-align: center;
   border-radius: 10px;
@@ -170,7 +187,7 @@
 .overlay-number {
   font-weight: 700;
   font-size: 1.1em;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .overlay-grade {
@@ -186,18 +203,24 @@
 }
 
 .overlay-prize {
+  width: 100%;
   margin-top: 3px;
+  overflow: hidden;
   font-size: 0.76em;
   font-weight: 600;
   color: #f2f2f2;
-  word-break: break-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .overlay-owner {
+  width: 100%;
   margin-top: 2px;
+  overflow: hidden;
   font-size: 0.72em;
   color: var(--grade-text);
-  word-break: break-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Centered draw announcement */
@@ -212,6 +235,9 @@
 }
 
 .draw-card {
+  width: min(440px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
   text-align: center;
   padding: 26px 44px;
   border-radius: 18px;
@@ -220,6 +246,17 @@
   box-shadow: 0 0 40px 6px var(--grade-color-dim), 0 8px 30px rgba(0, 0, 0, 0.55);
   color: #f2f2f2;
   animation: cardPop 0.55s cubic-bezier(0.2, 1.6, 0.35, 1), cardGlow 1.6s ease-in-out infinite alternate;
+}
+
+.draw-test-badge {
+  width: fit-content;
+  margin: 0 auto 12px;
+  padding: 4px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #d7dbd9;
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
 @keyframes cardPop {
@@ -271,12 +308,14 @@
   margin-top: 8px;
   font-size: 1.15rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .draw-winner {
   margin-top: 6px;
   font-size: 0.9rem;
   color: #9a9aa0;
+  overflow-wrap: anywhere;
 }
 
 /* Confetti burst */

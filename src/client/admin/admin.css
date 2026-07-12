@@ -58,10 +58,11 @@
 .preflight-badge.attention { color: var(--warning); }
 .preflight-checks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .preflight-checks > div { display: flex; gap: 12px; min-height: 92px; padding: 18px; border: 1px solid var(--panel-border); background: var(--panel); }
+.preflight-checks > div > div { min-width: 0; }
 .preflight-checks > div > span { display: grid; place-items: center; flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--bg-deep); color: var(--warning); font-weight: 900; }
 .preflight-checks > div.ready > span { color: var(--success); }
 .preflight-checks strong { font-size: .8rem; }
-.preflight-checks p { margin: 6px 0 0; color: var(--text-dim); font-size: .72rem; }
+.preflight-checks p { margin: 6px 0 0; color: var(--text-dim); font-size: .72rem; overflow-wrap: anywhere; }
 .test-donation-form { display: grid; grid-template-columns: minmax(180px, .7fr) minmax(260px, 1.3fr) auto; align-items: end; gap: 12px; padding: 18px; }
 .test-donation-form label { display: grid; gap: 7px; color: var(--text-dim); font-size: .72rem; font-weight: 700; }
 .test-donation-form input { min-height: 40px; background: var(--bg-deep); border: 1px solid var(--panel-border); border-radius: 8px; color: var(--text); padding: 0 11px; }
@@ -1199,6 +1200,7 @@ button.danger-button {
 
 .admin-page {
   width: 100%;
+  min-width: 0;
 }
 
 .page-header {
@@ -1209,6 +1211,8 @@ button.danger-button {
   gap: 24px;
   margin-bottom: 18px;
 }
+
+.page-header > * { min-width: 0; }
 
 .page-header h1 {
   margin: 0;
@@ -1300,6 +1304,8 @@ button.danger-button {
   font-size: 0.86rem;
 }
 
+.setting-row-copy { min-width: 0; }
+
 .setting-row-copy p {
   margin: 4px 0 0;
   color: var(--text-dim);
@@ -1379,6 +1385,9 @@ button.danger-button {
   padding: 0 16px;
   border-bottom: 1px solid var(--panel-border);
 }
+
+.workflow-heading > * { min-width: 0; }
+.workflow-heading p { margin: 4px 0 0; color: var(--text-dim); font-size: 0.74rem; line-height: 1.45; overflow-wrap: anywhere; }
 
 .workflow-heading h2 {
   margin: 0;
@@ -1484,8 +1493,8 @@ button.danger-button {
 .board-ticket { min-height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; padding: 8px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--panel); }
 .board-ticket.sold { border-color: rgba(0, 255, 163, 0.55); background: var(--success-bg); }
 .board-ticket strong { color: var(--text); font-size: 1rem; }
-.board-ticket span { max-width: 100%; overflow: hidden; color: var(--text-dim); font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
-.board-ticket small { max-width: 100%; overflow: hidden; color: var(--accent); font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+.board-ticket span { width: 100%; max-width: 100%; overflow: hidden; color: var(--text-dim); font-size: 0.7rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.board-ticket small { width: 100%; max-width: 100%; overflow: hidden; color: var(--accent); font-size: 0.7rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 
 .page-empty { min-height: 280px; display: grid; place-items: center; align-content: center; gap: 16px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--panel); color: var(--text-dim); }
 .page-empty .mascot { width: 96px; }
@@ -1526,7 +1535,17 @@ button.danger-button {
 .winner-row strong { color: var(--accent); }
 .winner-row time { color: var(--text-dim); text-align: right; }
 .overlay-actions { width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.overlay-actions code { min-width: 0; flex: 1; padding: 10px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--bg-deep); color: var(--accent); font-size: 0.74rem; overflow-wrap: anywhere; }
+.overlay-actions code { min-width: 0; flex: 1; padding: 10px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--bg-deep); color: var(--accent); font-size: 0.74rem; line-height: 1.45; overflow-wrap: anywhere; }
+.overlay-actions button { flex: 0 0 auto; white-space: nowrap; }
+
+.overlay-preview-section { margin-bottom: 14px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--panel); overflow: hidden; }
+.overlay-preview-frame { aspect-ratio: 16 / 9; margin: 16px; border: 1px solid var(--panel-border); border-radius: 6px; background: #090b0c; overflow: hidden; }
+.overlay-preview-frame iframe { width: 100%; height: 100%; display: block; border: 0; }
+.overlay-test-form { display: grid; grid-template-columns: 90px 90px minmax(180px, 1fr) minmax(160px, 0.8fr) auto; align-items: end; gap: 10px; padding: 0 16px; }
+.overlay-test-form label { min-width: 0; display: grid; gap: 6px; color: var(--text-dim); font-size: 0.72rem; font-weight: 700; }
+.overlay-test-form input { width: 100%; min-width: 0; min-height: 40px; padding: 0 10px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--bg-deep); color: var(--text); }
+.overlay-test-form button { min-height: 40px; white-space: nowrap; }
+.overlay-test-note { margin: 10px 16px 16px; color: var(--text-dim); font-size: 0.72rem; line-height: 1.5; }
 .inline-feedback { margin: 10px 0 0; color: var(--text-dim); font-size: 0.76rem; }
 .inline-feedback.success { color: var(--accent); }
 .inline-feedback.error { color: var(--capsule-coral); }
@@ -1555,6 +1574,16 @@ button.danger-button {
 
 .load-error .inline-feedback { margin: 0; }
 .load-error button { min-height: 36px; }
+
+@media (max-width: 1120px) and (min-width: 721px) {
+  .shell-content { padding-right: 28px; padding-left: 28px; }
+  .preflight-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .setting-row { grid-template-columns: minmax(180px, 0.75fr) minmax(0, 1.25fr); gap: 18px; }
+  .overlay-test-form { grid-template-columns: 80px 80px minmax(150px, 1fr) minmax(140px, 1fr); }
+  .overlay-test-form button { grid-column: 1 / -1; justify-self: end; }
+  .log-table { overflow-x: auto; }
+  .log-row { min-width: 820px; }
+}
 
 @media (max-width: 720px) {
   .admin-shell { display: block; min-height: 100%; }

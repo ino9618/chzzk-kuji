@@ -54,6 +54,24 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db): void {
     if (isValidAdminToken(token)) {
       socket.join('admin');
     }
+
+    socket.on('overlay:test', (input, acknowledge) => {
+      if (!socket.rooms.has('admin')) {
+        acknowledge?.({ ok: false, error: 'unauthorized' });
+        return;
+      }
+
+      const payload = input && typeof input === 'object' ? input as Record<string, unknown> : {};
+      const number = Number(payload.number);
+      const testEvent = {
+        number: Number.isInteger(number) && number > 0 ? Math.min(number, 9999) : 1,
+        grade: String(payload.grade ?? 'A').trim().slice(0, 8) || 'A',
+        prizeName: String(payload.prizeName ?? '테스트 상품').trim().slice(0, 80) || '테스트 상품',
+        nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
+      };
+      io.emit('overlay:test', testEvent);
+      acknowledge?.({ ok: true });
+    });
   });
 }
 

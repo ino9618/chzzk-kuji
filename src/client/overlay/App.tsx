@@ -32,6 +32,7 @@ interface DrawAnnounce {
   grade: string | null;
   prizeName: string | null;
   nickname: string | null;
+  test?: boolean;
 }
 
 const socket = io();
@@ -78,6 +79,12 @@ export function App() {
   const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const showAnnouncement = (next: Omit<DrawAnnounce, 'key'>) => {
+    setAnnounce({ ...next, key: Date.now() });
+    if (announceTimer.current) clearTimeout(announceTimer.current);
+    announceTimer.current = setTimeout(() => setAnnounce(null), ANNOUNCE_MS);
+  };
+
   useEffect(() => {
     fetch('/api/overlay/board')
       .then((r) => r.json())
@@ -92,22 +99,26 @@ export function App() {
           if (highlightTimer.current) clearTimeout(highlightTimer.current);
           highlightTimer.current = setTimeout(() => setJustSold(null), HIGHLIGHT_MS);
 
-          setAnnounce({
-            key: Date.now(),
+          showAnnouncement({
             number: newlySold.number,
             grade: newlySold.prizeGrade,
             prizeName: newlySold.prizeName,
             nickname: newlySold.ownerNickname,
           });
-          if (announceTimer.current) clearTimeout(announceTimer.current);
-          announceTimer.current = setTimeout(() => setAnnounce(null), ANNOUNCE_MS);
         }
         return next;
       });
     });
 
+    socket.on('overlay:test', (event: Omit<DrawAnnounce, 'key'>) => {
+      showAnnouncement({ ...event, test: true });
+    });
+
     return () => {
       socket.off('board:update');
+      socket.off('overlay:test');
+      if (announceTimer.current) clearTimeout(announceTimer.current);
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
     };
   }, []);
 
@@ -116,7 +127,7 @@ export function App() {
     return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 70 : 32);
   }, [announce?.key]);
 
-  if (!board.active) {
+  if (!board.active && !announce) {
     return <div className="overlay-empty" />;
   }
 
@@ -128,7 +139,7 @@ export function App() {
 
   return (
     <div className="overlay-root">
-      <div className="overlay-header">
+      {board.active && <><div className="overlay-header">
         <span className="overlay-header-title">🎫 {board.name || '호갱 API'}</span>
         <span className="overlay-header-count">
           {soldCount} / {totalCount}
@@ -176,7 +187,7 @@ export function App() {
             )}
           </div>
         ))}
-      </div>
+      </div></>}
 
       {announce && (
         <div className="draw-announce" key={announce.key}>
@@ -198,6 +209,7 @@ export function App() {
             ))}
           </div>
           <div className={`draw-card ${gradeClass(announce.grade)}`}>
+            {announce.test && <div className="draw-test-badge">미리보기 테스트</div>}
             <div className="draw-label">당첨!</div>
             <div className="draw-number">{announce.number}번</div>
             {announce.grade && <div className="draw-grade">{announce.grade}상</div>}
