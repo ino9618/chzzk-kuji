@@ -140,10 +140,14 @@ export function App() {
   return (
     <div className="overlay-root">
       {board.active && <><div className="overlay-header">
-        <span className="overlay-header-title">🎫 {board.name || '호갱 API'}</span>
-        <span className="overlay-header-count">
-          {soldCount} / {totalCount}
-        </span>
+        <div className="overlay-title-block">
+          <span className="overlay-eyebrow">이치방쿠지</span>
+          <span className="overlay-header-title">{board.name || '호갱 API'}</span>
+        </div>
+        <div className="overlay-progress-block">
+          <span>판매 현황</span>
+          <strong className="overlay-header-count">{soldCount}<small>/ {totalCount}</small></strong>
+        </div>
       </div>
 
       {board.grades && board.grades.length > 0 && (
@@ -169,7 +173,7 @@ export function App() {
         </div>
       )}
 
-      <div className="overlay-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 88px))` }}>
+      <div className="overlay-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 118px))` }}>
         {board.tickets?.map((t) => (
           <div
             key={t.number}
