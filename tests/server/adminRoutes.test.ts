@@ -67,6 +67,43 @@ describe('admin session routes', () => {
     const res = await request(app).get('/api/admin/session');
     expect(res.status).toBe(401);
   });
+
+  it('returns previous sessions with their ticket configuration', async () => {
+    await agent.post('/api/admin/session').send({
+      name: '지난 회차', ticketPrice: 1500, numberRangeMin: 1, numberRangeMax: 2,
+      tickets: [{ number: 1, prizeName: '커피', prizeGrade: 'A' }, { number: 2, prizeName: '케이크', prizeGrade: 'B' }],
+    });
+    await agent.post('/api/admin/session/close');
+
+    const res = await agent.get('/api/admin/sessions');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ name: '지난 회차', ticketPrice: 1500, status: 'closed', soldCount: 0 });
+    expect(res.body[0].tickets).toEqual(expect.arrayContaining([
+      expect.objectContaining({ number: 1, prizeName: '커피', prizeGrade: 'A' }),
+      expect.objectContaining({ number: 2, prizeName: '케이크', prizeGrade: 'B' }),
+    ]));
+  });
+});
+
+describe('donation simulator', () => {
+  it('uses the real donation pipeline and sells the requested ticket', async () => {
+    await agent.post('/api/admin/session').send({
+      name: '테스트 회차', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: '테스트 상품', prizeGrade: 'A' }],
+    });
+    const simulate = await agent.post('/api/admin/donation-simulator').send({ nickname: '테스트 후원자', amount: 1000, message: '1번' });
+    expect(simulate.status).toBe(200);
+    expect(simulate.body).toMatchObject({ status: 'processed', outcomes: [{ number: 1, result: 'success', prizeName: '테스트 상품' }] });
+
+    const session = await agent.get('/api/admin/session');
+    expect(session.body.tickets[0]).toMatchObject({ status: 'sold', ownerNickname: '테스트 후원자' });
+  });
+
+  it('rejects malformed simulator payloads', async () => {
+    const res = await agent.post('/api/admin/donation-simulator').send({ nickname: '', amount: 0, message: '' });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('admin queue and log routes', () => {

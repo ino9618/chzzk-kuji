@@ -22,3 +22,5 @@ export const MonitorIcon = (props: IconProps) => <IconBase {...props}><rect x="3
 export const SlidersIcon = (props: IconProps) => <IconBase {...props}><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="13" cy="18" r="2" /></IconBase>;
 export const MoreIcon = (props: IconProps) => <IconBase {...props}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></IconBase>;
 export const CloseIcon = (props: IconProps) => <IconBase {...props}><path d="m6 6 12 12M18 6 6 18" /></IconBase>;
+export const SendIcon = (props: IconProps) => <IconBase {...props}><path d="m3 11 18-8-8 18-2-8zM11 13l4-4" /></IconBase>;
+export const CopyIcon = (props: IconProps) => <IconBase {...props}><rect x="8" y="8" width="12" height="12" /><path d="M16 8V4H4v12h4" /></IconBase>;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { api, type BasicSettings, type ChzzkConnection, type SessionState, type QueueEntry, type Winner } from './api';
+import { api, type BasicSettings, type ChzzkConnection, type SessionState, type QueueEntry, type Winner, type SessionHistoryEntry } from './api';
 import type { AdminPage } from './adminModel';
 import { AppShell } from './components/AppShell';
 import { ConfirmDialog } from './components/ConfirmDialog';
@@ -16,6 +16,8 @@ import { ConnectionPage } from './pages/ConnectionPage';
 import { BasicSettingsPage } from './pages/BasicSettingsPage';
 import { OperationsLogPage } from './pages/OperationsLogPage';
 import { BroadcastPreflightPage } from './pages/BroadcastPreflightPage';
+import { DonationSimulatorPage } from './pages/DonationSimulatorPage';
+import { SessionHistoryPage } from './pages/SessionHistoryPage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -34,6 +36,8 @@ export function App() {
   const [connection, setConnection] = useState<ChzzkConnection>({ status: 'unknown', channelId: null, channelName: null, lastEventAt: null });
   const [kujiEnabled, setKujiEnabled] = useState(true);
   const [basicSettings, setBasicSettings] = useState<BasicSettings>({ kujiEnabled: true, defaultTicketPrice: 1000, nicknameMode: 'masked' });
+  const [sessionHistory, setSessionHistory] = useState<SessionHistoryEntry[]>([]);
+  const [sessionTemplate, setSessionTemplate] = useState<SessionHistoryEntry | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [closingSession, setClosingSession] = useState(false);
@@ -54,7 +58,7 @@ export function App() {
 
   const loadData = useCallback(async () => {
     try {
-      const [nextSession, nextQueue, nextWinners, nextLog, basics, status, connectionInfo] = await Promise.all([
+      const [nextSession, nextQueue, nextWinners, nextLog, basics, status, connectionInfo, sessions] = await Promise.all([
         api.getSession(),
         api.getQueue(),
         api.getWinners(),
@@ -62,6 +66,7 @@ export function App() {
         api.getBasicSettings(),
         api.getChzzkStatus(),
         api.getChzzkConnection(),
+        api.getSessions(),
       ]);
       setSession(nextSession);
       setQueue(nextQueue);
@@ -72,6 +77,7 @@ export function App() {
       setConnection(connectionInfo);
       setKujiEnabled(basics.kujiEnabled);
       setBasicSettings(basics);
+      setSessionHistory(sessions);
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -118,6 +124,7 @@ export function App() {
     try {
       await api.closeSession();
       setSession({ active: false });
+      setSessionHistory(await api.getSessions());
       setCloseDialogOpen(false);
       try { setSession(await api.getSession()); } catch { setLoadError(true); }
     } catch {
@@ -145,6 +152,8 @@ export function App() {
     } catch {
       setLoadError(true);
     }
+    try { setSessionHistory(await api.getSessions()); } catch { setLoadError(true); }
+    setSessionTemplate(null);
     setPage('board');
   };
 
@@ -157,10 +166,12 @@ export function App() {
       {page === 'preflight' && <BroadcastPreflightPage session={session} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} />}
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
       {page === 'winners' && <WinnersPage winners={winners} />}
+      {page === 'session-history' && <SessionHistoryPage sessions={sessionHistory} activeSession={session.active} onClone={(template) => { setSessionTemplate(template); setPage('session-setup'); }} />}
       {page === 'log' && <OperationsLogPage entries={log} />}
+      {page === 'donation-simulator' && <DonationSimulatorPage session={session} onSend={async (payload) => { const result = await api.simulateDonation(payload); await loadData(); return result; }} />}
       {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} onDisconnect={async () => { await api.disconnectChzzk(); const next = { status: 'not_configured', channelId: null, channelName: null, lastEventAt: connection.lastEventAt }; setConnection(next); setChzzkStatus(next.status); }} />}
       {page === 'settings' && <BasicSettingsPage settings={basicSettings} onSave={async (next) => { const saved = await api.setBasicSettings(next); setBasicSettings(saved); setKujiEnabled(saved.kujiEnabled); setNicknameMode(saved.nicknameMode); }} />}
-      {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage onCreate={api.createSession} onCreated={refreshCreatedSession} defaultTicketPrice={basicSettings.defaultTicketPrice} />)}
+      {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage key={sessionTemplate?.id ?? 'new'} onCreate={api.createSession} onCreated={refreshCreatedSession} defaultTicketPrice={basicSettings.defaultTicketPrice} template={sessionTemplate ? { id: sessionTemplate.id, name: sessionTemplate.name, ticketPrice: sessionTemplate.ticketPrice, tickets: sessionTemplate.tickets.map(({ number, prizeName, prizeGrade }) => ({ number, prizeName, prizeGrade: prizeGrade ?? undefined })) } : null} />)}
       {page === 'overlay' && <OverlaySettingsPage nicknameMode={nicknameMode} onSetNicknameMode={async (mode) => { await api.setNicknameMode(mode); setNicknameMode(mode); setBasicSettings((current) => ({ ...current, nicknameMode: mode })); }} onTestOverlay={async (payload) => { await socket.timeout(3000).emitWithAck('overlay:test', payload); }} />}
       {page === 'more' && <MorePage onLogout={logout} />}
       <ConfirmDialog open={closeDialogOpen} title="회차를 종료할까요?" description={`${session.name || '현재 회차'}를 종료하면 되돌릴 수 없습니다.`} confirmLabel="회차 종료" pending={closingSession} onConfirm={closeSession} onCancel={() => setCloseDialogOpen(false)} />

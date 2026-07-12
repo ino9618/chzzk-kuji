@@ -78,6 +78,7 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db): void {
 export interface AppOptions {
   adminPasswordHash: string;
   disconnectChzzk?: () => Promise<void> | void;
+  simulateDonation?: (event: import('./donationProcessor').DonationEvent) => Promise<import('./donationProcessor').ProcessDonationResult>;
 }
 
 export async function createApp(db: Db, options: AppOptions) {
@@ -107,7 +108,11 @@ export async function createApp(db: Db, options: AppOptions) {
   }
 
   app.use('/api/auth', createAuthRouter(db));
-  app.use('/api/admin', createAdminRouter(db, { getChzzkStatus: () => chzzkStatus, disconnectChzzk: options.disconnectChzzk }));
+  app.use('/api/admin', createAdminRouter(db, {
+    getChzzkStatus: () => chzzkStatus,
+    disconnectChzzk: options.disconnectChzzk,
+    simulateDonation: options.simulateDonation ?? ((event) => processDonation(db, event)),
+  }));
   app.use('/api/overlay', createOverlayRouter(db));
 
   return {
@@ -139,7 +144,12 @@ async function main(): Promise<void> {
   }
 
   let disconnectActiveChzzk = () => undefined;
-  const { app, setChzzkStatus } = await createApp(db, { adminPasswordHash, disconnectChzzk: () => disconnectActiveChzzk() });
+  let simulateDonation = (event: import('./donationProcessor').DonationEvent) => processDonation(db, event);
+  const { app, setChzzkStatus } = await createApp(db, {
+    adminPasswordHash,
+    disconnectChzzk: () => disconnectActiveChzzk(),
+    simulateDonation: (event) => simulateDonation(event),
+  });
 
   if (process.env.NODE_ENV === 'production') {
     const path = require('node:path') as typeof import('node:path');
@@ -150,6 +160,12 @@ async function main(): Promise<void> {
   const io = new SocketIOServer(httpServer, { cors: { origin: true } });
 
   registerSocketHandlers(io, db);
+  simulateDonation = async (event) => {
+    const result = await processDonation(db, event);
+    broadcastBoardUpdate(io, await buildBoardPayload(db));
+    broadcastQueueUpdate(io, await listPendingIssues(db));
+    return result;
+  };
 
   const encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY ?? '', 'hex');
   const tokens = encryptionKey.length === 32 ? await loadTokens(db, encryptionKey) : undefined;

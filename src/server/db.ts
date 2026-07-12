@@ -248,6 +248,29 @@ export async function getTicketsForSession(db: Db, sessionId: number): Promise<T
   return rows.map(rowToTicket);
 }
 
+export interface SessionHistoryEntry extends Session {
+  tickets: Ticket[];
+  soldCount: number;
+}
+
+export async function listSessionHistory(db: Db): Promise<SessionHistoryEntry[]> {
+  const { rows: sessionRows } = await db.query(`SELECT * FROM sessions ORDER BY id DESC`);
+  if (sessionRows.length === 0) return [];
+  const sessions = sessionRows.map(rowToSession);
+  const { rows: ticketRows } = await db.query(`SELECT * FROM tickets ORDER BY session_id DESC, number ASC`);
+  const ticketsBySession = new Map<number, Ticket[]>();
+  for (const row of ticketRows) {
+    const ticket = rowToTicket(row);
+    const entries = ticketsBySession.get(ticket.sessionId) ?? [];
+    entries.push(ticket);
+    ticketsBySession.set(ticket.sessionId, entries);
+  }
+  return sessions.map((session) => {
+    const tickets = ticketsBySession.get(session.id) ?? [];
+    return { ...session, tickets, soldCount: tickets.filter((ticket) => ticket.status === 'sold').length };
+  });
+}
+
 export async function tryAssignTicket(
   db: Db,
   sessionId: number,

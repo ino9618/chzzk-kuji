@@ -7,6 +7,7 @@ interface SessionSetupPageProps {
   onCreate: (payload: { name: string; ticketPrice: number; numberRangeMin: number; numberRangeMax: number; tickets: TicketDraft[] }) => Promise<void>;
   onCreated: () => Promise<void>;
   defaultTicketPrice?: number;
+  template?: { id: number; name: string; ticketPrice: number; tickets: TicketDraft[] } | null;
 }
 
 function shuffle<T>(items: T[]): T[] {
@@ -18,14 +19,14 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 1000 }: SessionSetupPageProps) {
-  const [name, setName] = useState('');
-  const [ticketPrice, setTicketPrice] = useState(defaultTicketPrice);
-  const [groups, setGroups] = useState<PrizeGroup[]>([
+export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 1000, template = null }: SessionSetupPageProps) {
+  const [name, setName] = useState(template ? `${template.name} 새 회차` : '');
+  const [ticketPrice, setTicketPrice] = useState(template?.ticketPrice ?? defaultTicketPrice);
+  const [groups, setGroups] = useState<PrizeGroup[]>(template ? [] : [
     { grade: 'A', prizeName: '', count: 1 },
     { grade: 'B', prizeName: '', count: 2 },
   ]);
-  const [manualText, setManualText] = useState('');
+  const [manualText, setManualText] = useState(template ? template.tickets.map((ticket) => `${ticket.number}, ${ticket.prizeName}, ${ticket.prizeGrade ?? ''}`).join('\n') : '');
   const [errors, setErrors] = useState<ReturnType<typeof validateSessionDraft>>({});
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -72,7 +73,8 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
 
   return (
     <div className="admin-page session-setup-page">
-      <header className="page-header"><div><h1>회차 설정</h1><p>상품을 입력하면 번호를 자동으로 만들고 섞어 드립니다.</p></div></header>
+      <header className="page-header"><div><h1>회차 설정</h1><p>{template ? `${template.name} 구성을 불러왔습니다. 확인 후 새 회차를 시작하세요.` : '상품을 입력하면 번호를 자동으로 만들고 섞어 드립니다.'}</p></div></header>
+      {template && <div className="template-loaded"><strong>이전 회차 불러오기 완료</strong><span>가격, 번호, 상품, 등급 구성을 그대로 적용했습니다.</span></div>}
       <section className="setup-section">
         <h2><span>1</span> 기본 정보</h2>
         <div className="form-grid">
@@ -88,7 +90,7 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
           {errors.groups && <small className="field-error">{errors.groups}</small>}
         </div>
         <button className="secondary-button add-prize-button" onClick={() => setGroups((current) => [...current, { grade: '', prizeName: '', count: 1 }])}><PlusIcon />상품 추가</button>
-        <details className="manual-editor"><summary>직접 편집</summary><p>번호, 상품명, 등급 순서로 한 줄에 하나씩 입력하세요.</p><textarea value={manualText} onChange={(event) => setManualText(event.target.value)} placeholder={'1, 아메리카노, A\n2, 케이크, B'} rows={6} /></details>
+        <details className="manual-editor" open={Boolean(template)}><summary>직접 편집</summary><p>번호, 상품명, 등급 순서로 한 줄에 하나씩 입력하세요.</p><textarea value={manualText} onChange={(event) => setManualText(event.target.value)} placeholder={'1, 아메리카노, A\n2, 케이크, B'} rows={6} /></details>
       </section>
       <section className="setup-section">
         <h2><span>3</span> 번호 확인</h2>

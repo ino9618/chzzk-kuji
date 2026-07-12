@@ -7,6 +7,9 @@ import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
 import { BasicSettingsPage } from '../../src/client/admin/pages/BasicSettingsPage';
 import { OperationsLogPage } from '../../src/client/admin/pages/OperationsLogPage';
 import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPreflightPage';
+import { DonationSimulatorPage } from '../../src/client/admin/pages/DonationSimulatorPage';
+import { SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
+import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -69,5 +72,34 @@ describe('BroadcastPreflightPage', () => {
     expect(html).toContain('모의 후원 검사');
     expect(html).toContain('실제 번호를 판매 처리하지 않고');
     expect(html).toContain('오버레이 미리보기');
+  });
+});
+
+describe('new operation tools', () => {
+  const previousSession = {
+    id: 3, name: '지난 회차', ticketPrice: 1500, numberRangeMin: 1, numberRangeMax: 1,
+    status: 'closed' as const, createdAt: '2026-07-01T00:00:00.000Z', soldCount: 0,
+    tickets: [{ number: 1, prizeName: '커피', prizeGrade: 'A', status: 'available' as const, ownerNickname: null }],
+  };
+
+  it('renders a real donation simulator warning and send control', () => {
+    const html = renderToStaticMarkup(<DonationSimulatorPage session={{ active: true, name: '현재 회차', ticketPrice: 1000, tickets: previousSession.tickets }} onSend={vi.fn(async () => ({ status: 'processed', sessionId: 1, outcomes: [] }))} />);
+    expect(html).toContain('도네이션 테스트');
+    expect(html).toContain('실제로 판매 처리');
+    expect(html).toContain('테스트 도네이션 보내기');
+  });
+
+  it('renders previous sessions and clone action', () => {
+    const html = renderToStaticMarkup(<SessionHistoryPage sessions={[previousSession]} activeSession={false} onClone={vi.fn()} />);
+    expect(html).toContain('지난 회차');
+    expect(html).toContain('신규 회차로 불러오기');
+  });
+
+  it('prefills session setup from a previous session template', () => {
+    const html = renderToStaticMarkup(<SessionSetupPage onCreate={vi.fn(async () => undefined)} onCreated={vi.fn(async () => undefined)} template={{ id: 3, name: '지난 회차', ticketPrice: 1500, tickets: previousSession.tickets }} />);
+    expect(html).toContain('이전 회차 불러오기 완료');
+    expect(html).toContain('지난 회차 새 회차');
+    expect(html).toContain('1500');
+    expect(html).toContain('1, 커피, A');
   });
 });

@@ -8,6 +8,7 @@ import {
   resolveDonationLog,
   listDonationLog,
   listAllWinners,
+  listSessionHistory,
   getSetting,
   setSetting,
   deleteSetting,
@@ -15,10 +16,12 @@ import {
 } from '../db';
 import { requireAdmin } from '../middleware/adminAuth';
 import { requireOwner } from '../middleware/adminAuth';
+import type { DonationEvent, ProcessDonationResult } from '../donationProcessor';
 
 export interface AdminRouterDeps {
   getChzzkStatus: () => 'connected' | 'disconnected' | 'reconnecting' | 'not_configured' | 'needs_reauth';
   disconnectChzzk?: () => Promise<void> | void;
+  simulateDonation: (event: DonationEvent) => Promise<ProcessDonationResult>;
 }
 
 export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
@@ -78,6 +81,25 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
 
   router.get('/winners', async (_req, res) => {
     res.json(await listAllWinners(db));
+  });
+
+  router.get('/sessions', async (_req, res) => {
+    res.json(await listSessionHistory(db));
+  });
+
+  router.post('/donation-simulator', async (req, res) => {
+    const { nickname, amount, message } = req.body as { nickname?: unknown; amount?: unknown; message?: unknown };
+    if (typeof nickname !== 'string' || !nickname.trim() || !Number.isInteger(amount) || Number(amount) < 1 || typeof message !== 'string' || !message.trim()) {
+      res.status(400).json({ error: 'invalid_simulation' });
+      return;
+    }
+    const result = await deps.simulateDonation({
+      channelId: `simulator-${Date.now()}`,
+      nickname: nickname.trim().slice(0, 40),
+      amount: Number(amount),
+      message: message.trim().slice(0, 200),
+    });
+    res.json(result);
   });
 
   router.get('/nickname-mode', async (_req, res) => {

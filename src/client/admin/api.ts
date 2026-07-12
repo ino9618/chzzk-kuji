@@ -55,6 +55,25 @@ export interface BasicSettings {
   nicknameMode: 'masked' | 'full';
 }
 
+export interface SessionHistoryEntry {
+  id: number;
+  name: string;
+  ticketPrice: number;
+  numberRangeMin: number;
+  numberRangeMax: number;
+  status: 'active' | 'closed';
+  createdAt: string;
+  soldCount: number;
+  tickets: Ticket[];
+}
+
+export type DonationSimulationResult =
+  | { status: 'feature_disabled' }
+  | { status: 'session_inactive' }
+  | { status: 'amount_mismatch'; ticketPrice: number }
+  | { status: 'number_missing'; expectedCount: number; foundNumbers: number[] }
+  | { status: 'processed'; sessionId: number; outcomes: Array<{ number: number; result: 'success' | 'duplicate_rejected' | 'out_of_range'; prizeName?: string }> };
+
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
   if (res.status === 401) {
@@ -79,6 +98,9 @@ export const api = {
   resolveQueueItem: (id: number) => jsonFetch(`/api/admin/queue/${id}/resolve`, { method: 'POST' }),
   getLog: () => jsonFetch<QueueEntry[]>('/api/admin/log'),
   getWinners: () => jsonFetch<Winner[]>('/api/admin/winners'),
+  getSessions: () => jsonFetch<SessionHistoryEntry[]>('/api/admin/sessions'),
+  simulateDonation: (payload: { nickname: string; amount: number; message: string }) =>
+    jsonFetch<DonationSimulationResult>('/api/admin/donation-simulator', { method: 'POST', body: JSON.stringify(payload) }),
   getNicknameMode: () => jsonFetch<{ mode: 'masked' | 'full' }>('/api/admin/nickname-mode'),
   setNicknameMode: (mode: 'masked' | 'full') =>
     jsonFetch('/api/admin/nickname-mode', { method: 'POST', body: JSON.stringify({ mode }) }),

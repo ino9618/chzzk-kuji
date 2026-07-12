@@ -10,7 +10,9 @@ import {
   SlidersIcon,
   TicketIcon,
   TrophyIcon,
+  SendIcon,
 } from './Icons';
+import { adminNavigationSections, type AdminIconName } from '../adminFeatures';
 import { MoreSheet } from './MoreSheet';
 
 interface AppShellProps {
@@ -21,21 +23,16 @@ interface AppShellProps {
   onLogout?: () => void;
 }
 
-const operationsItems = [
-  { page: 'operations' as const, label: '간편 운영', icon: DashboardIcon },
-  { page: 'preflight' as const, label: '방송 전 점검', icon: MonitorIcon },
-  { page: 'board' as const, label: '판매 번호판', icon: TicketIcon },
-  { page: 'winners' as const, label: '당첨 내역', icon: TrophyIcon },
-  { page: 'log' as const, label: '운영 기록', icon: BookIcon },
-];
-
-const settingsItems = [
-  { page: 'connection' as const, label: '치지직 연결', icon: SlidersIcon },
-  { page: 'settings' as const, label: '기본 설정', icon: SettingsIcon },
-  { page: 'session-setup' as const, label: '회차 설정', icon: SettingsIcon },
-  { page: 'overlay' as const, label: '오버레이', icon: MonitorIcon },
-  { page: 'more' as const, label: '기타 설정', icon: SlidersIcon },
-];
+const iconMap: Record<AdminIconName, typeof DashboardIcon> = {
+  dashboard: DashboardIcon,
+  monitor: MonitorIcon,
+  ticket: TicketIcon,
+  trophy: TrophyIcon,
+  book: BookIcon,
+  settings: SettingsIcon,
+  sliders: SlidersIcon,
+  send: SendIcon,
+};
 
 const statusLabels: Record<string, string> = {
   connected: '연결됨',
@@ -54,9 +51,9 @@ export function AppShell({ page, onNavigate, status, children, onLogout = () => 
     onNavigate(nextPage);
   };
 
-  const renderItems = (items: typeof operationsItems | typeof settingsItems) =>
+  const renderItems = (items: (typeof adminNavigationSections)[number]['items']) =>
     items.map((item) => {
-      const Icon = item.icon;
+      const Icon = iconMap[item.icon];
       return (
         <button
           key={item.page}
@@ -75,10 +72,7 @@ export function AppShell({ page, onNavigate, status, children, onLogout = () => 
       <aside className="shell-sidebar">
         <div className="shell-brand"><BrandMark /></div>
         <nav aria-label="관리자 메뉴">
-          <p className="shell-nav-group">방송 운영</p>
-          {renderItems(operationsItems)}
-          <p className="shell-nav-group">설정</p>
-          {renderItems(settingsItems)}
+          {adminNavigationSections.map((section) => <div className="shell-nav-section" key={section.label}><p className="shell-nav-group">{section.label}</p>{renderItems(section.items)}</div>)}
         </nav>
         <div className={`shell-connection ${status}`}>
           <span className="dot" />
