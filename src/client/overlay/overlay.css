@@ -4,6 +4,9 @@
 }
 
 .overlay-root {
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
   font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 

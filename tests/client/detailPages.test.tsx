@@ -43,6 +43,9 @@ describe('detail settings pages', () => {
     expect(html).toContain('새 창 미리보기');
     expect(html).toContain('부분 마스킹');
     expect(html).toContain('실시간 오버레이 미리보기');
+    expect(html).toContain('1920 × 1080');
+    expect(html).toContain('width="1920"');
+    expect(html).toContain('height="1080"');
     expect(html).toContain('테스트 표시');
     expect(html).toContain('당첨 내역에는 저장되지 않습니다');
   });

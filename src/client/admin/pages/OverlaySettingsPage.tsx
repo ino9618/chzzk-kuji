@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { InlineFeedback } from '../components/InlineFeedback';
 import { SettingRow } from '../components/SettingRow';
 
@@ -7,6 +7,34 @@ interface OverlayTestPayload {
   grade: string;
   prizeName: string;
   nickname: string;
+}
+
+const OVERLAY_WIDTH = 1920;
+const OVERLAY_HEIGHT = 1080;
+
+function OverlayPreviewFrame() {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const resize = () => setScale(frame.clientWidth / OVERLAY_WIDTH);
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div className="overlay-preview-frame" ref={frameRef}>
+    <iframe
+      src="/overlay.html"
+      title="OBS 오버레이 실시간 미리보기"
+      width={OVERLAY_WIDTH}
+      height={OVERLAY_HEIGHT}
+      style={{ transform: `scale(${scale})` }}
+    />
+  </div>;
 }
 
 export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOverlay }: { nicknameMode: 'masked' | 'full'; onSetNicknameMode: (mode: 'masked' | 'full') => Promise<void>; onTestOverlay: (payload: OverlayTestPayload) => Promise<void> }) {
@@ -53,8 +81,8 @@ export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOve
     <div className="admin-page overlay-page">
       <header className="page-header"><div><h1>오버레이</h1><p>OBS 브라우저 소스와 화면 표시 방식을 설정합니다.</p></div></header>
       <section className="overlay-preview-section">
-        <div className="workflow-heading"><div><h2>실시간 오버레이 미리보기</h2><p>아래 테스트를 실행하면 OBS와 이 화면에 동시에 표시됩니다.</p></div><span>16:9</span></div>
-        <div className="overlay-preview-frame"><iframe src="/overlay.html" title="OBS 오버레이 실시간 미리보기" /></div>
+        <div className="workflow-heading"><div><h2>실시간 오버레이 미리보기</h2><p>OBS 브라우저 소스와 동일한 Full HD 화면을 축소해 표시합니다.</p></div><span>1920 × 1080</span></div>
+        <OverlayPreviewFrame />
         <div className="overlay-test-form">
           <label>번호<input type="number" min={1} max={9999} value={test.number} onChange={(event) => setTest((current) => ({ ...current, number: Number(event.target.value) }))} /></label>
           <label>등급<input type="text" maxLength={8} value={test.grade} onChange={(event) => setTest((current) => ({ ...current, grade: event.target.value }))} /></label>
@@ -65,7 +93,7 @@ export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOve
         <p className="overlay-test-note">테스트 표시는 약 5초간 유지되며 회차, 번호판, 당첨 내역에는 저장되지 않습니다.</p>
       </section>
       <section className="workflow-section">
-        <SettingRow title="OBS 브라우저 소스" description="OBS의 브라우저 소스 URL에 아래 주소를 입력하세요.">
+        <SettingRow title="OBS 브라우저 소스" description="OBS 브라우저 소스의 너비 1920, 높이 1080으로 설정하고 아래 주소를 입력하세요.">
           <div className="overlay-actions"><code>{url}</code><button onClick={copy}>복사</button><button className="secondary-button" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>
         </SettingRow>
         <SettingRow title="닉네임 표시" description="전체 노출은 방송 화면에 시청자 닉네임을 그대로 표시합니다.">
