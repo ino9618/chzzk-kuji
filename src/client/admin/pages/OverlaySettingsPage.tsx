@@ -9,6 +9,12 @@ interface OverlayTestPayload {
   nickname: string;
 }
 
+interface RouletteOverlayTestPayload {
+  label: string;
+  nickname: string;
+  amount: number;
+}
+
 const OVERLAY_WIDTH = 1920;
 const OVERLAY_HEIGHT = 1080;
 
@@ -37,11 +43,13 @@ function OverlayPreviewFrame() {
   </div>;
 }
 
-export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOverlay }: { nicknameMode: 'masked' | 'full'; onSetNicknameMode: (mode: 'masked' | 'full') => Promise<void>; onTestOverlay: (payload: OverlayTestPayload) => Promise<void> }) {
+export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOverlay, onTestRoulette }: { nicknameMode: 'masked' | 'full'; onSetNicknameMode: (mode: 'masked' | 'full') => Promise<void>; onTestOverlay: (payload: OverlayTestPayload) => Promise<void>; onTestRoulette: (payload: RouletteOverlayTestPayload) => Promise<void> }) {
   const [feedback, setFeedback] = useState('');
   const [pending, setPending] = useState(false);
   const [testPending, setTestPending] = useState(false);
+  const [testMode, setTestMode] = useState<'kuji' | 'roulette'>('kuji');
   const [test, setTest] = useState<OverlayTestPayload>({ number: 1, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자' });
+  const [rouletteTest, setRouletteTest] = useState<RouletteOverlayTestPayload>({ label: '테스트 룰렛 결과', nickname: '테스트 후원자', amount: 5000 });
   const url = typeof window === 'undefined' ? '/overlay.html' : `${window.location.origin}/overlay.html`;
 
   const copy = async () => {
@@ -76,6 +84,18 @@ export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOve
       setTestPending(false);
     }
   };
+  const runRouletteTest = async () => {
+    setTestPending(true);
+    setFeedback('');
+    try {
+      await onTestRoulette(rouletteTest);
+      setFeedback('오버레이에 룰렛 테스트를 표시했습니다. 룰렛 설정과 결과 내역은 변경되지 않습니다.');
+    } catch {
+      setFeedback('룰렛 오버레이 테스트를 표시하지 못했습니다. 연결 상태를 확인해 주세요.');
+    } finally {
+      setTestPending(false);
+    }
+  };
 
   return (
     <div className="admin-page overlay-page">
@@ -83,14 +103,23 @@ export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOve
       <section className="overlay-preview-section">
         <div className="workflow-heading"><div><h2>실시간 오버레이 미리보기</h2><p>OBS 브라우저 소스와 동일한 Full HD 화면을 축소해 표시합니다.</p></div><span>1920 × 1080</span></div>
         <OverlayPreviewFrame />
-        <div className="overlay-test-form">
+        <div className="overlay-test-switch segmented-control" aria-label="오버레이 테스트 종류">
+          <button className={testMode === 'kuji' ? 'active' : ''} onClick={() => setTestMode('kuji')}>이치방쿠지</button>
+          <button className={testMode === 'roulette' ? 'active' : ''} onClick={() => setTestMode('roulette')}>룰렛</button>
+        </div>
+        {testMode === 'kuji' ? <div className="overlay-test-form">
           <label>번호<input type="number" min={1} max={9999} value={test.number} onChange={(event) => setTest((current) => ({ ...current, number: Number(event.target.value) }))} /></label>
           <label>등급<input type="text" maxLength={8} value={test.grade} onChange={(event) => setTest((current) => ({ ...current, grade: event.target.value }))} /></label>
           <label>상품명<input type="text" maxLength={80} value={test.prizeName} onChange={(event) => setTest((current) => ({ ...current, prizeName: event.target.value }))} /></label>
           <label>후원자<input type="text" maxLength={40} value={test.nickname} onChange={(event) => setTest((current) => ({ ...current, nickname: event.target.value }))} /></label>
-          <button disabled={testPending} onClick={runOverlayTest}>{testPending ? '표시 중' : '테스트 표시'}</button>
-        </div>
-        <p className="overlay-test-note">테스트 시 당첨 효과음과 TTS도 함께 재생됩니다. 회차, 번호판, 당첨 내역에는 저장되지 않습니다.</p>
+          <button disabled={testPending} onClick={runOverlayTest}>{testPending ? '표시 중' : '이치방쿠지 테스트'}</button>
+        </div> : <div className="overlay-test-form roulette-overlay-test-form">
+          <label>후원 금액<input type="number" min={1} max={100000000} value={rouletteTest.amount} onChange={(event) => setRouletteTest((current) => ({ ...current, amount: Number(event.target.value) }))} /></label>
+          <label>결과 항목<input type="text" maxLength={40} value={rouletteTest.label} onChange={(event) => setRouletteTest((current) => ({ ...current, label: event.target.value }))} /></label>
+          <label>후원자<input type="text" maxLength={40} value={rouletteTest.nickname} onChange={(event) => setRouletteTest((current) => ({ ...current, nickname: event.target.value }))} /></label>
+          <button disabled={testPending} onClick={runRouletteTest}>{testPending ? '표시 중' : '룰렛 테스트'}</button>
+        </div>}
+        <p className="overlay-test-note">테스트는 OBS와 위 미리보기에 동시에 표시되며 회차, 번호판, 당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다.</p>
       </section>
       <section className="workflow-section">
         <SettingRow title="당첨 효과음과 Google Cloud TTS" description="당첨 팡파르 후 Google Cloud 한국어 음성으로 후원자, 번호와 상품명을 자동 안내합니다.">

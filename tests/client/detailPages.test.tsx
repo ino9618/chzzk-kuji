@@ -61,7 +61,7 @@ describe('detail settings pages', () => {
   });
 
   it('renders overlay controls', () => {
-    const html = renderToStaticMarkup(<OverlaySettingsPage nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} onTestOverlay={vi.fn(async () => undefined)} />);
+    const html = renderToStaticMarkup(<OverlaySettingsPage nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} onTestOverlay={vi.fn(async () => undefined)} onTestRoulette={vi.fn(async () => undefined)} />);
     expect(html).toContain('OBS 브라우저 소스');
     expect(html).toContain('새 창 미리보기');
     expect(html).toContain('부분 마스킹');
@@ -69,8 +69,9 @@ describe('detail settings pages', () => {
     expect(html).toContain('1920 × 1080');
     expect(html).toContain('width="1920"');
     expect(html).toContain('height="1080"');
-    expect(html).toContain('테스트 표시');
-    expect(html).toContain('당첨 내역에는 저장되지 않습니다');
+    expect(html).toContain('이치방쿠지 테스트');
+    expect(html).toContain('룰렛');
+    expect(html).toContain('당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다');
   });
 
   it('renders low-frequency actions', () => {

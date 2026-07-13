@@ -78,6 +78,23 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
       }
       acknowledge?.({ ok: true });
     });
+
+    socket.on('overlay:roulette-test', (input, acknowledge) => {
+      if (!socket.rooms.has('admin')) {
+        acknowledge?.({ ok: false, error: 'unauthorized' });
+        return;
+      }
+
+      const payload = input && typeof input === 'object' ? input as Record<string, unknown> : {};
+      const amount = Number(payload.amount);
+      io.emit('roulette:result', {
+        label: String(payload.label ?? '테스트 룰렛 결과').trim().slice(0, 40) || '테스트 룰렛 결과',
+        nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
+        amount: Number.isInteger(amount) && amount > 0 ? Math.min(amount, 100_000_000) : 5000,
+        test: true,
+      });
+      acknowledge?.({ ok: true });
+    });
   });
 }
 

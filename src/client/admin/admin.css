@@ -1607,6 +1607,8 @@ button.danger-button {
 .overlay-preview-frame { position: relative; aspect-ratio: 16 / 9; margin: 16px; border: 1px solid var(--panel-border); border-radius: 6px; background: #090b0c; overflow: hidden; }
 .overlay-preview-frame iframe { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; display: block; border: 0; transform-origin: top left; }
 .overlay-test-form { display: grid; grid-template-columns: 90px 90px minmax(180px, 1fr) minmax(160px, 0.8fr) auto; align-items: end; gap: 10px; padding: 0 16px; }
+.overlay-test-switch { width: fit-content; margin: 14px 16px 12px; }
+.roulette-overlay-test-form { grid-template-columns: 150px minmax(220px, 1fr) minmax(180px, .8fr) auto; }
 .overlay-test-form label { min-width: 0; display: grid; gap: 6px; color: var(--text-dim); font-size: 0.72rem; font-weight: 700; }
 .overlay-test-form input { width: 100%; min-width: 0; min-height: 40px; padding: 0 10px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--bg-deep); color: var(--text); }
 .overlay-test-form button { min-height: 40px; white-space: nowrap; }

@@ -34,6 +34,7 @@ interface RouletteResult {
   label: string;
   nickname: string;
   amount: number;
+  test?: boolean;
 }
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
@@ -42,6 +43,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     <LotteryModel3D mode="roulette" />
     {revealed && <><div className="reveal-burst" /><div className="roulette-result-card">
+      {result.test && <div className="draw-test-badge">미리보기 테스트</div>}
       <span className="roulette-result-label">후원 룰렛 결과</span>
       <strong>{result.label}</strong>
       <p>{result.nickname} · {result.amount.toLocaleString('ko-KR')} 치즈</p>

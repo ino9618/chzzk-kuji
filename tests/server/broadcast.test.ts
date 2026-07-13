@@ -133,4 +133,22 @@ describe('admin-room broadcast scoping (integration)', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(received).toContainEqual({ number: 7, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자' });
   });
+
+  it('broadcasts roulette overlay tests without recording a real roulette result', async () => {
+    const token = 'roulette-overlay-admin-token';
+    registerAdminToken(token);
+    adminClient = ioClient(`http://localhost:${port}`, { transports: ['websocket'], extraHeaders: { Cookie: `admin_token=${token}` } });
+    publicClient = ioClient(`http://localhost:${port}`, { transports: ['websocket'] });
+    await Promise.all([
+      new Promise<void>((resolve) => adminClient.on('connect', resolve)),
+      new Promise<void>((resolve) => publicClient.on('connect', resolve)),
+    ]);
+
+    const received: unknown[] = [];
+    publicClient.on('roulette:result', (payload) => received.push(payload));
+    expect(await publicClient.emitWithAck('overlay:roulette-test', { label: '비공개' })).toEqual({ ok: false, error: 'unauthorized' });
+    expect(await adminClient.emitWithAck('overlay:roulette-test', { label: 'A상', nickname: '후원자', amount: 5000 })).toEqual({ ok: true });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(received).toContainEqual({ label: 'A상', nickname: '후원자', amount: 5000, test: true });
+  });
 });
