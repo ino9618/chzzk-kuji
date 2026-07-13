@@ -14,7 +14,7 @@ import { ChzzkSocketClient } from './chzzkSocket';
 import { loadTokens, saveTokens } from './chzzkAuth';
 import { broadcastBoardUpdate, broadcastQueueUpdate, broadcastConnectionStatus } from './broadcast';
 import { broadcastRouletteResult, broadcastWinnerAudio } from './broadcast';
-import { processRouletteDonation } from './rouletteProcessor';
+import { getRouletteConfig, processRouletteDonation } from './rouletteProcessor';
 import { buildWinnerSpeech, synthesizeGoogleTts, type WinnerSpeechInput } from './googleTts';
 import { isValidAdminToken } from './middleware/adminAuth';
 
@@ -79,7 +79,7 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
       acknowledge?.({ ok: true });
     });
 
-    socket.on('overlay:roulette-test', (input, acknowledge) => {
+    socket.on('overlay:roulette-test', async (input, acknowledge) => {
       if (!socket.rooms.has('admin')) {
         acknowledge?.({ ok: false, error: 'unauthorized' });
         return;
@@ -87,10 +87,13 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
 
       const payload = input && typeof input === 'object' ? input as Record<string, unknown> : {};
       const amount = Number(payload.amount);
+      const label = String(payload.label ?? '테스트 룰렛 결과').trim().slice(0, 40) || '테스트 룰렛 결과';
+      const config = await getRouletteConfig(db);
       io.emit('roulette:result', {
-        label: String(payload.label ?? '테스트 룰렛 결과').trim().slice(0, 40) || '테스트 룰렛 결과',
+        label,
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
         amount: Number.isInteger(amount) && amount > 0 ? Math.min(amount, 100_000_000) : 5000,
+        items: Array.from(new Set([...config.items.map((item) => item.label), label])),
         test: true,
       });
       acknowledge?.({ ok: true });

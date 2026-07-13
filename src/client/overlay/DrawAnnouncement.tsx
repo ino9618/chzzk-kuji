@@ -1,6 +1,3 @@
-import { useEffect, useState } from 'react';
-import { LotteryModel3D } from './LotteryModel3D';
-
 export interface OverlayAnnouncement {
   key: number;
   number: number;
@@ -41,16 +38,13 @@ export function DrawResultCard({ announce }: { announce: OverlayAnnouncement }) 
 }
 
 export function DrawAnnouncement({ announce, confetti }: { announce: OverlayAnnouncement; confetti: ConfettiPiece[] }) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const timer = window.setTimeout(() => setRevealed(true), 3200); return () => window.clearTimeout(timer); }, [announce.key]);
   return <div className="draw-announce" key={announce.key}>
-    <LotteryModel3D mode="kuji" />
-    {revealed && <><div className="reveal-burst" /><div className="confetti">
+    <div className="reveal-burst" /><div className="confetti">
       {confetti.map((piece, index) => <span key={index} className="confetti-piece" style={{
         left: `${piece.left}%`, width: piece.size, height: piece.size * 0.5, background: piece.color,
         animationDelay: `${piece.delay}s`, animationDuration: `${piece.duration}s`, ['--rot' as string]: `${piece.rotate}deg`,
       }} />)}
-    </div></>}
-    {revealed && <DrawResultCard announce={announce} />}
+    </div>
+    <DrawResultCard announce={announce} />
   </div>;
 }

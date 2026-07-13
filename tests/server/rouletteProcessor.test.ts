@@ -43,7 +43,7 @@ describe('roulette processor', () => {
   it('records a triggered anonymous roulette result', async () => {
     await enableRoulette();
     const result = await processRouletteDonation(db, { channelId: 'anonymous', nickname: '익명 후원자', amount: 1000, message: '!룰렛' }, () => 0.9);
-    expect(result).toEqual({ status: 'triggered', result: { label: 'B', nickname: '익명 후원자', amount: 1000 } });
+    expect(result).toEqual({ status: 'triggered', result: { label: 'B', nickname: '익명 후원자', amount: 1000, items: ['A', 'B'] } });
     expect(await listRouletteLog(db)).toEqual([expect.objectContaining({ donorNickname: '익명 후원자', resultLabel: 'B' })]);
   });
 });

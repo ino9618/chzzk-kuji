@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
-import { playGoogleTtsAudio, playWinnerFanfare } from './overlayAudio';
-import { LotteryModel3D } from './LotteryModel3D';
+import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -34,19 +33,41 @@ interface RouletteResult {
   label: string;
   nickname: string;
   amount: number;
+  items?: string[];
   test?: boolean;
 }
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
-  useEffect(() => { const timer = window.setTimeout(() => setRevealed(true), 3400); return () => window.clearTimeout(timer); }, [result]);
+  const sequence = useMemo(() => {
+    const source = Array.from(new Set((result.items ?? []).map((item) => item.trim()).filter(Boolean)));
+    if (!source.includes(result.label)) source.push(result.label);
+    if (source.length < 2) source.push('다시 돌리기', '보너스');
+    return [...Array.from({ length: 8 }, () => source).flat(), result.label];
+  }, [result]);
+  useEffect(() => {
+    setRevealed(false);
+    playRouletteSpinSound();
+    const timer = window.setTimeout(() => { setRevealed(true); playRouletteStopSound(); }, 3300);
+    return () => window.clearTimeout(timer);
+  }, [result]);
+  const reelStyle = { '--roulette-reel-end': `${88 - (sequence.length - 1) * 88}px` } as CSSProperties;
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
-    <LotteryModel3D mode="roulette" />
+    <div className="roulette-reel-shell">
+      <div className="roulette-reel-header"><span>후원 룰렛</span><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
+      <div className="roulette-reel-window">
+        <div className="roulette-reel-track" style={reelStyle}>
+          {sequence.map((item, index) => <div className={`roulette-reel-item ${index === sequence.length - 1 ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
+        </div>
+        <div className="roulette-reel-focus" aria-hidden="true" />
+      </div>
+      <div className="roulette-reel-donor"><span>{result.nickname}</span><strong>{result.amount.toLocaleString('ko-KR')} 치즈</strong></div>
+    </div>
     {revealed && <><div className="reveal-burst" /><div className="roulette-result-card">
       {result.test && <div className="draw-test-badge">미리보기 테스트</div>}
-      <span className="roulette-result-label">후원 룰렛 결과</span>
+      <span className="roulette-result-label">룰렛 당첨 결과</span>
       <strong>{result.label}</strong>
-      <p>{result.nickname} · {result.amount.toLocaleString('ko-KR')} 치즈</p>
+      <p><b>{result.nickname}</b><span>{result.amount.toLocaleString('ko-KR')} 치즈</span></p>
     </div></>}
   </div>;
 }
@@ -91,7 +112,7 @@ export function App() {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
       isDevPreview = preview === 'kuji' || preview === 'roulette';
       if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: null, nickname: '테스트 후원자', test: true });
-      if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000 });
+      if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], test: true });
     }
     if (!isDevPreview) fetch('/api/overlay/board')
       .then((r) => r.json())

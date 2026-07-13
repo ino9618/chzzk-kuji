@@ -17,6 +17,7 @@ export interface RouletteResult {
   label: string;
   nickname: string;
   amount: number;
+  items: string[];
 }
 
 export type RouletteProcessResult =
@@ -75,7 +76,7 @@ export async function processRouletteDonation(db: Db, event: DonationEvent, rand
   if (!config.enabled) return { status: 'disabled' };
   if (event.amount < config.minimumAmount) return { status: 'below_minimum', minimumAmount: config.minimumAmount };
   const item = pickRouletteItem(config.items, random);
-  const result = { label: item.label, nickname: event.nickname, amount: event.amount };
+  const result = { label: item.label, nickname: event.nickname, amount: event.amount, items: config.items.map(({ label }) => label) };
   await insertRouletteLog(db, { donorNickname: event.nickname, donorChannelId: event.channelId, amount: event.amount, resultLabel: item.label });
   return { status: 'triggered', result };
 }

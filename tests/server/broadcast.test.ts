@@ -149,6 +149,6 @@ describe('admin-room broadcast scoping (integration)', () => {
     expect(await publicClient.emitWithAck('overlay:roulette-test', { label: '비공개' })).toEqual({ ok: false, error: 'unauthorized' });
     expect(await adminClient.emitWithAck('overlay:roulette-test', { label: 'A상', nickname: '후원자', amount: 5000 })).toEqual({ ok: true });
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(received).toContainEqual({ label: 'A상', nickname: '후원자', amount: 5000, test: true });
+    expect(received).toContainEqual(expect.objectContaining({ label: 'A상', nickname: '후원자', amount: 5000, items: expect.arrayContaining(['A상']), test: true }));
   });
 });
