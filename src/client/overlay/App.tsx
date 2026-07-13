@@ -36,6 +36,19 @@ interface RouletteResult {
   amount: number;
 }
 
+function RouletteAnnouncement({ result }: { result: RouletteResult }) {
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => { const timer = window.setTimeout(() => setRevealed(true), 3400); return () => window.clearTimeout(timer); }, [result]);
+  return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
+    <LotteryModel3D mode="roulette" />
+    {revealed && <><div className="reveal-burst" /><div className="roulette-result-card">
+      <span className="roulette-result-label">후원 룰렛 결과</span>
+      <strong>{result.label}</strong>
+      <p>{result.nickname} · {result.amount.toLocaleString('ko-KR')} 치즈</p>
+    </div></>}
+  </div>;
+}
+
 const socket = io();
 
 const ANNOUNCE_MS = 8000;
@@ -196,14 +209,7 @@ export function App() {
       </div></>}
 
       {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
-      {rouletteResult && <div className="roulette-result-overlay">
-        <LotteryModel3D mode="roulette" />
-        <div className="roulette-result-card">
-          <span className="roulette-result-label">후원 룰렛 결과</span>
-          <strong>{rouletteResult.label}</strong>
-          <p>{rouletteResult.nickname} · {rouletteResult.amount.toLocaleString('ko-KR')} 치즈</p>
-        </div>
-      </div>}
+      {rouletteResult && <RouletteAnnouncement result={rouletteResult} />}
     </div>
   );
 }

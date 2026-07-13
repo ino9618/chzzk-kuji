@@ -19,7 +19,7 @@ export function LotteryModel3D({ mode }: { mode: 'kuji' | 'roulette' }) {
       if (disposed) return; model = gltf.scene;
       const box = new THREE.Box3().setFromObject(model); const center = box.getCenter(new THREE.Vector3()); const size = box.getSize(new THREE.Vector3());
       model.position.sub(center); model.scale.setScalar((mode === 'kuji' ? 5.2 : 5.5) / Math.max(size.x, size.y, size.z)); scene.add(model);
-      if (gltf.animations.length) { mixer = new THREE.AnimationMixer(model); const action = mixer.clipAction(gltf.animations[0]); action.setLoop(THREE.LoopOnce, 1); action.clampWhenFinished = true; action.play(); }
+      if (gltf.animations.length) { mixer = new THREE.AnimationMixer(model); gltf.animations.forEach((clip) => { const action = mixer!.clipAction(clip); action.setLoop(THREE.LoopOnce, 1); action.clampWhenFinished = true; action.play(); }); }
     });
     const startedAt = performance.now(); let previousAt = startedAt;
     const render = (now: number) => { if (disposed) return; const delta = Math.min((now - previousAt) / 1000, .04); previousAt = now; mixer?.update(delta); if (model && mode === 'kuji') model.rotation.y = Math.sin((now - startedAt) / 1000 * .7) * .12; renderer.render(scene, camera); frame = requestAnimationFrame(render); };

@@ -10,7 +10,7 @@ import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPr
 import { DonationSimulatorPage } from '../../src/client/admin/pages/DonationSimulatorPage';
 import { SessionHistoryDetail, SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
-import { DrawAnnouncement } from '../../src/client/overlay/DrawAnnouncement';
+import { DrawResultCard } from '../../src/client/overlay/DrawAnnouncement';
 import { RoulettePage } from '../../src/client/admin/pages/RoulettePage';
 import { FeaturesPage } from '../../src/client/admin/pages/FeaturesPage';
 import type { Winner } from '../../src/client/admin/api';
@@ -144,11 +144,11 @@ describe('DrawAnnouncement', () => {
   const base = { key: 1, number: 7, grade: 'A', prizeName: '사진 상품', nickname: '당첨자' };
 
   it('renders a prize image only when one is registered', () => {
-    const withImage = renderToStaticMarkup(<DrawAnnouncement announce={{ ...base, prizeImageUrl: 'data:image/webp;base64,UklGRg==' }} confetti={[]} />);
+    const withImage = renderToStaticMarkup(<DrawResultCard announce={{ ...base, prizeImageUrl: 'data:image/webp;base64,UklGRg==' }} />);
     expect(withImage).toContain('draw-image-frame');
     expect(withImage).toContain('사진 상품 상품');
 
-    const withoutImage = renderToStaticMarkup(<DrawAnnouncement announce={base} confetti={[]} />);
+    const withoutImage = renderToStaticMarkup(<DrawResultCard announce={base} />);
     expect(withoutImage).not.toContain('draw-image-frame');
     expect(withoutImage).not.toContain('has-image');
   });
