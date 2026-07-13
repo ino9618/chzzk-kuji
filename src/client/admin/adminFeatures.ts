@@ -1,6 +1,6 @@
 import type { AdminPage } from './adminModel';
 
-export type AdminIconName = 'dashboard' | 'monitor' | 'ticket' | 'trophy' | 'book' | 'settings' | 'sliders' | 'send';
+export type AdminIconName = 'dashboard' | 'monitor' | 'ticket' | 'trophy' | 'book' | 'settings' | 'sliders' | 'send' | 'roulette';
 
 export interface AdminNavigationItem {
   page: AdminPage;
@@ -30,6 +30,12 @@ export const adminNavigationSections: AdminNavigationSection[] = [
       { page: 'winners', label: '당첨 내역', icon: 'trophy' },
       { page: 'session-history', label: '회차 기록', icon: 'book' },
       { page: 'log', label: '운영 기록', icon: 'book' },
+    ],
+  },
+  {
+    label: '방송 기능',
+    items: [
+      { page: 'roulette', label: '후원 룰렛', icon: 'roulette' },
     ],
   },
   {

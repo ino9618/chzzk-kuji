@@ -75,6 +75,11 @@ export type DonationSimulationResult =
   | { status: 'number_missing'; expectedCount: number; foundNumbers: number[] }
   | { status: 'processed'; sessionId: number; outcomes: Array<{ number: number; result: 'success' | 'duplicate_rejected' | 'out_of_range'; prizeName?: string }> };
 
+export interface RouletteItem { label: string; weight: number; }
+export interface RouletteConfig { enabled: boolean; minimumAmount: number; items: RouletteItem[]; }
+export interface RouletteLogEntry { id: number; donorNickname: string; donorChannelId: string; amount: number; resultLabel: string; createdAt: string; }
+export type RouletteProcessResult = { status: 'ignored' | 'disabled' } | { status: 'below_minimum'; minimumAmount: number } | { status: 'triggered'; result: { label: string; nickname: string; amount: number } };
+
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
   if (res.status === 401) {
@@ -102,6 +107,10 @@ export const api = {
   getSessions: () => jsonFetch<SessionHistoryEntry[]>('/api/admin/sessions'),
   simulateDonation: (payload: { nickname: string; amount: number; message: string }) =>
     jsonFetch<DonationSimulationResult>('/api/admin/donation-simulator', { method: 'POST', body: JSON.stringify(payload) }),
+  getRoulette: () => jsonFetch<RouletteConfig>('/api/admin/roulette'),
+  setRoulette: (config: RouletteConfig) => jsonFetch<RouletteConfig>('/api/admin/roulette', { method: 'POST', body: JSON.stringify(config) }),
+  getRouletteLog: () => jsonFetch<RouletteLogEntry[]>('/api/admin/roulette/log'),
+  testRoulette: () => jsonFetch<RouletteProcessResult>('/api/admin/roulette/test', { method: 'POST' }),
   getNicknameMode: () => jsonFetch<{ mode: 'masked' | 'full' }>('/api/admin/nickname-mode'),
   setNicknameMode: (mode: 'masked' | 'full') =>
     jsonFetch('/api/admin/nickname-mode', { method: 'POST', body: JSON.stringify({ mode }) }),

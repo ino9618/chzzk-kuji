@@ -108,6 +108,15 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS roulette_log (
+  id SERIAL PRIMARY KEY,
+  donor_nickname TEXT NOT NULL,
+  donor_channel_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  result_label TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prize_image_url TEXT;
 `;
 
@@ -416,4 +425,24 @@ export async function setSetting(db: Db, key: string, value: string): Promise<vo
 
 export async function deleteSetting(db: Db, key: string): Promise<void> {
   await db.query(`DELETE FROM settings WHERE key = $1`, [key]);
+}
+
+export interface RouletteLogEntry {
+  id: number;
+  donorNickname: string;
+  donorChannelId: string;
+  amount: number;
+  resultLabel: string;
+  createdAt: string;
+}
+
+export async function insertRouletteLog(db: Db, entry: Omit<RouletteLogEntry, 'id' | 'createdAt'>): Promise<RouletteLogEntry> {
+  const { rows } = await db.query(`INSERT INTO roulette_log (donor_nickname, donor_channel_id, amount, result_label) VALUES ($1, $2, $3, $4) RETURNING *`, [entry.donorNickname, entry.donorChannelId, entry.amount, entry.resultLabel]);
+  const row = rows[0];
+  return { id: row.id, donorNickname: row.donor_nickname, donorChannelId: row.donor_channel_id, amount: row.amount, resultLabel: row.result_label, createdAt: toIso(row.created_at) };
+}
+
+export async function listRouletteLog(db: Db, limit = 100): Promise<RouletteLogEntry[]> {
+  const { rows } = await db.query(`SELECT * FROM roulette_log ORDER BY id DESC LIMIT $1`, [limit]);
+  return rows.map((row) => ({ id: row.id, donorNickname: row.donor_nickname, donorChannelId: row.donor_channel_id, amount: row.amount, resultLabel: row.result_label, createdAt: toIso(row.created_at) }));
 }

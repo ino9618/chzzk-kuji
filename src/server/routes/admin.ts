@@ -12,16 +12,19 @@ import {
   getSetting,
   setSetting,
   deleteSetting,
+  listRouletteLog,
   type Db,
 } from '../db';
 import { requireAdmin } from '../middleware/adminAuth';
 import { requireOwner } from '../middleware/adminAuth';
 import type { DonationEvent, ProcessDonationResult } from '../donationProcessor';
+import { getRouletteConfig, type RouletteConfig, type RouletteProcessResult } from '../rouletteProcessor';
 
 export interface AdminRouterDeps {
   getChzzkStatus: () => 'connected' | 'disconnected' | 'reconnecting' | 'not_configured' | 'needs_reauth';
   disconnectChzzk?: () => Promise<void> | void;
   simulateDonation: (event: DonationEvent) => Promise<ProcessDonationResult>;
+  simulateRoulette: (event: DonationEvent) => Promise<RouletteProcessResult>;
 }
 
 export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
@@ -106,6 +109,39 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
       message: message.trim().slice(0, 200),
     });
     res.json(result);
+  });
+
+  router.get('/roulette', async (_req, res) => {
+    res.json(await getRouletteConfig(db));
+  });
+
+  router.post('/roulette', async (req, res) => {
+    const { enabled, minimumAmount, items } = req.body as RouletteConfig;
+    const validItems = Array.isArray(items) && items.length >= 2 && items.length <= 20 && items.every((item) => typeof item?.label === 'string' && item.label.trim().length > 0 && item.label.trim().length <= 40 && Number.isInteger(item.weight) && item.weight > 0 && item.weight <= 1000);
+    if (typeof enabled !== 'boolean' || !Number.isInteger(minimumAmount) || minimumAmount < 1 || !validItems) {
+      res.status(400).json({ error: 'invalid_roulette_config' });
+      return;
+    }
+    const normalized = items.map((item) => ({ label: item.label.trim(), weight: item.weight }));
+    await db.transaction(async (tx) => {
+      await setSetting(tx, 'roulette_enabled', enabled ? 'true' : 'false');
+      await setSetting(tx, 'roulette_minimum_amount', String(minimumAmount));
+      await setSetting(tx, 'roulette_items', JSON.stringify(normalized));
+    });
+    res.json({ enabled, minimumAmount, items: normalized });
+  });
+
+  router.get('/roulette/log', async (_req, res) => {
+    res.json(await listRouletteLog(db));
+  });
+
+  router.post('/roulette/test', async (_req, res) => {
+    const config = await getRouletteConfig(db);
+    if (!config.enabled) {
+      res.status(409).json({ error: 'roulette_disabled' });
+      return;
+    }
+    res.json(await deps.simulateRoulette({ channelId: 'roulette-test', nickname: '테스트 후원자', amount: config.minimumAmount, message: '!룰렛' }));
   });
 
   router.get('/nickname-mode', async (_req, res) => {

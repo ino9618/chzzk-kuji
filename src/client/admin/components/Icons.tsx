@@ -27,3 +27,4 @@ export const CopyIcon = (props: IconProps) => <IconBase {...props}><rect x="8" y
 export const ImageIcon = (props: IconProps) => <IconBase {...props}><rect x="3" y="4" width="18" height="16" rx="1" /><circle cx="9" cy="10" r="2" /><path d="m4 18 5-5 3 3 2-2 6 5" /></IconBase>;
 export const ArrowLeftIcon = (props: IconProps) => <IconBase {...props}><path d="m15 18-6-6 6-6M9 12h11" /></IconBase>;
 export const ChevronRightIcon = (props: IconProps) => <IconBase {...props}><path d="m9 18 6-6-6-6" /></IconBase>;
+export const RouletteIcon = (props: IconProps) => <IconBase {...props}><circle cx="12" cy="12" r="9" /><path d="M12 3v9l6.4 6.4M12 12l-8.4 3.3" /><circle cx="12" cy="12" r="2" /></IconBase>;

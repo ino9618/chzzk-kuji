@@ -18,6 +18,7 @@ import { OperationsLogPage } from './pages/OperationsLogPage';
 import { BroadcastPreflightPage } from './pages/BroadcastPreflightPage';
 import { DonationSimulatorPage } from './pages/DonationSimulatorPage';
 import { SessionHistoryPage } from './pages/SessionHistoryPage';
+import { RoulettePage } from './pages/RoulettePage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -168,6 +169,7 @@ export function App() {
       {page === 'winners' && <WinnersPage winners={winners} />}
       {page === 'session-history' && <SessionHistoryPage sessions={sessionHistory} activeSession={session.active} onClone={(template) => { setSessionTemplate(template); setPage('session-setup'); }} />}
       {page === 'log' && <OperationsLogPage entries={log} />}
+      {page === 'roulette' && <RoulettePage />}
       {page === 'donation-simulator' && <DonationSimulatorPage session={session} onSend={async (payload) => { const result = await api.simulateDonation(payload); await loadData(); return result; }} />}
       {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} onDisconnect={async () => { await api.disconnectChzzk(); const next = { status: 'not_configured', channelId: null, channelName: null, lastEventAt: connection.lastEventAt }; setConnection(next); setChzzkStatus(next.status); }} />}
       {page === 'settings' && <BasicSettingsPage settings={basicSettings} onSave={async (next) => { const saved = await api.setBasicSettings(next); setBasicSettings(saved); setKujiEnabled(saved.kujiEnabled); setNicknameMode(saved.nicknameMode); }} />}

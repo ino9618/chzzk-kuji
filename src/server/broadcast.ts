@@ -11,3 +11,7 @@ export function broadcastQueueUpdate(io: SocketIOServer, queue: unknown): void {
 export function broadcastConnectionStatus(io: SocketIOServer, status: string): void {
   io.to('admin').emit('connection:status', status);
 }
+
+export function broadcastRouletteResult(io: SocketIOServer, result: unknown): void {
+  io.emit('roulette:result', result);
+}

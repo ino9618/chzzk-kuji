@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { WinnersPage } from '../../src/client/admin/pages/WinnersPage';
+import { WinnersDetail, WinnersPage } from '../../src/client/admin/pages/WinnersPage';
 import { OverlaySettingsPage } from '../../src/client/admin/pages/OverlaySettingsPage';
 import { MorePage } from '../../src/client/admin/pages/MorePage';
 import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
@@ -11,14 +11,24 @@ import { DonationSimulatorPage } from '../../src/client/admin/pages/DonationSimu
 import { SessionHistoryDetail, SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
 import { DrawAnnouncement } from '../../src/client/overlay/DrawAnnouncement';
+import { RoulettePage } from '../../src/client/admin/pages/RoulettePage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
 
 describe('WinnersPage', () => {
-  it('filters and groups winners', () => {
+  it('filters and groups winners into session rows', () => {
     expect(renderToStaticMarkup(<WinnersPage winners={winners} initialQuery="홍길동" />)).toContain('홍길동');
     expect(renderToStaticMarkup(<WinnersPage winners={winners} initialQuery="없는사람" />)).toContain('검색 결과가 없습니다.');
+    expect(renderToStaticMarkup(<WinnersPage winners={winners} />)).toContain('상세 보기');
+    expect(renderToStaticMarkup(<WinnersPage winners={winners} />)).not.toContain('winner-table');
+  });
+
+  it('renders winners only inside the selected session detail', () => {
+    const html = renderToStaticMarkup(<WinnersDetail sessionName="여름 회차" winners={winners} onBack={vi.fn()} />);
+    expect(html).toContain('회차 목록으로');
+    expect(html).toContain('홍길동');
+    expect(html).toContain('A상 · 아메리카노');
   });
 });
 
@@ -129,5 +139,15 @@ describe('DrawAnnouncement', () => {
     const withoutImage = renderToStaticMarkup(<DrawAnnouncement announce={base} confetti={[]} />);
     expect(withoutImage).not.toContain('draw-image-frame');
     expect(withoutImage).not.toContain('has-image');
+  });
+});
+
+describe('RoulettePage', () => {
+  it('renders weighted roulette controls and the donation command', () => {
+    const html = renderToStaticMarkup(<RoulettePage />);
+    expect(html).toContain('후원 룰렛');
+    expect(html).toContain('!룰렛');
+    expect(html).toContain('가중치');
+    expect(html).toContain('룰렛 테스트');
   });
 });

@@ -1548,6 +1548,40 @@ button.danger-button {
 .winner-row:last-child { border-bottom: 0; }
 .winner-row strong { color: var(--accent); }
 .winner-row time { color: var(--text-dim); text-align: right; }
+.winner-session-list { display: grid; gap: 10px; }
+.winner-session-row { width: 100%; min-height: 72px; display: grid; grid-template-columns: minmax(0, 1fr) 80px 100px; align-items: center; gap: 16px; padding: 12px 16px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--panel); color: var(--text); text-align: left; }
+.winner-session-row:hover { border-color: var(--border-strong); filter: none; }
+.winner-session-row > span:first-child { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.winner-session-row strong { overflow: hidden; font-size: 0.88rem; text-overflow: ellipsis; white-space: nowrap; }
+.winner-session-row small { color: var(--text-dim); font-size: 0.7rem; }
+.winner-session-count { color: var(--accent); font-size: 0.8rem; font-weight: 800; text-align: right; }
+.winner-detail-count { align-self: flex-end; padding: 7px 10px; border: 1px solid var(--panel-border); border-radius: 8px; color: var(--accent); font-size: 0.75rem; font-weight: 800; }
+.roulette-page .page-header code { color: var(--accent); }
+.roulette-config-panel,
+.roulette-log-panel { margin-bottom: 12px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--panel); overflow: hidden; }
+.roulette-config-panel { padding-bottom: 16px; }
+.roulette-config-head { min-height: 88px; display: grid; grid-template-columns: 46px minmax(0, 1fr) 220px; align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid var(--panel-border); }
+.roulette-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-dim); color: var(--accent); }
+.roulette-icon svg { width: 22px; height: 22px; }
+.roulette-config-head strong { font-size: 0.86rem; }
+.roulette-config-head p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.73rem; }
+.roulette-config-head label { display: grid; gap: 6px; color: var(--text-dim); font-size: 0.7rem; font-weight: 700; }
+.roulette-config-head input { min-width: 0; }
+.roulette-item-table { margin: 16px 16px 0; border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; }
+.roulette-item-head,
+.roulette-item-row { display: grid; grid-template-columns: minmax(180px, 1fr) 100px 80px 40px; align-items: center; gap: 8px; padding: 8px 10px; }
+.roulette-item-head { min-height: 36px; background: var(--bg-deep); color: var(--text-dim); font-size: 0.68rem; font-weight: 700; }
+.roulette-item-row { border-top: 1px solid var(--panel-border); }
+.roulette-item-row input { min-width: 0; min-height: 38px; padding: 0 10px; border: 1px solid var(--panel-border); border-radius: 6px; background: var(--bg-deep); color: var(--text); }
+.roulette-item-row > span { color: var(--accent); font-size: 0.75rem; font-weight: 800; text-align: right; }
+.roulette-config-panel > .add-prize-button { margin-left: 16px; }
+.roulette-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 16px 16px 0; padding-top: 16px; border-top: 1px solid var(--panel-border); }
+.roulette-log-empty { margin: 0; padding: 28px 16px; color: var(--text-dim); font-size: 0.75rem; text-align: center; }
+.roulette-log-row { min-height: 48px; display: grid; grid-template-columns: minmax(160px, 1fr) minmax(120px, .7fr) 110px 130px; align-items: center; gap: 12px; padding: 8px 16px; border-top: 1px solid var(--panel-border); font-size: 0.75rem; }
+.roulette-log-row strong { color: var(--accent); }
+.roulette-log-row span,
+.roulette-log-row time { overflow: hidden; color: var(--text-dim); text-overflow: ellipsis; white-space: nowrap; }
+.roulette-log-row time { text-align: right; }
 .overlay-actions { width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .overlay-actions code { min-width: 0; flex: 1; padding: 10px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--bg-deep); color: var(--accent); font-size: 0.74rem; line-height: 1.45; overflow-wrap: anywhere; }
 .overlay-actions button { flex: 0 0 auto; white-space: nowrap; }

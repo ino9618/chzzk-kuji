@@ -28,6 +28,12 @@ interface BoardPayload {
   grades?: GradeSummary[];
 }
 
+interface RouletteResult {
+  label: string;
+  nickname: string;
+  amount: number;
+}
+
 const socket = io();
 
 const ANNOUNCE_MS = 8000;
@@ -50,8 +56,10 @@ export function App() {
   const [board, setBoard] = useState<BoardPayload>({ active: false });
   const [justSold, setJustSold] = useState<number | null>(null);
   const [announce, setAnnounce] = useState<OverlayAnnouncement | null>(null);
+  const [rouletteResult, setRouletteResult] = useState<RouletteResult | null>(null);
   const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rouletteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
@@ -88,12 +96,19 @@ export function App() {
     socket.on('overlay:test', (event: Omit<OverlayAnnouncement, 'key'>) => {
       showAnnouncement({ ...event, test: true });
     });
+    socket.on('roulette:result', (result: RouletteResult) => {
+      setRouletteResult(result);
+      if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
+      rouletteTimer.current = setTimeout(() => setRouletteResult(null), 8000);
+    });
 
     return () => {
       socket.off('board:update');
       socket.off('overlay:test');
+      socket.off('roulette:result');
       if (announceTimer.current) clearTimeout(announceTimer.current);
       if (highlightTimer.current) clearTimeout(highlightTimer.current);
+      if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
     };
   }, []);
 
@@ -102,7 +117,7 @@ export function App() {
     return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 70 : 32);
   }, [announce?.key]);
 
-  if (!board.active && !announce) {
+  if (!board.active && !announce && !rouletteResult) {
     return <div className="overlay-empty" />;
   }
 
@@ -169,6 +184,14 @@ export function App() {
       </div></>}
 
       {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
+      {rouletteResult && <div className="roulette-result-overlay">
+        <div className="roulette-result-card">
+          <div className="roulette-result-wheel"><span>R</span></div>
+          <span className="roulette-result-label">후원 룰렛 결과</span>
+          <strong>{rouletteResult.label}</strong>
+          <p>{rouletteResult.nickname} · {rouletteResult.amount.toLocaleString('ko-KR')} 치즈</p>
+        </div>
+      </div>}
     </div>
   );
 }

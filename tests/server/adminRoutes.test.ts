@@ -115,6 +115,24 @@ describe('donation simulator', () => {
   });
 });
 
+describe('roulette settings', () => {
+  it('saves weighted items and can run a test spin', async () => {
+    const config = { enabled: true, minimumAmount: 2000, items: [{ label: '노래', weight: 3 }, { label: '미션', weight: 1 }] };
+    expect((await agent.post('/api/admin/roulette').send(config)).body).toEqual(config);
+    expect((await agent.get('/api/admin/roulette')).body).toEqual(config);
+    const spin = await agent.post('/api/admin/roulette/test');
+    expect(spin.status).toBe(200);
+    expect(spin.body.status).toBe('triggered');
+    expect(['노래', '미션']).toContain(spin.body.result.label);
+    expect((await agent.get('/api/admin/roulette/log')).body).toHaveLength(1);
+  });
+
+  it('rejects invalid roulette weights', async () => {
+    const res = await agent.post('/api/admin/roulette').send({ enabled: true, minimumAmount: 1000, items: [{ label: 'A', weight: 0 }, { label: 'B', weight: 1 }] });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe('admin queue and log routes', () => {
   it('lists pending issues and marks them resolved', async () => {
     await agent.post('/api/admin/session').send({
