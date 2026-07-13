@@ -19,6 +19,7 @@ import { BroadcastPreflightPage } from './pages/BroadcastPreflightPage';
 import { DonationSimulatorPage } from './pages/DonationSimulatorPage';
 import { SessionHistoryPage } from './pages/SessionHistoryPage';
 import { RoulettePage } from './pages/RoulettePage';
+import { FeaturesPage } from './pages/FeaturesPage';
 import './admin.css';
 
 const socket = io({ autoConnect: false });
@@ -27,7 +28,7 @@ export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [oauthAvailable, setOauthAvailable] = useState(true);
-  const [page, setPage] = useState<AdminPage>('operations');
+  const [page, setPage] = useState<AdminPage>('features');
   const [session, setSession] = useState<SessionState>({ active: false });
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [winners, setWinners] = useState<Winner[]>([]);
@@ -163,6 +164,7 @@ export function App() {
       {loadError && <div className="load-error"><InlineFeedback tone="error">일부 정보를 불러오지 못했습니다.</InlineFeedback><button onClick={loadData}>다시 시도</button></div>}
       {mutationError && <InlineFeedback tone="error">{mutationError}</InlineFeedback>}
       {chzzkStatus === 'needs_reauth' && <div className="reauth-banner">치지직 인증이 만료되어 후원 수신이 중단되었습니다. <a href="/api/chzzk/oauth/login">네이버로 다시 로그인</a>하면 즉시 복구됩니다.</div>}
+      {page === 'features' && <FeaturesPage onNavigate={setPage} />}
       {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} kujiPending={savingKuji} onToggleKuji={toggleKuji} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
       {page === 'preflight' && <BroadcastPreflightPage session={session} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} />}
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}

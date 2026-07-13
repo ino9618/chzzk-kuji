@@ -12,9 +12,20 @@ import { SessionHistoryDetail, SessionHistoryPage } from '../../src/client/admin
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
 import { DrawAnnouncement } from '../../src/client/overlay/DrawAnnouncement';
 import { RoulettePage } from '../../src/client/admin/pages/RoulettePage';
+import { FeaturesPage } from '../../src/client/admin/pages/FeaturesPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
+
+describe('FeaturesPage', () => {
+  it('presents kuji and roulette as equal broadcast features', () => {
+    const html = renderToStaticMarkup(<FeaturesPage onNavigate={vi.fn()} />);
+    expect(html).toContain('방송 기능');
+    expect(html).toContain('이치방쿠지');
+    expect(html).toContain('후원 룰렛');
+    expect(html).toContain('기능 확장 예정');
+  });
+});
 
 describe('WinnersPage', () => {
   it('filters and groups winners into session rows', () => {

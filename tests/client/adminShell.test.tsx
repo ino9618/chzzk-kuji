@@ -7,19 +7,20 @@ import { InlineFeedback } from '../../src/client/admin/components/InlineFeedback
 describe('AppShell', () => {
   it('renders grouped desktop navigation and four mobile destinations', () => {
     const html = renderToStaticMarkup(
-      <AppShell page="operations" onNavigate={vi.fn()} status="connected">
+      <AppShell page="features" onNavigate={vi.fn()} status="connected">
         <p>내용</p>
       </AppShell>
     );
 
-    expect(html).toContain('방송 운영');
-    expect(html).toContain('간편 운영');
+    expect(html).toContain('방송 기능');
+    expect(html).toContain('이치방쿠지 관리');
+    expect(html).toContain('후원 룰렛');
     expect(html).toContain('판매 번호판');
     expect(html).toContain('당첨 내역');
     expect(html).toContain('회차 설정');
     expect(html).toContain('오버레이');
     expect(html).toContain('기타 설정');
-    expect(html).toContain('>운영<');
+    expect(html).toContain('>기능<');
     expect(html).toContain('>번호판<');
     expect(html).toContain('>당첨<');
     expect(html).toContain('>더보기<');

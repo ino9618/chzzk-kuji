@@ -86,7 +86,7 @@ export function AppShell({ page, onNavigate, status, children, onLogout = () => 
 
       <nav className="mobile-bottom-nav" aria-label="모바일 관리자 메뉴">
         {[
-          { page: 'operations' as const, label: '운영', icon: DashboardIcon },
+          { page: 'features' as const, label: '기능', icon: DashboardIcon },
           { page: 'board' as const, label: '번호판', icon: TicketIcon },
           { page: 'winners' as const, label: '당첨', icon: TrophyIcon },
         ].map((item) => {

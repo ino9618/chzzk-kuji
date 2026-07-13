@@ -17,25 +17,26 @@ export interface AdminNavigationSection {
 // the shell rendering logic.
 export const adminNavigationSections: AdminNavigationSection[] = [
   {
-    label: '방송 운영',
+    label: '홈',
     items: [
-      { page: 'operations', label: '간편 운영', icon: 'dashboard' },
+      { page: 'features', label: '방송 기능', icon: 'dashboard' },
       { page: 'preflight', label: '방송 전 점검', icon: 'monitor' },
-    ],
-  },
-  {
-    label: '이치방쿠지',
-    items: [
-      { page: 'board', label: '판매 번호판', icon: 'ticket' },
-      { page: 'winners', label: '당첨 내역', icon: 'trophy' },
-      { page: 'session-history', label: '회차 기록', icon: 'book' },
-      { page: 'log', label: '운영 기록', icon: 'book' },
     ],
   },
   {
     label: '방송 기능',
     items: [
+      { page: 'operations', label: '이치방쿠지', icon: 'ticket' },
       { page: 'roulette', label: '후원 룰렛', icon: 'roulette' },
+    ],
+  },
+  {
+    label: '이치방쿠지 관리',
+    items: [
+      { page: 'board', label: '판매 번호판', icon: 'ticket' },
+      { page: 'winners', label: '당첨 내역', icon: 'trophy' },
+      { page: 'session-history', label: '회차 기록', icon: 'book' },
+      { page: 'log', label: '운영 기록', icon: 'book' },
     ],
   },
   {

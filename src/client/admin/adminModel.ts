@@ -1,6 +1,6 @@
 import type { Ticket, Winner } from './api';
 
-export type AdminPage = 'operations' | 'preflight' | 'board' | 'winners' | 'session-history' | 'log' | 'roulette' | 'donation-simulator' | 'connection' | 'settings' | 'session-setup' | 'overlay' | 'more';
+export type AdminPage = 'features' | 'operations' | 'preflight' | 'board' | 'winners' | 'session-history' | 'log' | 'roulette' | 'donation-simulator' | 'connection' | 'settings' | 'session-setup' | 'overlay' | 'more';
 export type TicketFilter = 'all' | 'available' | 'sold';
 
 export interface OperationsStatusInput {
