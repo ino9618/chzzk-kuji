@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import { playGoogleTtsAudio, playWinnerFanfare } from './overlayAudio';
+import { LotteryModel3D } from './LotteryModel3D';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -70,7 +71,14 @@ export function App() {
   };
 
   useEffect(() => {
-    fetch('/api/overlay/board')
+    let isDevPreview = false;
+    if (import.meta.env.DEV) {
+      const preview = new URLSearchParams(window.location.search).get('preview3d');
+      isDevPreview = preview === 'kuji' || preview === 'roulette';
+      if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: null, nickname: '테스트 후원자', test: true });
+      if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000 });
+    }
+    if (!isDevPreview) fetch('/api/overlay/board')
       .then((r) => r.json())
       .then(setBoard);
 
@@ -189,8 +197,8 @@ export function App() {
 
       {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
       {rouletteResult && <div className="roulette-result-overlay">
+        <LotteryModel3D mode="roulette" />
         <div className="roulette-result-card">
-          <div className="roulette-result-wheel"><span>R</span></div>
           <span className="roulette-result-label">후원 룰렛 결과</span>
           <strong>{rouletteResult.label}</strong>
           <p>{rouletteResult.nickname} · {rouletteResult.amount.toLocaleString('ko-KR')} 치즈</p>

@@ -1,3 +1,5 @@
+import { LotteryModel3D } from './LotteryModel3D';
+
 export interface OverlayAnnouncement {
   key: number;
   number: number;
@@ -28,6 +30,7 @@ export function gradeClass(grade: string | null | undefined): string {
 
 export function DrawAnnouncement({ announce, confetti }: { announce: OverlayAnnouncement; confetti: ConfettiPiece[] }) {
   return <div className="draw-announce" key={announce.key}>
+    <LotteryModel3D mode="kuji" />
     <div className="confetti">
       {confetti.map((piece, index) => <span key={index} className="confetti-piece" style={{
         left: `${piece.left}%`, width: piece.size, height: piece.size * 0.5, background: piece.color,
