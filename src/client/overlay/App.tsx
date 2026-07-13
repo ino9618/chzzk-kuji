@@ -42,7 +42,7 @@ interface RouletteResult {
 
 export type OverlayMode = 'kuji' | 'roulette' | 'combined';
 
-const ROULETTE_SPIN_MS = 3000;
+const ROULETTE_SPIN_MS = 2500;
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
