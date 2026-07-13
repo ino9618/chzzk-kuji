@@ -93,8 +93,8 @@ export function OverlaySettingsPage({ nicknameMode, onSetNicknameMode, onTestOve
         <p className="overlay-test-note">테스트 시 당첨 효과음과 TTS도 함께 재생됩니다. 회차, 번호판, 당첨 내역에는 저장되지 않습니다.</p>
       </section>
       <section className="workflow-section">
-        <SettingRow title="당첨 효과음과 무료 TTS" description="당첨 팡파르 후 브라우저 내장 한국어 음성으로 후원자, 번호와 상품명을 자동 안내합니다. 별도 API 키나 이용료가 없습니다.">
-          <span className="overlay-audio-state">자동 재생</span>
+        <SettingRow title="당첨 효과음과 Google Cloud TTS" description="당첨 팡파르 후 Google Cloud 한국어 음성으로 후원자, 번호와 상품명을 자동 안내합니다.">
+          <span className="overlay-audio-state">Google 음성</span>
         </SettingRow>
         <SettingRow title="OBS 브라우저 소스" description="OBS 브라우저 소스의 너비 1920, 높이 1080으로 설정하고 아래 주소를 입력하세요.">
           <div className="overlay-actions"><code>{url}</code><button onClick={copy}>복사</button><button className="secondary-button" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>

@@ -13,8 +13,9 @@ import { processDonation } from './donationProcessor';
 import { ChzzkSocketClient } from './chzzkSocket';
 import { loadTokens, saveTokens } from './chzzkAuth';
 import { broadcastBoardUpdate, broadcastQueueUpdate, broadcastConnectionStatus } from './broadcast';
-import { broadcastRouletteResult } from './broadcast';
+import { broadcastRouletteResult, broadcastWinnerAudio } from './broadcast';
 import { processRouletteDonation } from './rouletteProcessor';
+import { buildWinnerSpeech, synthesizeGoogleTts, type WinnerSpeechInput } from './googleTts';
 import { isValidAdminToken } from './middleware/adminAuth';
 
 /**
@@ -43,7 +44,7 @@ export function parseCookie(cookieHeader: string | undefined, name: string): str
  * the 'admin' room receive admin-only broadcasts (queue:update,
  * connection:status); all sockets receive board:update.
  */
-export function registerSocketHandlers(io: SocketIOServer, db: Db): void {
+export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerAudio?: (input: WinnerSpeechInput) => Promise<string>): void {
   io.on('connection', (socket) => {
     buildBoardPayload(db)
       .then((board) => socket.emit('board:update', board))
@@ -57,7 +58,7 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db): void {
       socket.join('admin');
     }
 
-    socket.on('overlay:test', (input, acknowledge) => {
+    socket.on('overlay:test', async (input, acknowledge) => {
       if (!socket.rooms.has('admin')) {
         acknowledge?.({ ok: false, error: 'unauthorized' });
         return;
@@ -72,6 +73,9 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db): void {
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
       };
       io.emit('overlay:test', testEvent);
+      if (createWinnerAudio) {
+        try { broadcastWinnerAudio(io, await createWinnerAudio(testEvent)); } catch (error) { console.error('Google Cloud TTS test failed:', error); }
+      }
       acknowledge?.({ ok: true });
     });
   });
@@ -165,9 +169,19 @@ async function main(): Promise<void> {
   const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, { cors: { origin: true } });
 
-  registerSocketHandlers(io, db);
+  const googleTtsKey = process.env.GOOGLE_CLOUD_TTS_API_KEY ?? '';
+  const createWinnerAudio = googleTtsKey ? (input: WinnerSpeechInput) => synthesizeGoogleTts(buildWinnerSpeech(input), googleTtsKey) : undefined;
+  registerSocketHandlers(io, db, createWinnerAudio);
+  const announceProcessedWinners = async (event: import('./donationProcessor').DonationEvent, result: import('./donationProcessor').ProcessDonationResult) => {
+    if (!createWinnerAudio || result.status !== 'processed') return;
+    for (const outcome of result.outcomes.filter((item) => item.result === 'success')) {
+      try { broadcastWinnerAudio(io, await createWinnerAudio({ nickname: event.nickname, number: outcome.number, prizeName: outcome.prizeName })); }
+      catch (error) { console.error('Google Cloud TTS generation failed:', error); }
+    }
+  };
   simulateDonation = async (event) => {
     const result = await processDonation(db, event);
+    await announceProcessedWinners(event, result);
     broadcastBoardUpdate(io, await buildBoardPayload(db));
     broadcastQueueUpdate(io, await listPendingIssues(db));
     return result;
@@ -238,7 +252,10 @@ async function main(): Promise<void> {
       (async () => {
         const roulette = await processRouletteDonation(db, event);
         if (roulette.status === 'triggered') broadcastRouletteResult(io, roulette.result);
-        if (roulette.status === 'ignored') await processDonation(db, event);
+        if (roulette.status === 'ignored') {
+          const result = await processDonation(db, event);
+          await announceProcessedWinners(event, result);
+        }
         broadcastBoardUpdate(io, await buildBoardPayload(db));
         broadcastQueueUpdate(io, await listPendingIssues(db));
       })().catch((err) => console.error('Failed to process a donation event:', err));

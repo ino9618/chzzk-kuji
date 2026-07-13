@@ -76,9 +76,9 @@ export type DonationSimulationResult =
   | { status: 'processed'; sessionId: number; outcomes: Array<{ number: number; result: 'success' | 'duplicate_rejected' | 'out_of_range'; prizeName?: string }> };
 
 export interface RouletteItem { label: string; weight: number; }
-export interface RouletteConfig { enabled: boolean; minimumAmount: number; items: RouletteItem[]; }
+export interface RouletteConfig { enabled: boolean; minimumAmount: number; registrationAmount: number; items: RouletteItem[]; }
 export interface RouletteLogEntry { id: number; donorNickname: string; donorChannelId: string; amount: number; resultLabel: string; createdAt: string; }
-export type RouletteProcessResult = { status: 'ignored' | 'disabled' } | { status: 'below_minimum'; minimumAmount: number } | { status: 'triggered'; result: { label: string; nickname: string; amount: number } };
+export type RouletteProcessResult = { status: 'ignored' | 'disabled' } | { status: 'below_minimum' | 'registration_below_minimum'; minimumAmount: number } | { status: 'registration_rejected'; reason: string } | { status: 'registered'; label: string; nickname: string; amount: number } | { status: 'triggered'; result: { label: string; nickname: string; amount: number } };
 
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });

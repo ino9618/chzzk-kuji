@@ -13,6 +13,7 @@ export default defineConfig({
         admin: path.resolve(__dirname, 'src/client/admin.html'),
         overlay: path.resolve(__dirname, 'src/client/overlay.html'),
         manual: path.resolve(__dirname, 'src/client/manual.html'),
+        preview3d: path.resolve(__dirname, 'src/client/preview-3d.html'),
       },
     },
   },

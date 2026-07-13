@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
-import { playWinnerAudio } from './overlayAudio';
+import { playGoogleTtsAudio, playWinnerFanfare } from './overlayAudio';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -64,7 +64,7 @@ export function App() {
 
   const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
-    playWinnerAudio(next);
+    playWinnerFanfare();
     if (announceTimer.current) clearTimeout(announceTimer.current);
     announceTimer.current = setTimeout(() => setAnnounce(null), ANNOUNCE_MS);
   };
@@ -103,11 +103,13 @@ export function App() {
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
       rouletteTimer.current = setTimeout(() => setRouletteResult(null), 8000);
     });
+    socket.on('winner:audio', ({ audioDataUrl }: { audioDataUrl: string }) => playGoogleTtsAudio(audioDataUrl));
 
     return () => {
       socket.off('board:update');
       socket.off('overlay:test');
       socket.off('roulette:result');
+      socket.off('winner:audio');
       if (announceTimer.current) clearTimeout(announceTimer.current);
       if (highlightTimer.current) clearTimeout(highlightTimer.current);
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);

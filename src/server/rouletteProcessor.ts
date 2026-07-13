@@ -1,4 +1,4 @@
-import { getSetting, insertRouletteLog, type Db } from './db';
+import { getSetting, insertRouletteLog, setSetting, type Db } from './db';
 import type { DonationEvent } from './donationProcessor';
 
 export interface RouletteItem {
@@ -9,6 +9,7 @@ export interface RouletteItem {
 export interface RouletteConfig {
   enabled: boolean;
   minimumAmount: number;
+  registrationAmount: number;
   items: RouletteItem[];
 }
 
@@ -22,6 +23,9 @@ export type RouletteProcessResult =
   | { status: 'ignored' }
   | { status: 'disabled' }
   | { status: 'below_minimum'; minimumAmount: number }
+  | { status: 'registration_below_minimum'; minimumAmount: number }
+  | { status: 'registration_rejected'; reason: 'duplicate' | 'full' | 'empty' }
+  | { status: 'registered'; label: string; nickname: string; amount: number }
   | { status: 'triggered'; result: RouletteResult };
 
 const DEFAULT_ITEMS: RouletteItem[] = [
@@ -31,15 +35,15 @@ const DEFAULT_ITEMS: RouletteItem[] = [
 ];
 
 export async function getRouletteConfig(db: Db): Promise<RouletteConfig> {
-  const [enabled, amount, rawItems] = await Promise.all([
-    getSetting(db, 'roulette_enabled'), getSetting(db, 'roulette_minimum_amount'), getSetting(db, 'roulette_items'),
+  const [enabled, amount, registrationAmount, rawItems] = await Promise.all([
+    getSetting(db, 'roulette_enabled'), getSetting(db, 'roulette_minimum_amount'), getSetting(db, 'roulette_registration_amount'), getSetting(db, 'roulette_items'),
   ]);
   let items = DEFAULT_ITEMS;
   try {
     const parsed = JSON.parse(rawItems ?? 'null');
     if (Array.isArray(parsed) && parsed.length > 0) items = parsed;
   } catch { /* use defaults */ }
-  return { enabled: enabled === 'true', minimumAmount: Math.max(1, Number(amount) || 1000), items };
+  return { enabled: enabled === 'true', minimumAmount: Math.max(1, Number(amount) || 1000), registrationAmount: Math.max(1, Number(registrationAmount) || 5000), items };
 }
 
 export function pickRouletteItem(items: RouletteItem[], random = Math.random): RouletteItem {
@@ -55,8 +59,19 @@ export function pickRouletteItem(items: RouletteItem[], random = Math.random): R
 }
 
 export async function processRouletteDonation(db: Db, event: DonationEvent, random = Math.random): Promise<RouletteProcessResult> {
-  if (!/(?:^|\s)!룰렛(?:\s|$)/u.test(event.message)) return { status: 'ignored' };
   const config = await getRouletteConfig(db);
+  const registration = event.message.match(/(?:^|\s)!등록\s+(.+)$/u);
+  if (registration) {
+    if (!config.enabled) return { status: 'disabled' };
+    if (event.amount < config.registrationAmount) return { status: 'registration_below_minimum', minimumAmount: config.registrationAmount };
+    const label = registration[1].trim().slice(0, 40);
+    if (!label) return { status: 'registration_rejected', reason: 'empty' };
+    if (config.items.length >= 20) return { status: 'registration_rejected', reason: 'full' };
+    if (config.items.some((item) => item.label.toLocaleLowerCase('ko-KR') === label.toLocaleLowerCase('ko-KR'))) return { status: 'registration_rejected', reason: 'duplicate' };
+    await setSetting(db, 'roulette_items', JSON.stringify([...config.items, { label, weight: 1 }]));
+    return { status: 'registered', label, nickname: event.nickname, amount: event.amount };
+  }
+  if (!/(?:^|\s)!룰렛(?:\s|$)/u.test(event.message)) return { status: 'ignored' };
   if (!config.enabled) return { status: 'disabled' };
   if (event.amount < config.minimumAmount) return { status: 'below_minimum', minimumAmount: config.minimumAmount };
   const item = pickRouletteItem(config.items, random);

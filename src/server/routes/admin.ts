@@ -116,9 +116,9 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
   });
 
   router.post('/roulette', async (req, res) => {
-    const { enabled, minimumAmount, items } = req.body as RouletteConfig;
+    const { enabled, minimumAmount, registrationAmount, items } = req.body as RouletteConfig;
     const validItems = Array.isArray(items) && items.length >= 2 && items.length <= 20 && items.every((item) => typeof item?.label === 'string' && item.label.trim().length > 0 && item.label.trim().length <= 40 && Number.isInteger(item.weight) && item.weight > 0 && item.weight <= 1000);
-    if (typeof enabled !== 'boolean' || !Number.isInteger(minimumAmount) || minimumAmount < 1 || !validItems) {
+    if (typeof enabled !== 'boolean' || !Number.isInteger(minimumAmount) || minimumAmount < 1 || !Number.isInteger(registrationAmount) || registrationAmount < 1 || !validItems) {
       res.status(400).json({ error: 'invalid_roulette_config' });
       return;
     }
@@ -126,9 +126,10 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
     await db.transaction(async (tx) => {
       await setSetting(tx, 'roulette_enabled', enabled ? 'true' : 'false');
       await setSetting(tx, 'roulette_minimum_amount', String(minimumAmount));
+      await setSetting(tx, 'roulette_registration_amount', String(registrationAmount));
       await setSetting(tx, 'roulette_items', JSON.stringify(normalized));
     });
-    res.json({ enabled, minimumAmount, items: normalized });
+    res.json({ enabled, minimumAmount, registrationAmount, items: normalized });
   });
 
   router.get('/roulette/log', async (_req, res) => {

@@ -15,3 +15,7 @@ export function broadcastConnectionStatus(io: SocketIOServer, status: string): v
 export function broadcastRouletteResult(io: SocketIOServer, result: unknown): void {
   io.emit('roulette:result', result);
 }
+
+export function broadcastWinnerAudio(io: SocketIOServer, audioDataUrl: string): void {
+  io.emit('winner:audio', { audioDataUrl });
+}

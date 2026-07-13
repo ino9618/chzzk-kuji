@@ -1,12 +1,3 @@
-import type { OverlayAnnouncement } from './DrawAnnouncement';
-
-export function buildWinnerSpeech(announcement: Omit<OverlayAnnouncement, 'key'>): string {
-  const winner = announcement.nickname?.trim() || '익명 후원자';
-  const grade = announcement.grade?.trim() ? `${announcement.grade.trim()}상 ` : '';
-  const prize = announcement.prizeName?.trim() || '상품';
-  return `${winner}님, 축하합니다. ${announcement.number}번, ${grade}${prize}에 당첨되었습니다.`;
-}
-
 function playFanfare() {
   const context = new AudioContext();
   const gain = context.createGain();
@@ -25,18 +16,12 @@ function playFanfare() {
   window.setTimeout(() => void context.close(), 1200);
 }
 
-export function playWinnerAudio(announcement: Omit<OverlayAnnouncement, 'key'>) {
+export function playWinnerFanfare() {
   try { playFanfare(); } catch { /* Browser source audio may be disabled. */ }
-  if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
-  window.setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(buildWinnerSpeech(announcement));
-    utterance.lang = 'ko-KR';
-    utterance.rate = 0.95;
-    utterance.pitch = 1.05;
-    utterance.volume = 1;
-    const voice = window.speechSynthesis.getVoices().find((item) => item.lang.toLowerCase().startsWith('ko'));
-    if (voice) utterance.voice = voice;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, 650);
+}
+
+export function playGoogleTtsAudio(audioDataUrl: string) {
+  const audio = new Audio(audioDataUrl);
+  audio.volume = 1;
+  void audio.play().catch(() => { /* OBS/browser source audio may be muted. */ });
 }

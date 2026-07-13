@@ -117,7 +117,7 @@ describe('donation simulator', () => {
 
 describe('roulette settings', () => {
   it('saves weighted items and can run a test spin', async () => {
-    const config = { enabled: true, minimumAmount: 2000, items: [{ label: '노래', weight: 3 }, { label: '미션', weight: 1 }] };
+    const config = { enabled: true, minimumAmount: 2000, registrationAmount: 5000, items: [{ label: '노래', weight: 3 }, { label: '미션', weight: 1 }] };
     expect((await agent.post('/api/admin/roulette').send(config)).body).toEqual(config);
     expect((await agent.get('/api/admin/roulette')).body).toEqual(config);
     const spin = await agent.post('/api/admin/roulette/test');
@@ -128,7 +128,7 @@ describe('roulette settings', () => {
   });
 
   it('rejects invalid roulette weights', async () => {
-    const res = await agent.post('/api/admin/roulette').send({ enabled: true, minimumAmount: 1000, items: [{ label: 'A', weight: 0 }, { label: 'B', weight: 1 }] });
+    const res = await agent.post('/api/admin/roulette').send({ enabled: true, minimumAmount: 1000, registrationAmount: 5000, items: [{ label: 'A', weight: 0 }, { label: 'B', weight: 1 }] });
     expect(res.status).toBe(400);
   });
 });
