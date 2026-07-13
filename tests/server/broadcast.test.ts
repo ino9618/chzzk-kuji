@@ -39,7 +39,12 @@ describe('admin-room broadcast scoping (integration)', () => {
     db = await createTestDb();
     httpServer = createServer();
     io = new SocketIOServer(httpServer, { cors: { origin: true } });
-    registerSocketHandlers(io, db);
+    registerSocketHandlers(
+      io,
+      db,
+      async () => 'data:audio/mpeg;base64,V0lOTkVS',
+      async () => 'data:audio/mpeg;base64,Uk9VTEVUVEU=',
+    );
 
     await new Promise<void>((resolve) => {
       httpServer.listen(0, () => resolve());
@@ -132,7 +137,7 @@ describe('admin-room broadcast scoping (integration)', () => {
       nickname: '테스트 후원자',
       sourceTicketNumber: 7,
     });
-    expect(accepted).toEqual({ ok: true });
+    expect(accepted).toEqual({ ok: true, tts: 'sent' });
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(received).toContainEqual({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: image, nickname: '테스트 후원자' });
 
@@ -142,7 +147,7 @@ describe('admin-room broadcast scoping (integration)', () => {
       prizeName: '예시 상품',
       nickname: '예시 후원자',
       prizeImageUrl: '/assets/mascot-success-example.png',
-    })).toEqual({ ok: true });
+    })).toEqual({ ok: true, tts: 'sent' });
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(received).toContainEqual({ number: 3, grade: 'B', prizeName: '예시 상품', prizeImageUrl: '/assets/mascot-success-example.png', nickname: '예시 후원자' });
   });
@@ -160,8 +165,8 @@ describe('admin-room broadcast scoping (integration)', () => {
     const received: unknown[] = [];
     publicClient.on('roulette:result', (payload) => received.push(payload));
     expect(await publicClient.emitWithAck('overlay:roulette-test', { label: '비공개' })).toEqual({ ok: false, error: 'unauthorized' });
-    expect(await adminClient.emitWithAck('overlay:roulette-test', { label: 'A상', nickname: '후원자', amount: 5000 })).toEqual({ ok: true });
+    expect(await adminClient.emitWithAck('overlay:roulette-test', { label: 'A상', nickname: '후원자', amount: 5000 })).toEqual({ ok: true, tts: 'sent' });
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(received).toContainEqual(expect.objectContaining({ label: 'A상', nickname: '후원자', amount: 5000, items: expect.arrayContaining(['A상']), test: true }));
+    expect(received).toContainEqual(expect.objectContaining({ label: 'A상', nickname: '후원자', amount: 5000, items: expect.arrayContaining(['A상']), audioDataUrl: 'data:audio/mpeg;base64,Uk9VTEVUVEU=', test: true }));
   });
 });

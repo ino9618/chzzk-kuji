@@ -64,7 +64,7 @@ describe('detail settings pages', () => {
   });
 
   it('renders overlay controls', () => {
-    const html = renderToStaticMarkup(<OverlaySettingsPage session={{ active: true, tickets: [{ number: 7, prizeName: '한정판 피규어', prizeGrade: 'A', prizeImageUrl: 'data:image/webp;base64,UklGRg==', status: 'available', ownerNickname: null }] }} nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} onTestOverlay={vi.fn(async () => undefined)} onTestRoulette={vi.fn(async () => undefined)} />);
+    const html = renderToStaticMarkup(<OverlaySettingsPage session={{ active: true, tickets: [{ number: 7, prizeName: '한정판 피규어', prizeGrade: 'A', prizeImageUrl: 'data:image/webp;base64,UklGRg==', status: 'available', ownerNickname: null }] }} nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} onTestOverlay={vi.fn(async () => ({ ok: true, tts: 'sent' as const }))} onTestRoulette={vi.fn(async () => ({ ok: true, tts: 'sent' as const }))} />);
     expect(html).toContain('이치방쿠지 OBS 소스');
     expect(html).toContain('룰렛 OBS 소스');
     expect(html).toContain('/overlay-kuji.html');
@@ -81,6 +81,7 @@ describe('detail settings pages', () => {
     expect(html).toContain('이치방쿠지 테스트');
     expect(html).toContain('룰렛');
     expect(html).toContain('당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다');
+    expect(html).toContain('테스트로 확인');
   });
 
   it('renders low-frequency actions', () => {

@@ -19,6 +19,11 @@ interface RouletteOverlayTestPayload {
   amount: number;
 }
 
+export interface OverlayTestResponse {
+  ok: boolean;
+  tts: 'sent' | 'not_configured' | 'failed';
+}
+
 const OVERLAY_WIDTH = 1920;
 const OVERLAY_HEIGHT = 1080;
 
@@ -42,12 +47,13 @@ function OverlayPreviewFrame({ src }: { src: string }) {
       title="OBS 오버레이 실시간 미리보기"
       width={OVERLAY_WIDTH}
       height={OVERLAY_HEIGHT}
+      allow="autoplay"
       style={{ transform: `scale(${scale})` }}
     />
   </div>;
 }
 
-export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, onTestOverlay, onTestRoulette }: { session: SessionState; nicknameMode: 'masked' | 'full'; onSetNicknameMode: (mode: 'masked' | 'full') => Promise<void>; onTestOverlay: (payload: OverlayTestPayload) => Promise<void>; onTestRoulette: (payload: RouletteOverlayTestPayload) => Promise<void> }) {
+export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, onTestOverlay, onTestRoulette }: { session: SessionState; nicknameMode: 'masked' | 'full'; onSetNicknameMode: (mode: 'masked' | 'full') => Promise<void>; onTestOverlay: (payload: OverlayTestPayload) => Promise<OverlayTestResponse>; onTestRoulette: (payload: RouletteOverlayTestPayload) => Promise<OverlayTestResponse> }) {
   const [feedback, setFeedback] = useState('');
   const [pending, setPending] = useState(false);
   const [testPending, setTestPending] = useState(false);
@@ -85,8 +91,12 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
     setTestPending(true);
     setFeedback('');
     try {
-      await onTestOverlay(test);
-      setFeedback('오버레이에 테스트 당첨 화면을 표시했습니다. 실제 판매 내역은 변경되지 않습니다.');
+      const result = await onTestOverlay(test);
+      setFeedback(result.tts === 'sent'
+        ? '테스트 당첨 화면과 Google TTS를 전송했습니다. 실제 판매 내역은 변경되지 않습니다.'
+        : result.tts === 'not_configured'
+          ? '당첨 화면은 표시했지만 Google Cloud TTS API 키가 서버에 설정되지 않았습니다.'
+          : '당첨 화면은 표시했지만 Google Cloud TTS 음성 생성에 실패했습니다. API 키와 결제 설정을 확인해 주세요.');
     } catch {
       setFeedback('오버레이 테스트를 표시하지 못했습니다. 연결 상태를 확인해 주세요.');
     } finally {
@@ -97,8 +107,12 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
     setTestPending(true);
     setFeedback('');
     try {
-      await onTestRoulette(rouletteTest);
-      setFeedback('오버레이에 룰렛 테스트를 표시했습니다. 룰렛 설정과 결과 내역은 변경되지 않습니다.');
+      const result = await onTestRoulette(rouletteTest);
+      setFeedback(result.tts === 'sent'
+        ? '룰렛 테스트와 Google TTS를 전송했습니다. TTS는 룰렛이 멈춘 뒤 재생됩니다.'
+        : result.tts === 'not_configured'
+          ? '룰렛은 표시했지만 Google Cloud TTS API 키가 서버에 설정되지 않았습니다.'
+          : '룰렛은 표시했지만 Google Cloud TTS 음성 생성에 실패했습니다. API 키와 결제 설정을 확인해 주세요.');
     } catch {
       setFeedback('룰렛 오버레이 테스트를 표시하지 못했습니다. 연결 상태를 확인해 주세요.');
     } finally {
@@ -147,8 +161,8 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
         <p className="overlay-test-note">테스트는 OBS와 위 미리보기에 동시에 표시되며 회차, 번호판, 당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다.</p>
       </section>
       <section className="workflow-section">
-        <SettingRow title="당첨 효과음과 Google Cloud TTS" description="당첨 팡파르 후 Google Cloud 한국어 음성으로 후원자, 번호와 상품명을 자동 안내합니다.">
-          <span className="overlay-audio-state">Google 음성</span>
+        <SettingRow title="당첨 효과음과 Google Cloud TTS" description="테스트 실행 결과에서 API 키 설정과 음성 생성 상태를 확인할 수 있습니다. 룰렛 TTS는 정지 효과음 다음에 재생됩니다.">
+          <span className="overlay-audio-state">테스트로 확인</span>
         </SettingRow>
         <SettingRow title="이치방쿠지 OBS 소스" description="번호판과 이치방쿠지 당첨 화면만 표시합니다. OBS 크기는 1920 × 1080으로 설정하세요.">
           <div className="overlay-actions"><code>{kujiUrl}</code><button onClick={() => copy(kujiUrl, '이치방쿠지 오버레이')}>복사</button><button className="secondary-button" onClick={() => window.open(kujiUrl, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>

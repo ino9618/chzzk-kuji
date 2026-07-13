@@ -35,29 +35,36 @@ interface RouletteResult {
   nickname: string;
   amount: number;
   items?: string[];
+  audioDataUrl?: string;
   test?: boolean;
 }
 
 export type OverlayMode = 'kuji' | 'roulette' | 'combined';
 
+const ROULETTE_SPIN_MS = 5200;
+
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
   const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
   const revealDone = useRef(false);
+  const speechTimer = useRef<number>();
   const { sequence, winningIndex } = useMemo(() => {
     const source = Array.from(new Set((result.items ?? []).map((item) => item.trim()).filter(Boolean)));
     if (!source.includes(result.label)) source.push(result.label);
     if (source.length < 2) source.push('다시 돌리기', '보너스');
     const nextItem = source[(source.indexOf(result.label) + 1) % source.length];
-    const items = [...Array.from({ length: 8 }, () => source).flat(), result.label, nextItem];
+    const items = [...Array.from({ length: 12 }, () => source).flat(), result.label, nextItem];
     return { sequence: items, winningIndex: items.length - 2 };
   }, [result]);
   useEffect(() => {
     revealDone.current = false;
     setRevealed(false);
-    playRouletteSpinSound();
-    const timer = window.setTimeout(() => finishSpin(), 3600);
-    return () => window.clearTimeout(timer);
+    playRouletteSpinSound(ROULETTE_SPIN_MS);
+    const timer = window.setTimeout(() => finishSpin(), ROULETTE_SPIN_MS + 300);
+    return () => {
+      window.clearTimeout(timer);
+      if (speechTimer.current) window.clearTimeout(speechTimer.current);
+    };
   }, [result]);
   useEffect(() => {
     const resize = () => setRowHeight(Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
@@ -74,6 +81,9 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     revealDone.current = true;
     setRevealed(true);
     playRouletteStopSound();
+    if (result.audioDataUrl) {
+      speechTimer.current = window.setTimeout(() => playGoogleTtsAudio(result.audioDataUrl!), 800);
+    }
   };
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     <div className="roulette-reel-shell" style={reelStyle}>
@@ -173,7 +183,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       if (!showRoulette) return;
       setRouletteResult(result);
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
-      rouletteTimer.current = setTimeout(() => setRouletteResult(null), 8000);
+      rouletteTimer.current = setTimeout(() => setRouletteResult(null), 11_000);
     });
     socket.on('winner:audio', ({ audioDataUrl }: { audioDataUrl: string }) => playGoogleTtsAudio(audioDataUrl));
 

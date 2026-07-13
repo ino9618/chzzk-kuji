@@ -15,7 +15,7 @@ import { loadTokens, saveTokens } from './chzzkAuth';
 import { broadcastBoardUpdate, broadcastQueueUpdate, broadcastConnectionStatus } from './broadcast';
 import { broadcastRouletteResult, broadcastWinnerAudio } from './broadcast';
 import { getRouletteConfig, processRouletteDonation } from './rouletteProcessor';
-import { buildWinnerSpeech, synthesizeGoogleTts, type WinnerSpeechInput } from './googleTts';
+import { buildRouletteSpeech, buildWinnerSpeech, synthesizeGoogleTts, type RouletteSpeechInput, type WinnerSpeechInput } from './googleTts';
 import { isValidAdminToken } from './middleware/adminAuth';
 
 /**
@@ -44,7 +44,14 @@ export function parseCookie(cookieHeader: string | undefined, name: string): str
  * the 'admin' room receive admin-only broadcasts (queue:update,
  * connection:status); all sockets receive board:update.
  */
-export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerAudio?: (input: WinnerSpeechInput) => Promise<string>): void {
+type TtsStatus = 'sent' | 'not_configured' | 'failed';
+
+export function registerSocketHandlers(
+  io: SocketIOServer,
+  db: Db,
+  createWinnerAudio?: (input: WinnerSpeechInput) => Promise<string>,
+  createRouletteAudio?: (input: RouletteSpeechInput) => Promise<string>,
+): void {
   io.on('connection', (socket) => {
     buildBoardPayload(db)
       .then((board) => socket.emit('board:update', board))
@@ -85,10 +92,14 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
         ...(prizeImageUrl ? { prizeImageUrl } : {}),
       };
       io.emit('overlay:test', testEvent);
+      let tts: TtsStatus = createWinnerAudio ? 'failed' : 'not_configured';
       if (createWinnerAudio) {
-        try { broadcastWinnerAudio(io, await createWinnerAudio(testEvent)); } catch (error) { console.error('Google Cloud TTS test failed:', error); }
+        try {
+          broadcastWinnerAudio(io, await createWinnerAudio(testEvent));
+          tts = 'sent';
+        } catch (error) { console.error('Google Cloud TTS test failed:', error); }
       }
-      acknowledge?.({ ok: true });
+      acknowledge?.({ ok: true, tts });
     });
 
     socket.on('overlay:roulette-test', async (input, acknowledge) => {
@@ -101,14 +112,23 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
       const amount = Number(payload.amount);
       const label = String(payload.label ?? '테스트 룰렛 결과').trim().slice(0, 40) || '테스트 룰렛 결과';
       const config = await getRouletteConfig(db);
-      io.emit('roulette:result', {
+      const result = {
         label,
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
         amount: Number.isInteger(amount) && amount > 0 ? Math.min(amount, 100_000_000) : 5000,
         items: Array.from(new Set([...config.items.map((item) => item.label), label])),
         test: true,
-      });
-      acknowledge?.({ ok: true });
+      };
+      let tts: TtsStatus = createRouletteAudio ? 'failed' : 'not_configured';
+      let audioDataUrl: string | undefined;
+      if (createRouletteAudio) {
+        try {
+          audioDataUrl = await createRouletteAudio(result);
+          tts = 'sent';
+        } catch (error) { console.error('Google Cloud roulette TTS test failed:', error); }
+      }
+      io.emit('roulette:result', { ...result, ...(audioDataUrl ? { audioDataUrl } : {}) });
+      acknowledge?.({ ok: true, tts });
     });
   });
 }
@@ -131,7 +151,7 @@ export async function createApp(db: Db, options: AppOptions) {
     'not_configured';
 
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', ttsConfigured: Boolean(process.env.GOOGLE_CLOUD_TTS_API_KEY) });
   });
 
   app.get('/', (_req, res) => {
@@ -199,7 +219,8 @@ async function main(): Promise<void> {
 
   const googleTtsKey = process.env.GOOGLE_CLOUD_TTS_API_KEY ?? '';
   const createWinnerAudio = googleTtsKey ? (input: WinnerSpeechInput) => synthesizeGoogleTts(buildWinnerSpeech(input), googleTtsKey) : undefined;
-  registerSocketHandlers(io, db, createWinnerAudio);
+  const createRouletteAudio = googleTtsKey ? (input: RouletteSpeechInput) => synthesizeGoogleTts(buildRouletteSpeech(input), googleTtsKey) : undefined;
+  registerSocketHandlers(io, db, createWinnerAudio, createRouletteAudio);
   const announceProcessedWinners = async (event: import('./donationProcessor').DonationEvent, result: import('./donationProcessor').ProcessDonationResult) => {
     if (!createWinnerAudio || result.status !== 'processed') return;
     for (const outcome of result.outcomes.filter((item) => item.result === 'success')) {
@@ -207,9 +228,17 @@ async function main(): Promise<void> {
       catch (error) { console.error('Google Cloud TTS generation failed:', error); }
     }
   };
+  const addRouletteAudio = async (result: import('./rouletteProcessor').RouletteResult) => {
+    if (!createRouletteAudio) return result;
+    try { return { ...result, audioDataUrl: await createRouletteAudio(result) }; }
+    catch (error) {
+      console.error('Google Cloud roulette TTS generation failed:', error);
+      return result;
+    }
+  };
   simulateRoulette = async (event) => {
     const result = await processRouletteDonation(db, event);
-    if (result.status === 'triggered') broadcastRouletteResult(io, result.result);
+    if (result.status === 'triggered') broadcastRouletteResult(io, await addRouletteAudio(result.result));
     return result;
   };
 
@@ -272,7 +301,7 @@ async function main(): Promise<void> {
     socketClient.on('donation', (event) => {
       (async () => {
         const roulette = await processRouletteDonation(db, event);
-        if (roulette.status === 'triggered') broadcastRouletteResult(io, roulette.result);
+        if (roulette.status === 'triggered') broadcastRouletteResult(io, await addRouletteAudio(roulette.result));
         if (roulette.status === 'ignored') {
           const result = await processDonation(db, event);
           await announceProcessedWinners(event, result);
