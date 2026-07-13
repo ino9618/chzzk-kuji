@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { SessionState } from '../api';
 import { validateTestDonation } from '../adminModel';
 import { InlineFeedback } from '../components/InlineFeedback';
+import { NumberStepper } from '../components/NumberStepper';
 
 export function BroadcastPreflightPage({ session, chzzkStatus, kujiEnabled }: { session: SessionState; chzzkStatus: string; kujiEnabled: boolean }) {
   const firstAvailable = session.tickets?.find((ticket) => ticket.status === 'available')?.number;
@@ -22,7 +23,7 @@ export function BroadcastPreflightPage({ session, chzzkStatus, kujiEnabled }: { 
       <section className="preflight-checks">{checks.map((check) => <div className={check.ok ? 'ready' : 'attention'} key={check.label}><span aria-hidden="true">{check.ok ? '✓' : '!'}</span><div><strong>{check.label}</strong><p>{check.detail}</p></div></div>)}</section>
       <section className="workflow-section">
         <div className="workflow-heading"><div><h2>모의 후원 검사</h2><p>실제 번호를 판매 처리하지 않고 후원 조건만 검사합니다.</p></div></div>
-        <div className="test-donation-form"><label>후원 금액<div className="input-suffix"><input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} /><span>치즈</span></div></label><label>후원 메시지<input type="text" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="예: 1번 3번" /></label><button disabled={!session.active} onClick={() => setResult(validateTestDonation(session, amount, message))}>조건 검사</button></div>
+        <div className="test-donation-form"><label>후원 금액<NumberStepper aria-label="모의 후원 금액" min={1} step={100} suffix="치즈" value={amount} onValueChange={setAmount} /></label><label>후원 메시지<input type="text" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="예: 1번 3번" /></label><button disabled={!session.active} onClick={() => setResult(validateTestDonation(session, amount, message))}>조건 검사</button></div>
         {result && <InlineFeedback tone={result.ok ? 'success' : 'error'}>{result.message}</InlineFeedback>}
       </section>
       <section className="workflow-section"><div className="workflow-heading"><div><h2>OBS 오버레이</h2><p>OBS 브라우저 소스와 동일한 이치방쿠지 화면을 새 창에서 확인합니다.</p></div><a className="button-link secondary-button" href="/overlay-kuji.html" target="_blank" rel="noreferrer">쿠지 오버레이 미리보기</a></div></section>

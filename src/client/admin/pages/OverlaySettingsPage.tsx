@@ -3,6 +3,7 @@ import { InlineFeedback } from '../components/InlineFeedback';
 import { SettingRow } from '../components/SettingRow';
 import type { SessionState } from '../api';
 import examplePrizeImage from '../../assets/mascot-success.png';
+import { NumberStepper } from '../components/NumberStepper';
 
 interface OverlayTestPayload {
   number: number;
@@ -147,13 +148,13 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
         </div>
         {testMode === 'kuji' ? <div className="overlay-test-form">
           <label className="overlay-prize-source">등록 상품<select value={test.sourceTicketNumber ?? ''} onChange={(event) => selectRegisteredTicket(event.target.value)}><option value="">직접 입력 · 예시 이미지</option>{registeredTickets.map((ticket) => <option value={ticket.number} key={ticket.number}>{ticket.number}번 · {ticket.prizeGrade ? `${ticket.prizeGrade}상 · ` : ''}{ticket.prizeName}{ticket.prizeImageUrl ? ' · 이미지' : ''}</option>)}</select></label>
-          <label>번호<input type="number" min={1} max={9999} disabled={test.sourceTicketNumber != null} value={test.number} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, number: Number(event.target.value) }))} /></label>
+          <label>번호<NumberStepper aria-label="테스트 번호" min={1} max={9999} disabled={test.sourceTicketNumber != null} value={test.number} onValueChange={(number) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, number }))} /></label>
           <label>등급<input type="text" maxLength={8} disabled={test.sourceTicketNumber != null} value={test.grade} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, grade: event.target.value }))} /></label>
           <label>상품명<input type="text" maxLength={80} disabled={test.sourceTicketNumber != null} value={test.prizeName} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, prizeName: event.target.value }))} /></label>
           <label>후원자<input type="text" maxLength={40} value={test.nickname} onChange={(event) => setTest((current) => ({ ...current, nickname: event.target.value }))} /></label>
           <button disabled={testPending} onClick={runOverlayTest}>{testPending ? '표시 중' : '이치방쿠지 테스트'}</button>
         </div> : <div className="overlay-test-form roulette-overlay-test-form">
-          <label>후원 금액<input type="number" min={1} max={100000000} value={rouletteTest.amount} onChange={(event) => setRouletteTest((current) => ({ ...current, amount: Number(event.target.value) }))} /></label>
+          <label>후원 금액<NumberStepper aria-label="룰렛 테스트 후원 금액" min={1} max={100000000} step={100} suffix="치즈" value={rouletteTest.amount} onValueChange={(amount) => setRouletteTest((current) => ({ ...current, amount }))} /></label>
           <label>결과 항목<input type="text" maxLength={40} value={rouletteTest.label} onChange={(event) => setRouletteTest((current) => ({ ...current, label: event.target.value }))} /></label>
           <label>후원자<input type="text" maxLength={40} value={rouletteTest.nickname} onChange={(event) => setRouletteTest((current) => ({ ...current, nickname: event.target.value }))} /></label>
           <button disabled={testPending} onClick={runRouletteTest}>{testPending ? '표시 중' : '룰렛 테스트'}</button>

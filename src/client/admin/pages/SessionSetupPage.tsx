@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { buildTickets, validateSessionDraft, type PrizeGroup, type TicketDraft } from '../sessionForm';
 import { InlineFeedback } from '../components/InlineFeedback';
 import { ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
+import { NumberStepper } from '../components/NumberStepper';
 
 interface SessionSetupPageProps {
   onCreate: (payload: { name: string; ticketPrice: number; numberRangeMin: number; numberRangeMax: number; tickets: TicketDraft[] }) => Promise<void>;
@@ -112,14 +113,14 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
         <h2><span>1</span> 기본 정보</h2>
         <div className="form-grid">
           <label>회차 이름<input ref={nameRef} type="text" value={name} aria-invalid={Boolean(errors.name)} onChange={(event) => setName(event.target.value)} placeholder="예: 7월 이치방쿠지" />{errors.name && <small className="field-error">{errors.name}</small>}</label>
-          <label>장당 가격<div className="input-suffix"><input ref={priceRef} type="number" min={1} value={ticketPrice} aria-invalid={Boolean(errors.ticketPrice)} onChange={(event) => setTicketPrice(Number(event.target.value))} /><span>치즈</span></div>{errors.ticketPrice && <small className="field-error">{errors.ticketPrice}</small>}</label>
+          <label>장당 가격<NumberStepper ref={priceRef} aria-label="장당 가격" min={1} step={100} suffix="치즈" value={ticketPrice} aria-invalid={Boolean(errors.ticketPrice)} onValueChange={setTicketPrice} />{errors.ticketPrice && <small className="field-error">{errors.ticketPrice}</small>}</label>
         </div>
       </section>
       <section className="setup-section">
         <h2><span>2</span> 상품 구성</h2>
         <div className="prize-table">
           <div className="prize-table-head"><span>등급</span><span>상품명</span><span>사진</span><span>수량</span><span /></div>
-          {groups.map((group, index) => <div className="prize-row" key={index}><input ref={index === 0 ? groupRef : undefined} type="text" aria-label={`${index + 1}번 상품 등급`} value={group.grade} onChange={(event) => updateGroup(index, 'grade', event.target.value)} placeholder="A" /><input type="text" aria-label={`${index + 1}번 상품명`} value={group.prizeName} onChange={(event) => updateGroup(index, 'prizeName', event.target.value)} placeholder="상품명" /><div className="prize-image-control">{group.prizeImageUrl ? <img src={group.prizeImageUrl} alt="" /> : <ImageIcon />}<label title="상품 사진 선택"><span className="sr-only">{index + 1}번 상품 사진 선택</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void selectImage(index, event.target.files?.[0]); event.target.value = ''; }} /></label>{group.prizeImageUrl && <button className="prize-image-remove" aria-label={`${index + 1}번 상품 사진 삭제`} onClick={() => updateGroup(index, 'prizeImageUrl', '')}>×</button>}</div><input aria-label={`${index + 1}번 수량`} type="number" min={1} value={group.count} onChange={(event) => updateGroup(index, 'count', Number(event.target.value))} /><button className="icon-button" aria-label={`${index + 1}번 상품 삭제`} onClick={() => setGroups((current) => current.filter((_, groupIndex) => groupIndex !== index))}><TrashIcon /></button></div>)}
+          {groups.map((group, index) => <div className="prize-row" key={index}><input ref={index === 0 ? groupRef : undefined} type="text" aria-label={`${index + 1}번 상품 등급`} value={group.grade} onChange={(event) => updateGroup(index, 'grade', event.target.value)} placeholder="A" /><input type="text" aria-label={`${index + 1}번 상품명`} value={group.prizeName} onChange={(event) => updateGroup(index, 'prizeName', event.target.value)} placeholder="상품명" /><div className="prize-image-control">{group.prizeImageUrl ? <img src={group.prizeImageUrl} alt="" /> : <ImageIcon />}<label title="상품 사진 선택"><span className="sr-only">{index + 1}번 상품 사진 선택</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void selectImage(index, event.target.files?.[0]); event.target.value = ''; }} /></label>{group.prizeImageUrl && <button className="prize-image-remove" aria-label={`${index + 1}번 상품 사진 삭제`} onClick={() => updateGroup(index, 'prizeImageUrl', '')}>×</button>}</div><NumberStepper aria-label={`${index + 1}번 수량`} min={1} value={group.count} onValueChange={(count) => updateGroup(index, 'count', count)} /><button className="icon-button" aria-label={`${index + 1}번 상품 삭제`} onClick={() => setGroups((current) => current.filter((_, groupIndex) => groupIndex !== index))}><TrashIcon /></button></div>)}
           {errors.groups && <small className="field-error">{errors.groups}</small>}
         </div>
         {imageError && <InlineFeedback tone="error">{imageError}</InlineFeedback>}

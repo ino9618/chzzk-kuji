@@ -17,6 +17,7 @@ export const SettingsIcon = (props: IconProps) => <IconBase {...props}><circle c
 export const BookIcon = (props: IconProps) => <IconBase {...props}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21zM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5A2.5 2.5 0 0 1 20 21z" /></IconBase>;
 export const LogoutIcon = (props: IconProps) => <IconBase {...props}><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10" /></IconBase>;
 export const PlusIcon = (props: IconProps) => <IconBase {...props}><path d="M12 5v14M5 12h14" /></IconBase>;
+export const MinusIcon = (props: IconProps) => <IconBase {...props}><path d="M5 12h14" /></IconBase>;
 export const TrashIcon = (props: IconProps) => <IconBase {...props}><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></IconBase>;
 export const MonitorIcon = (props: IconProps) => <IconBase {...props}><rect x="3" y="4" width="18" height="13" rx="1" /><path d="M8 21h8M12 17v4" /></IconBase>;
 export const SlidersIcon = (props: IconProps) => <IconBase {...props}><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="13" cy="18" r="2" /></IconBase>;

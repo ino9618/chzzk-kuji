@@ -1956,3 +1956,98 @@ textarea:focus-visible { outline-color: #e0a93e; }
   .shell-connection { border-top-color: #29445e; color: #9eb4c7; }
   .shell-connection.connected { color: #71d6c4; }
 }
+
+/* ---------- Scrollbars + numeric steppers ---------- */
+html,
+.shell-content,
+textarea,
+.log-table {
+  scrollbar-width: thin;
+  scrollbar-color: #7fa6c1 #e3edf6;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: #e3edf6; }
+*::-webkit-scrollbar-thumb {
+  border: 2px solid #e3edf6;
+  border-radius: 5px;
+  background: #7fa6c1;
+}
+*::-webkit-scrollbar-thumb:hover { background: #5789ab; }
+*::-webkit-scrollbar-corner { background: #e3edf6; }
+
+.number-stepper {
+  min-width: 0;
+  min-height: 42px;
+  display: grid;
+  align-items: stretch;
+  border: 1px solid #b8cedd;
+  border-radius: 8px;
+  background: #f6f9fc;
+  overflow: hidden;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.number-stepper.no-suffix { grid-template-columns: 36px minmax(42px, 1fr) 36px; }
+.number-stepper.has-suffix { grid-template-columns: 36px minmax(52px, 1fr) auto 36px; }
+.number-stepper:focus-within {
+  border-color: #3f93cb;
+  box-shadow: 0 0 0 3px rgba(63, 147, 203, .13);
+}
+.number-stepper.disabled { background: #e8eff5; opacity: .72; }
+
+.number-stepper input[type='number'] {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #17283b;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.number-stepper input[type='number']:focus { border-color: transparent; }
+.number-stepper input[type='number']::-webkit-inner-spin-button,
+.number-stepper input[type='number']::-webkit-outer-spin-button { margin: 0; appearance: none; }
+
+.number-stepper-button {
+  width: 36px;
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 0;
+  background: #e3f1fa;
+  color: #286f9f;
+  box-shadow: none;
+}
+.number-stepper-button:first-child { border-right: 1px solid #c6d9e7; }
+.number-stepper-button:last-child { border-left: 1px solid #c6d9e7; }
+.number-stepper-button:hover:not(:disabled) { background: #cfe8f7; filter: none; }
+.number-stepper-button:active:not(:disabled) { background: #b9dcf1; transform: none; }
+.number-stepper-button:disabled { background: #edf2f6; color: #a9bac7; opacity: 1; }
+.number-stepper-button svg { width: 15px; height: 15px; stroke-width: 2.2; }
+.number-stepper-suffix {
+  align-self: center;
+  padding: 0 7px 0 2px;
+  color: #647c90;
+  font-size: .68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.settings-price { width: 240px; }
+.prize-table-head,
+.prize-row { grid-template-columns: 80px minmax(160px, 1fr) 58px 140px 40px; }
+.roulette-item-head,
+.roulette-item-row { grid-template-columns: minmax(180px, 1fr) 150px 80px 40px; }
+.overlay-test-form { grid-template-columns: minmax(210px, 1.2fr) 140px 80px minmax(170px, 1fr) minmax(150px, .8fr) auto; }
+.roulette-overlay-test-form { grid-template-columns: 220px minmax(220px, 1fr) minmax(180px, .8fr) auto; }
+
+@media (max-width: 1120px) and (min-width: 721px) {
+  .overlay-test-form { grid-template-columns: 140px 80px minmax(150px, 1fr) minmax(140px, 1fr); }
+}
