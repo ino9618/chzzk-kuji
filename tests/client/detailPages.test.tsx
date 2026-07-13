@@ -13,6 +13,7 @@ import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage'
 import { DrawAnnouncement } from '../../src/client/overlay/DrawAnnouncement';
 import { RoulettePage } from '../../src/client/admin/pages/RoulettePage';
 import { FeaturesPage } from '../../src/client/admin/pages/FeaturesPage';
+import { buildWinnerSpeech } from '../../src/client/overlay/overlayAudio';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -24,6 +25,18 @@ describe('FeaturesPage', () => {
     expect(html).toContain('이치방쿠지');
     expect(html).toContain('후원 룰렛');
     expect(html).toContain('기능 확장 예정');
+  });
+});
+
+describe('winner audio', () => {
+  it('builds a Korean TTS announcement with winner and prize details', () => {
+    expect(buildWinnerSpeech({ number: 7, grade: 'A', prizeName: '게임기', nickname: '후원자' }))
+      .toBe('후원자님, 축하합니다. 7번, A상 게임기에 당첨되었습니다.');
+  });
+
+  it('uses safe labels when an anonymous donation has no prize metadata', () => {
+    expect(buildWinnerSpeech({ number: 2, grade: null, prizeName: null, nickname: null }))
+      .toContain('익명 후원자님');
   });
 });
 

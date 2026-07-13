@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
+import { playWinnerAudio } from './overlayAudio';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -63,6 +64,7 @@ export function App() {
 
   const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
+    playWinnerAudio(next);
     if (announceTimer.current) clearTimeout(announceTimer.current);
     announceTimer.current = setTimeout(() => setAnnounce(null), ANNOUNCE_MS);
   };

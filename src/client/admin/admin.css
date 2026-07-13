@@ -31,6 +31,7 @@
 .feature-item button { white-space: nowrap; }
 .feature-upcoming { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 18px 20px; border: 1px dashed var(--border-strong); border-radius: 8px; color: var(--text-dim); font-size: .78rem; }
 .feature-upcoming strong { color: var(--text); }
+.overlay-audio-state { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border: 1px solid rgba(0, 255, 163, .35); border-radius: 8px; background: var(--success-bg); color: var(--success); font-size: .74rem; font-weight: 800; }
 
 .connection-overview {
   display: flex;
