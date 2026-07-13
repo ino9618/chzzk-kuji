@@ -22,7 +22,7 @@ export function playWinnerFanfare() {
 
 let activeSpeech: HTMLAudioElement | undefined;
 
-export function playRouletteSpinSound(durationMs = 5200) {
+export function playRouletteSpinSound(durationMs = 4000) {
   try {
     const context = new AudioContext();
     const master = context.createGain();

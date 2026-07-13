@@ -41,7 +41,7 @@ interface RouletteResult {
 
 export type OverlayMode = 'kuji' | 'roulette' | 'combined';
 
-const ROULETTE_SPIN_MS = 5200;
+const ROULETTE_SPIN_MS = 4000;
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
@@ -53,7 +53,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     if (!source.includes(result.label)) source.push(result.label);
     if (source.length < 2) source.push('다시 돌리기', '보너스');
     const nextItem = source[(source.indexOf(result.label) + 1) % source.length];
-    const items = [...Array.from({ length: 12 }, () => source).flat(), result.label, nextItem];
+    const items = [...Array.from({ length: 10 }, () => source).flat(), result.label, nextItem];
     return { sequence: items, winningIndex: items.length - 2 };
   }, [result]);
   useEffect(() => {
@@ -74,6 +74,9 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const reelStyle = {
     '--roulette-row-height': `${rowHeight}px`,
     '--roulette-window-height': `${rowHeight * 3}px`,
+    '--roulette-reel-kick': `${Math.round(rowHeight * 0.45)}px`,
+    '--roulette-reel-fast-end': `${rowHeight - (winningIndex - 5) * rowHeight}px`,
+    '--roulette-reel-slow-end': `${rowHeight - (winningIndex - 1) * rowHeight}px`,
     '--roulette-reel-end': `${rowHeight - winningIndex * rowHeight}px`,
   } as CSSProperties;
   const finishSpin = () => {
