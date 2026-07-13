@@ -15,11 +15,11 @@ const sources: Record<MascotState, string> = {
 };
 
 const labels: Record<MascotState, string> = {
-  default: '인사하는 추첨 티켓 안내원',
-  face: '추첨 티켓 안내원 얼굴',
-  success: '당첨 티켓을 든 안내원',
-  waiting: '기록을 확인하는 추첨 안내원',
-  warning: '주의 카드를 든 추첨 안내원',
+  default: '인사하는 설표 안내원',
+  face: '웃고 있는 설표 안내원',
+  success: '당첨 티켓을 든 설표 안내원',
+  waiting: '기록을 확인하는 설표 안내원',
+  warning: '주의 카드를 든 설표 안내원',
 };
 
 export function Mascot({ state = 'default', className = '' }: { state?: MascotState; className?: string }) {
