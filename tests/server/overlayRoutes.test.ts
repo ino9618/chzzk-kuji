@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
-import type { Db } from '../../src/server/db';
+import { createSession, type Db } from '../../src/server/db';
 import { createApp } from '../../src/server/index';
 import { createTestDb, resetDb } from '../helpers/testDb';
 
@@ -84,6 +84,20 @@ describe('GET /api/overlay/board', () => {
     expect(sold).toMatchObject({ status: 'sold', prizeName: 'A상', prizeGrade: 'A' });
     expect(available.prizeName).toBeNull();
     expect(available.prizeGrade).toBeNull();
+  });
+
+  it('reveals a prize image only after its ticket is sold', async () => {
+    const image = 'data:image/webp;base64,UklGRg==';
+    const session = await createSession(db, {
+      name: '이미지 회차', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: '사진 상품', prizeGrade: 'A', prizeImageUrl: image }],
+    });
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    expect((await request(app).get('/api/overlay/board')).body.tickets[0].prizeImageUrl).toBeNull();
+    const { processDonation } = await import('../../src/server/donationProcessor');
+    await processDonation(db, { channelId: 'c1', nickname: '홍길동', amount: 1000, message: '1번' });
+    expect((await request(app).get('/api/overlay/board')).body.tickets[0].prizeImageUrl).toBe(image);
+    expect(session.id).toBeGreaterThan(0);
   });
 
   it('includes a grade summary with claimed/total counts, without revealing which numbers belong to each grade', async () => {

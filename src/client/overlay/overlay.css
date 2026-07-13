@@ -260,13 +260,29 @@
   overflow: hidden;
   text-align: center;
   padding: 26px 44px;
-  border-radius: 18px;
+  border-radius: 8px;
   background: rgba(8, 8, 10, 0.88);
   border: 2px solid var(--grade-color);
   box-shadow: 0 0 40px 6px var(--grade-color-dim), 0 8px 30px rgba(0, 0, 0, 0.55);
   color: #f2f2f2;
   animation: cardPop 0.55s cubic-bezier(0.2, 1.6, 0.35, 1), cardGlow 1.6s ease-in-out infinite alternate;
 }
+
+.draw-card.has-image { width: min(560px, calc(100vw - 48px)); }
+
+.draw-image-frame {
+  width: 100%;
+  height: 220px;
+  display: grid;
+  place-items: center;
+  margin: 16px 0 4px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.draw-image-frame img { width: 100%; height: 100%; display: block; object-fit: contain; }
 
 .draw-test-badge {
   width: fit-content;

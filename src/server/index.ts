@@ -86,7 +86,7 @@ export async function createApp(db: Db, options: AppOptions) {
   // Railway/Render/most PaaS terminate TLS at a proxy; without this Express
   // would refuse to set `secure` cookies because it sees plain HTTP.
   app.set('trust proxy', 1);
-  app.use(express.json());
+  app.use(express.json({ limit: '8mb' }));
   app.use(cookieParser());
 
   let chzzkStatus: 'connected' | 'disconnected' | 'reconnecting' | 'not_configured' | 'needs_reauth' =

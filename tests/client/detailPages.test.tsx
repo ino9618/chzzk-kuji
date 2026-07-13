@@ -10,6 +10,7 @@ import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPr
 import { DonationSimulatorPage } from '../../src/client/admin/pages/DonationSimulatorPage';
 import { SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
+import { DrawAnnouncement } from '../../src/client/overlay/DrawAnnouncement';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -104,5 +105,19 @@ describe('new operation tools', () => {
     expect(html).toContain('지난 회차 새 회차');
     expect(html).toContain('1500');
     expect(html).toContain('1, 커피, A');
+  });
+});
+
+describe('DrawAnnouncement', () => {
+  const base = { key: 1, number: 7, grade: 'A', prizeName: '사진 상품', nickname: '당첨자' };
+
+  it('renders a prize image only when one is registered', () => {
+    const withImage = renderToStaticMarkup(<DrawAnnouncement announce={{ ...base, prizeImageUrl: 'data:image/webp;base64,UklGRg==' }} confetti={[]} />);
+    expect(withImage).toContain('draw-image-frame');
+    expect(withImage).toContain('사진 상품 상품');
+
+    const withoutImage = renderToStaticMarkup(<DrawAnnouncement announce={base} confetti={[]} />);
+    expect(withoutImage).not.toContain('draw-image-frame');
+    expect(withoutImage).not.toContain('has-image');
   });
 });

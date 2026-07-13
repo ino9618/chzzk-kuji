@@ -25,4 +25,10 @@ describe('buildTickets', () => {
     expect(tickets.map((ticket) => ticket.number)).toEqual([1, 2, 3]);
     expect(tickets.filter((ticket) => ticket.prizeGrade === 'A')).toHaveLength(2);
   });
+
+  it('copies an optional prize image to every ticket in the group', () => {
+    const image = 'data:image/webp;base64,UklGRg==';
+    const tickets = buildTickets([{ grade: 'A', prizeName: '사진 상품', count: 2, prizeImageUrl: image }]);
+    expect(tickets.map((ticket) => ticket.prizeImageUrl)).toEqual([image, image]);
+  });
 });

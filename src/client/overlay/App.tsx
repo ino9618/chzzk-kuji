@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
+import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -8,6 +9,7 @@ interface OverlayTicket {
   ownerNickname: string | null;
   prizeName: string | null;
   prizeGrade: string | null;
+  prizeImageUrl: string | null;
 }
 
 interface GradeSummary {
@@ -26,38 +28,10 @@ interface BoardPayload {
   grades?: GradeSummary[];
 }
 
-interface DrawAnnounce {
-  key: number;
-  number: number;
-  grade: string | null;
-  prizeName: string | null;
-  nickname: string | null;
-  test?: boolean;
-}
-
 const socket = io();
 
-const ANNOUNCE_MS = 5000;
+const ANNOUNCE_MS = 8000;
 const HIGHLIGHT_MS = 2600;
-
-/** Maps a grade letter to a fixed color theme class (A gold, B silver, C bronze, rest green). */
-function gradeClass(grade: string | null | undefined): string {
-  if (!grade) return 'grade-x';
-  const g = grade.toUpperCase();
-  if (g === 'A') return 'grade-a';
-  if (g === 'B') return 'grade-b';
-  if (g === 'C') return 'grade-c';
-  return 'grade-x';
-}
-
-interface ConfettiPiece {
-  left: number;
-  delay: number;
-  duration: number;
-  size: number;
-  color: string;
-  rotate: number;
-}
 
 const CONFETTI_COLORS = ['#f5c451', '#00ffa3', '#7fd4ff', '#ff8fb1', '#ffffff'];
 
@@ -75,11 +49,11 @@ function makeConfetti(count: number): ConfettiPiece[] {
 export function App() {
   const [board, setBoard] = useState<BoardPayload>({ active: false });
   const [justSold, setJustSold] = useState<number | null>(null);
-  const [announce, setAnnounce] = useState<DrawAnnounce | null>(null);
+  const [announce, setAnnounce] = useState<OverlayAnnouncement | null>(null);
   const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showAnnouncement = (next: Omit<DrawAnnounce, 'key'>) => {
+  const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
     if (announceTimer.current) clearTimeout(announceTimer.current);
     announceTimer.current = setTimeout(() => setAnnounce(null), ANNOUNCE_MS);
@@ -103,6 +77,7 @@ export function App() {
             number: newlySold.number,
             grade: newlySold.prizeGrade,
             prizeName: newlySold.prizeName,
+            prizeImageUrl: newlySold.prizeImageUrl,
             nickname: newlySold.ownerNickname,
           });
         }
@@ -110,7 +85,7 @@ export function App() {
       });
     });
 
-    socket.on('overlay:test', (event: Omit<DrawAnnounce, 'key'>) => {
+    socket.on('overlay:test', (event: Omit<OverlayAnnouncement, 'key'>) => {
       showAnnouncement({ ...event, test: true });
     });
 
@@ -193,35 +168,7 @@ export function App() {
         ))}
       </div></>}
 
-      {announce && (
-        <div className="draw-announce" key={announce.key}>
-          <div className="confetti">
-            {confetti.map((p, i) => (
-              <span
-                key={i}
-                className="confetti-piece"
-                style={{
-                  left: `${p.left}%`,
-                  width: p.size,
-                  height: p.size * 0.5,
-                  background: p.color,
-                  animationDelay: `${p.delay}s`,
-                  animationDuration: `${p.duration}s`,
-                  ['--rot' as string]: `${p.rotate}deg`,
-                }}
-              />
-            ))}
-          </div>
-          <div className={`draw-card ${gradeClass(announce.grade)}`}>
-            {announce.test && <div className="draw-test-badge">미리보기 테스트</div>}
-            <div className="draw-label">당첨!</div>
-            <div className="draw-number">{announce.number}번</div>
-            {announce.grade && <div className="draw-grade">{announce.grade}상</div>}
-            {announce.prizeName && <div className="draw-prize">{announce.prizeName}</div>}
-            {announce.nickname && <div className="draw-winner">{announce.nickname}</div>}
-          </div>
-        </div>
-      )}
+      {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
     </div>
   );
 }

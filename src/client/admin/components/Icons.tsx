@@ -24,3 +24,4 @@ export const MoreIcon = (props: IconProps) => <IconBase {...props}><circle cx="5
 export const CloseIcon = (props: IconProps) => <IconBase {...props}><path d="m6 6 12 12M18 6 6 18" /></IconBase>;
 export const SendIcon = (props: IconProps) => <IconBase {...props}><path d="m3 11 18-8-8 18-2-8zM11 13l4-4" /></IconBase>;
 export const CopyIcon = (props: IconProps) => <IconBase {...props}><rect x="8" y="8" width="12" height="12" /><path d="M16 8V4H4v12h4" /></IconBase>;
+export const ImageIcon = (props: IconProps) => <IconBase {...props}><rect x="3" y="4" width="18" height="16" rx="1" /><circle cx="9" cy="10" r="2" /><path d="m4 18 5-5 3 3 2-2 6 5" /></IconBase>;

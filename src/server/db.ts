@@ -28,6 +28,7 @@ export interface Ticket {
   number: number;
   prizeName: string;
   prizeGrade: string | null;
+  prizeImageUrl: string | null;
   status: 'available' | 'sold';
   ownerNickname: string | null;
   ownerChannelId: string | null;
@@ -53,6 +54,7 @@ export interface NewTicket {
   number: number;
   prizeName: string;
   prizeGrade?: string | null;
+  prizeImageUrl?: string | null;
 }
 
 export interface AssignOutcome {
@@ -78,6 +80,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   number INTEGER NOT NULL,
   prize_name TEXT NOT NULL,
   prize_grade TEXT,
+  prize_image_url TEXT,
   status TEXT NOT NULL DEFAULT 'available',
   owner_nickname TEXT,
   owner_channel_id TEXT,
@@ -104,6 +107,8 @@ CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prize_image_url TEXT;
 `;
 
 export async function initSchema(db: Db): Promise<void> {
@@ -187,6 +192,7 @@ function rowToTicket(row: any): Ticket {
     number: row.number,
     prizeName: row.prize_name,
     prizeGrade: row.prize_grade,
+    prizeImageUrl: row.prize_image_url,
     status: row.status,
     ownerNickname: row.owner_nickname,
     ownerChannelId: row.owner_channel_id,
@@ -228,11 +234,12 @@ export async function createSession(
     );
     const session = rowToSession(rows[0]);
     for (const t of params.tickets) {
-      await tx.query(`INSERT INTO tickets (session_id, number, prize_name, prize_grade) VALUES ($1, $2, $3, $4)`, [
+      await tx.query(`INSERT INTO tickets (session_id, number, prize_name, prize_grade, prize_image_url) VALUES ($1, $2, $3, $4, $5)`, [
         session.id,
         t.number,
         t.prizeName,
         t.prizeGrade ?? null,
+        t.prizeImageUrl ?? null,
       ]);
     }
     return session;

@@ -3,6 +3,7 @@ export interface Ticket {
   number: number;
   prizeName: string;
   prizeGrade?: string | null;
+  prizeImageUrl?: string | null;
   status: 'available' | 'sold';
   ownerNickname: string | null;
   ownerChannelId?: string | null;
@@ -91,7 +92,7 @@ export const api = {
     ticketPrice: number;
     numberRangeMin: number;
     numberRangeMax: number;
-    tickets: Array<{ number: number; prizeName: string; prizeGrade?: string }>;
+    tickets: Array<{ number: number; prizeName: string; prizeGrade?: string; prizeImageUrl?: string | null }>;
   }) => jsonFetch('/api/admin/session', { method: 'POST', body: JSON.stringify(payload) }),
   closeSession: () => jsonFetch('/api/admin/session/close', { method: 'POST' }),
   getQueue: () => jsonFetch<QueueEntry[]>('/api/admin/queue'),

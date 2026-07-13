@@ -84,6 +84,15 @@ describe('admin session routes', () => {
       expect.objectContaining({ number: 2, prizeName: '케이크', prizeGrade: 'B' }),
     ]));
   });
+
+  it('rejects unsupported prize image data', async () => {
+    const res = await agent.post('/api/admin/session').send({
+      name: '잘못된 이미지', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: '상품', prizeImageUrl: 'https://example.com/image.png' }],
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'invalid_prize_image' });
+  });
 });
 
 describe('donation simulator', () => {

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { buildTickets, validateSessionDraft, type PrizeGroup, type TicketDraft } from '../sessionForm';
 import { InlineFeedback } from '../components/InlineFeedback';
-import { PlusIcon, TrashIcon } from '../components/Icons';
+import { ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
 
 interface SessionSetupPageProps {
   onCreate: (payload: { name: string; ticketPrice: number; numberRangeMin: number; numberRangeMax: number; tickets: TicketDraft[] }) => Promise<void>;
@@ -19,6 +19,28 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
+async function resizePrizeImage(file: File): Promise<string> {
+  if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 선택할 수 있습니다.');
+  if (file.size > 5 * 1024 * 1024) throw new Error('이미지는 5MB 이하만 등록할 수 있습니다.');
+  const source = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error('이미지를 읽지 못했습니다.'));
+      element.src = source;
+    });
+    const scale = Math.min(1, 640 / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/webp', 0.82);
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+}
+
 export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 1000, template = null }: SessionSetupPageProps) {
   const [name, setName] = useState(template ? `${template.name} 새 회차` : '');
   const [ticketPrice, setTicketPrice] = useState(template?.ticketPrice ?? defaultTicketPrice);
@@ -30,6 +52,7 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
   const [errors, setErrors] = useState<ReturnType<typeof validateSessionDraft>>({});
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [imageError, setImageError] = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
   const groupRef = useRef<HTMLInputElement>(null);
@@ -38,13 +61,23 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
   const manualTickets = manualText.trim()
     ? manualText.split('\n').filter((line) => line.trim()).map((line) => {
         const [number, prizeName, prizeGrade] = line.split(',').map((value) => value.trim());
-        return { number: Number(number), prizeName, prizeGrade: prizeGrade || undefined };
+        return { number: Number(number), prizeName, prizeGrade: prizeGrade || undefined, prizeImageUrl: template?.tickets.find((ticket) => ticket.number === Number(number))?.prizeImageUrl };
       })
     : null;
   const tickets = manualTickets ?? generatedTickets;
 
   const updateGroup = (index: number, key: keyof PrizeGroup, value: string | number) => {
     setGroups((current) => current.map((group, groupIndex) => (groupIndex === index ? { ...group, [key]: value } : group)));
+  };
+
+  const selectImage = async (index: number, file?: File) => {
+    if (!file) return;
+    setImageError('');
+    try {
+      updateGroup(index, 'prizeImageUrl', await resizePrizeImage(file));
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : '이미지를 처리하지 못했습니다.');
+    }
   };
 
   const submit = async () => {
@@ -85,12 +118,14 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
       <section className="setup-section">
         <h2><span>2</span> 상품 구성</h2>
         <div className="prize-table">
-          <div className="prize-table-head"><span>등급</span><span>상품명</span><span>수량</span><span /></div>
-          {groups.map((group, index) => <div className="prize-row" key={index}><input ref={index === 0 ? groupRef : undefined} type="text" aria-label={`${index + 1}번 상품 등급`} value={group.grade} onChange={(event) => updateGroup(index, 'grade', event.target.value)} placeholder="A" /><input type="text" aria-label={`${index + 1}번 상품명`} value={group.prizeName} onChange={(event) => updateGroup(index, 'prizeName', event.target.value)} placeholder="상품명" /><input aria-label={`${index + 1}번 수량`} type="number" min={1} value={group.count} onChange={(event) => updateGroup(index, 'count', Number(event.target.value))} /><button className="icon-button" aria-label={`${index + 1}번 상품 삭제`} onClick={() => setGroups((current) => current.filter((_, groupIndex) => groupIndex !== index))}><TrashIcon /></button></div>)}
+          <div className="prize-table-head"><span>등급</span><span>상품명</span><span>사진</span><span>수량</span><span /></div>
+          {groups.map((group, index) => <div className="prize-row" key={index}><input ref={index === 0 ? groupRef : undefined} type="text" aria-label={`${index + 1}번 상품 등급`} value={group.grade} onChange={(event) => updateGroup(index, 'grade', event.target.value)} placeholder="A" /><input type="text" aria-label={`${index + 1}번 상품명`} value={group.prizeName} onChange={(event) => updateGroup(index, 'prizeName', event.target.value)} placeholder="상품명" /><div className="prize-image-control">{group.prizeImageUrl ? <img src={group.prizeImageUrl} alt="" /> : <ImageIcon />}<label title="상품 사진 선택"><span className="sr-only">{index + 1}번 상품 사진 선택</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void selectImage(index, event.target.files?.[0]); event.target.value = ''; }} /></label>{group.prizeImageUrl && <button className="prize-image-remove" aria-label={`${index + 1}번 상품 사진 삭제`} onClick={() => updateGroup(index, 'prizeImageUrl', '')}>×</button>}</div><input aria-label={`${index + 1}번 수량`} type="number" min={1} value={group.count} onChange={(event) => updateGroup(index, 'count', Number(event.target.value))} /><button className="icon-button" aria-label={`${index + 1}번 상품 삭제`} onClick={() => setGroups((current) => current.filter((_, groupIndex) => groupIndex !== index))}><TrashIcon /></button></div>)}
           {errors.groups && <small className="field-error">{errors.groups}</small>}
         </div>
+        {imageError && <InlineFeedback tone="error">{imageError}</InlineFeedback>}
         <button className="secondary-button add-prize-button" onClick={() => setGroups((current) => [...current, { grade: '', prizeName: '', count: 1 }])}><PlusIcon />상품 추가</button>
         <details className="manual-editor" open={Boolean(template)}><summary>직접 편집</summary><p>번호, 상품명, 등급 순서로 한 줄에 하나씩 입력하세요.</p><textarea value={manualText} onChange={(event) => setManualText(event.target.value)} placeholder={'1, 아메리카노, A\n2, 케이크, B'} rows={6} /></details>
+        {template && template.tickets.some((ticket) => ticket.prizeImageUrl) && <p className="template-image-note">이전 회차의 상품 사진 {new Set(template.tickets.filter((ticket) => ticket.prizeImageUrl).map((ticket) => ticket.prizeImageUrl)).size}개도 함께 불러왔습니다.</p>}
       </section>
       <section className="setup-section">
         <h2><span>3</span> 번호 확인</h2>

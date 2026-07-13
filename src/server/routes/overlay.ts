@@ -52,6 +52,7 @@ export async function buildBoardPayload(db: Db) {
     // to see which number holds which prize before it's drawn).
     prizeName: t.status === 'sold' ? t.prizeName : null,
     prizeGrade: t.status === 'sold' ? t.prizeGrade : null,
+    prizeImageUrl: t.status === 'sold' ? t.prizeImageUrl : null,
   }));
 
   return {

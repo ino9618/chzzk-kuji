@@ -71,6 +71,8 @@
   box-sizing: border-box;
 }
 
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
 html,
 body,
 #root {
@@ -1515,10 +1517,17 @@ button.danger-button {
 .field-error { color: var(--capsule-coral); font-size: 0.72rem; }
 .prize-table { border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; }
 .prize-table-head,
-.prize-row { display: grid; grid-template-columns: 80px minmax(160px, 1fr) 86px 40px; gap: 8px; align-items: center; padding: 8px 10px; }
+.prize-row { display: grid; grid-template-columns: 80px minmax(160px, 1fr) 58px 86px 40px; gap: 8px; align-items: center; padding: 8px 10px; }
 .prize-table-head { background: var(--bg-deep); color: var(--text-dim); font-size: 0.7rem; }
 .prize-row { border-top: 1px solid var(--panel-border); }
 .prize-row input { min-width: 0; padding: 8px; font-size: 0.8rem; }
+.prize-image-control { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--panel-border); border-radius: 6px; background: var(--bg-deep); color: var(--text-dim); overflow: visible; }
+.prize-image-control > svg { width: 19px; height: 19px; }
+.prize-image-control > img { width: 100%; height: 100%; border-radius: 5px; object-fit: cover; }
+.prize-image-control label { position: absolute; inset: 0; cursor: pointer; }
+.prize-image-control input { width: 1px; height: 1px; opacity: 0; }
+.prize-image-remove { position: absolute; top: -7px; right: -7px; z-index: 1; width: 19px; height: 19px; min-height: 0; display: grid; place-items: center; padding: 0; border: 1px solid var(--panel-border); border-radius: 50%; background: var(--panel); color: var(--capsule-coral); font-size: 0.8rem; line-height: 1; }
+.template-image-note { margin: 10px 0 0; color: var(--accent); font-size: 0.73rem; }
 .icon-button { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; background: transparent; color: var(--text-dim); }
 .icon-button svg { width: 17px; height: 17px; }
 .add-prize-button { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
@@ -1676,7 +1685,7 @@ button.danger-button {
   .form-grid { grid-template-columns: 1fr; }
   .setup-section { padding: 16px 12px; }
   .prize-table-head,
-  .prize-row { grid-template-columns: 50px minmax(100px, 1fr) 60px 36px; gap: 5px; padding: 7px; }
+  .prize-row { grid-template-columns: 50px minmax(100px, 1fr) 44px 60px 36px; gap: 5px; padding: 7px; }
   .prize-row input { padding: 7px 5px; }
   .setup-submit { align-items: stretch; flex-direction: column; }
   .setup-submit button { min-height: 44px; }

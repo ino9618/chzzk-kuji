@@ -49,6 +49,15 @@ describe('sessions', () => {
     expect(await getTicketsForSession(db, session.id)).toHaveLength(3);
   });
 
+  it('persists an optional prize image with the ticket', async () => {
+    const image = 'data:image/webp;base64,UklGRg==';
+    const session = await createSession(db, {
+      name: '이미지 회차', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: '사진 상품', prizeGrade: 'A', prizeImageUrl: image }],
+    });
+    expect((await getTicketsForSession(db, session.id))[0].prizeImageUrl).toBe(image);
+  });
+
   it('closing a session removes it from getActiveSession', async () => {
     const session = await createSession(db, {
       name: '1회차',

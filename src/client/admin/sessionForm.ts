@@ -2,6 +2,7 @@ export interface PrizeGroup {
   grade: string;
   prizeName: string;
   count: number;
+  prizeImageUrl?: string;
 }
 
 export interface SessionDraft {
@@ -20,6 +21,7 @@ export interface TicketDraft {
   number: number;
   prizeName: string;
   prizeGrade?: string;
+  prizeImageUrl?: string;
 }
 
 export function validateSessionDraft(draft: SessionDraft): SessionErrors {
@@ -35,6 +37,6 @@ export function validateSessionDraft(draft: SessionDraft): SessionErrors {
 export function buildTickets(groups: PrizeGroup[]): TicketDraft[] {
   return groups
     .filter((group) => group.count > 0 && group.prizeName.trim())
-    .flatMap((group) => Array.from({ length: Math.floor(group.count) }, () => ({ prizeName: group.prizeName.trim(), prizeGrade: group.grade.trim() || undefined })))
+    .flatMap((group) => Array.from({ length: Math.floor(group.count) }, () => ({ prizeName: group.prizeName.trim(), prizeGrade: group.grade.trim() || undefined, prizeImageUrl: group.prizeImageUrl || undefined })))
     .map((ticket, index) => ({ number: index + 1, ...ticket }));
 }

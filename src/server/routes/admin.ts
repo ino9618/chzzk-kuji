@@ -52,8 +52,14 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
       ticketPrice: number;
       numberRangeMin: number;
       numberRangeMax: number;
-      tickets: Array<{ number: number; prizeName: string; prizeGrade?: string }>;
+      tickets: Array<{ number: number; prizeName: string; prizeGrade?: string; prizeImageUrl?: string | null }>;
     };
+    const invalidImage = tickets?.some((ticket) => ticket.prizeImageUrl != null && !/^data:image\/(?:webp|png|jpeg);base64,[a-zA-Z0-9+/=]+$/.test(ticket.prizeImageUrl));
+    const oversizedImage = tickets?.some((ticket) => (ticket.prizeImageUrl?.length ?? 0) > 2_000_000);
+    if (!Array.isArray(tickets) || invalidImage || oversizedImage) {
+      res.status(400).json({ error: 'invalid_prize_image' });
+      return;
+    }
     const existing = await getActiveSession(db);
     if (existing) await closeSession(db, existing.id);
     const session = await createSession(db, { name, ticketPrice, numberRangeMin, numberRangeMax, tickets });
