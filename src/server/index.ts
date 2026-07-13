@@ -302,6 +302,7 @@ async function main(): Promise<void> {
       (async () => {
         const roulette = await processRouletteDonation(db, event);
         if (roulette.status === 'triggered') broadcastRouletteResult(io, await addRouletteAudio(roulette.result));
+        if (roulette.status === 'registered') io.to('admin').emit('roulette:config-updated', { label: roulette.label, nickname: roulette.nickname, amount: roulette.amount });
         if (roulette.status === 'ignored') {
           const result = await processDonation(db, event);
           await announceProcessedWinners(event, result);

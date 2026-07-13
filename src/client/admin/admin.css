@@ -1749,6 +1749,13 @@ textarea:focus-visible { outline-color: #e0a93e; }
 .roulette-config-head p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.73rem; }
 .roulette-config-head label { display: grid; gap: 6px; color: var(--text-dim); font-size: 0.7rem; font-weight: 700; }
 .roulette-config-head input { min-width: 0; }
+.roulette-items-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 16px 16px 0; padding: 14px 16px; border: 1px solid var(--panel-border); border-radius: 8px; background: var(--bg-deep); }
+.roulette-items-heading > div { min-width: 0; }
+.roulette-items-heading strong { font-size: .82rem; }
+.roulette-items-heading span { display: inline-flex; margin-left: 8px; padding: 3px 7px; border-radius: 999px; background: var(--accent-dim); color: var(--accent); font-size: .68rem; font-weight: 800; }
+.roulette-items-heading p { margin: 5px 0 0; color: var(--text-dim); font-size: .7rem; line-height: 1.45; }
+.roulette-items-heading button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
+.roulette-items-heading button svg { width: 16px; height: 16px; }
 .roulette-item-table { margin: 16px 16px 0; border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; }
 .roulette-item-head,
 .roulette-item-row { display: grid; grid-template-columns: minmax(180px, 1fr) 100px 80px 40px; align-items: center; gap: 8px; padding: 8px 10px; }

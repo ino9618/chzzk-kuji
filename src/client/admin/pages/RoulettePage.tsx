@@ -1,18 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, type RouletteConfig, type RouletteLogEntry } from '../api';
 import { InlineFeedback } from '../components/InlineFeedback';
-import { PlusIcon, RouletteIcon, TrashIcon } from '../components/Icons';
+import { PlusIcon, RefreshIcon, RouletteIcon, TrashIcon } from '../components/Icons';
 import { NumberStepper } from '../components/NumberStepper';
 
 const initialConfig: RouletteConfig = { enabled: false, minimumAmount: 1000, registrationAmount: 5000, items: [{ label: '노래 한 곡', weight: 3 }, { label: '랜덤 미션', weight: 2 }, { label: '다시 돌리기', weight: 1 }] };
 
-export function RoulettePage() {
+export interface RouletteRegistrationNotice { key: number; label: string; nickname: string; amount: number; }
+
+export function RoulettePage({ registrationNotice = null }: { registrationNotice?: RouletteRegistrationNotice | null }) {
   const [config, setConfig] = useState(initialConfig);
   const [log, setLog] = useState<RouletteLogEntry[]>([]);
   const [pending, setPending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const refreshItems = useCallback(async (showFeedback = true) => {
+    setRefreshing(true);
+    try {
+      setConfig(await api.getRoulette());
+      if (showFeedback) setFeedback({ ok: true, text: '서버에 저장된 룰렛 항목을 새로 불러왔습니다.' });
+    } catch { setFeedback({ ok: false, text: '룰렛 설정을 불러오지 못했습니다.' }); }
+    finally { setRefreshing(false); }
+  }, []);
   useEffect(() => { Promise.all([api.getRoulette(), api.getRouletteLog()]).then(([next, entries]) => { setConfig(next); setLog(entries); }).catch(() => setFeedback({ ok: false, text: '룰렛 설정을 불러오지 못했습니다.' })); }, []);
+  useEffect(() => {
+    if (!registrationNotice) return;
+    api.getRoulette().then((next) => {
+      setConfig(next);
+      setFeedback({ ok: true, text: `${registrationNotice.nickname}님이 “${registrationNotice.label}” 항목을 등록했습니다.` });
+    }).catch(() => setFeedback({ ok: false, text: '새로 등록된 룰렛 항목을 불러오지 못했습니다.' }));
+  }, [registrationNotice?.key]);
   const updateItem = (index: number, key: 'label' | 'weight', value: string | number) => setConfig((current) => ({ ...current, items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item) }));
   const save = async () => {
     setPending(true); setFeedback(null);
@@ -35,6 +53,7 @@ export function RoulettePage() {
     <section className="roulette-config-panel">
       <div className="roulette-config-head"><div className="roulette-icon"><RouletteIcon /></div><div><strong>룰렛 조건</strong><p>한 번의 후원당 룰렛을 한 번 돌립니다.</p></div><label>최소 후원 금액<NumberStepper aria-label="최소 후원 금액" min={1} step={100} suffix="치즈" value={config.minimumAmount} onValueChange={(minimumAmount) => setConfig((current) => ({ ...current, minimumAmount }))} /></label></div>
       <div className="roulette-registration"><div><strong>시청자 항목 등록</strong><p>설정 금액 이상 후원하며 <code>!등록 항목명</code>을 입력하면 가중치 1의 항목으로 추가됩니다.</p></div><label>등록 후원 금액<NumberStepper aria-label="등록 후원 금액" min={1} step={100} suffix="치즈" value={config.registrationAmount} onValueChange={(registrationAmount) => setConfig((current) => ({ ...current, registrationAmount }))} /></label></div>
+      <div className="roulette-items-heading"><div><strong>등록된 룰렛 항목</strong><span>{config.items.length}개</span><p>시청자가 등록한 항목도 이 목록에 자동으로 추가됩니다. 직접 변경한 내용은 설정 저장을 눌러야 적용됩니다.</p></div><button className="secondary-button" disabled={refreshing || pending} onClick={() => refreshItems()}><RefreshIcon />{refreshing ? '불러오는 중' : '항목 새로고침'}</button></div>
       <div className="roulette-item-table"><div className="roulette-item-head"><span>결과 항목</span><span>가중치</span><span>확률</span><span /></div>{config.items.map((item, index) => <div className="roulette-item-row" key={index}><input aria-label={`${index + 1}번 룰렛 항목`} value={item.label} maxLength={40} onChange={(event) => updateItem(index, 'label', event.target.value)} /><NumberStepper aria-label={`${index + 1}번 룰렛 가중치`} min={1} max={1000} value={item.weight} onValueChange={(weight) => updateItem(index, 'weight', weight)} /><span>{totalWeight > 0 ? `${Math.round(item.weight / totalWeight * 100)}%` : '0%'}</span><button className="icon-button" aria-label={`${index + 1}번 룰렛 항목 삭제`} disabled={config.items.length <= 2} onClick={() => setConfig((current) => ({ ...current, items: current.items.filter((_, itemIndex) => itemIndex !== index) }))}><TrashIcon /></button></div>)}</div>
       <button className="secondary-button add-prize-button" disabled={config.items.length >= 20} onClick={() => setConfig((current) => ({ ...current, items: [...current.items, { label: '', weight: 1 }] }))}><PlusIcon />항목 추가</button>
       <div className="roulette-actions"><button className="secondary-button" disabled={pending || !config.enabled} onClick={test}>룰렛 테스트</button><button disabled={pending} onClick={save}>{pending ? '처리 중' : '설정 저장'}</button></div>

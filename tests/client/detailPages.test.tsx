@@ -164,6 +164,9 @@ describe('RoulettePage', () => {
     expect(html).toContain('후원 룰렛');
     expect(html).toContain('!룰렛');
     expect(html).toContain('가중치');
+    expect(html).toContain('등록된 룰렛 항목');
+    expect(html).toContain('항목 새로고침');
+    expect(html).toContain('설정 저장을 눌러야 적용됩니다');
     expect(html).toContain('룰렛 테스트');
   });
 });
