@@ -41,11 +41,14 @@ export type OverlayMode = 'kuji' | 'roulette' | 'combined';
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
-  const sequence = useMemo(() => {
+  const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
+  const { sequence, winningIndex } = useMemo(() => {
     const source = Array.from(new Set((result.items ?? []).map((item) => item.trim()).filter(Boolean)));
     if (!source.includes(result.label)) source.push(result.label);
     if (source.length < 2) source.push('다시 돌리기', '보너스');
-    return [...Array.from({ length: 8 }, () => source).flat(), result.label];
+    const nextItem = source[(source.indexOf(result.label) + 1) % source.length];
+    const items = [...Array.from({ length: 8 }, () => source).flat(), result.label, nextItem];
+    return { sequence: items, winningIndex: items.length - 2 };
   }, [result]);
   useEffect(() => {
     setRevealed(false);
@@ -53,14 +56,23 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     const timer = window.setTimeout(() => { setRevealed(true); playRouletteStopSound(); }, 3300);
     return () => window.clearTimeout(timer);
   }, [result]);
-  const reelStyle = { '--roulette-reel-end': `${88 - (sequence.length - 1) * 88}px` } as CSSProperties;
+  useEffect(() => {
+    const resize = () => setRowHeight(Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+  const reelStyle = {
+    '--roulette-row-height': `${rowHeight}px`,
+    '--roulette-window-height': `${rowHeight * 3}px`,
+    '--roulette-reel-end': `${rowHeight - winningIndex * rowHeight}px`,
+  } as CSSProperties;
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
-    <div className="roulette-reel-shell">
+    <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
       <div className="roulette-reel-header"><span>후원 룰렛</span><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
       <div className="roulette-reel-window">
-        <div className="roulette-reel-track" style={reelStyle}>
-          {sequence.map((item, index) => <div className={`roulette-reel-item ${index === sequence.length - 1 ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
+        <div className="roulette-reel-track">
+          {sequence.map((item, index) => <div className={`roulette-reel-item ${index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
         </div>
         <div className="roulette-reel-focus" aria-hidden="true" />
       </div>
@@ -111,7 +123,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
       isDevPreview = preview === 'kuji' || preview === 'roulette';
-      if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: null, nickname: '테스트 후원자', test: true });
+      if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: '/assets/mascot-success.png', nickname: '테스트 후원자', test: true });
       if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], test: true });
     }
     if (!isDevPreview && showKuji) {

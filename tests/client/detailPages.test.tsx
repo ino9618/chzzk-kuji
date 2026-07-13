@@ -71,6 +71,7 @@ describe('detail settings pages', () => {
     expect(html).toContain('/overlay-roulette.html');
     expect(html).toContain('한정판 피규어');
     expect(html).toContain('· 이미지');
+    expect(html).toContain('직접 입력 · 예시 이미지');
     expect(html).toContain('새 창 미리보기');
     expect(html).toContain('부분 마스킹');
     expect(html).toContain('실시간 오버레이 미리보기');

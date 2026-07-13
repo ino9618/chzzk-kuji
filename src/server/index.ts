@@ -72,12 +72,17 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
         const session = await getActiveSession(db);
         if (session) sourceTicket = (await getTicketsForSession(db, session.id)).find((ticket) => ticket.number === sourceTicketNumber);
       }
+      const requestedPrizeImageUrl = String(payload.prizeImageUrl ?? '');
+      const exampleImageUrl = /^\/(?:assets\/[a-zA-Z0-9_-]+\.(?:png|webp|jpe?g)|src\/client\/assets\/[a-zA-Z0-9_-]+\.(?:png|webp|jpe?g))$/.test(requestedPrizeImageUrl)
+        ? requestedPrizeImageUrl
+        : null;
+      const prizeImageUrl = sourceTicket ? sourceTicket.prizeImageUrl : exampleImageUrl;
       const testEvent = {
         number: sourceTicket?.number ?? (Number.isInteger(number) && number > 0 ? Math.min(number, 9999) : 1),
         grade: sourceTicket?.prizeGrade ?? (String(payload.grade ?? 'A').trim().slice(0, 8) || 'A'),
         prizeName: sourceTicket?.prizeName ?? (String(payload.prizeName ?? '테스트 상품').trim().slice(0, 80) || '테스트 상품'),
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
-        ...(sourceTicket?.prizeImageUrl ? { prizeImageUrl: sourceTicket.prizeImageUrl } : {}),
+        ...(prizeImageUrl ? { prizeImageUrl } : {}),
       };
       io.emit('overlay:test', testEvent);
       if (createWinnerAudio) {

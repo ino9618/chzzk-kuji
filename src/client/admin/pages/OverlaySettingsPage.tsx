@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { InlineFeedback } from '../components/InlineFeedback';
 import { SettingRow } from '../components/SettingRow';
 import type { SessionState } from '../api';
+import examplePrizeImage from '../../assets/mascot-success.png';
 
 interface OverlayTestPayload {
   number: number;
@@ -9,6 +10,7 @@ interface OverlayTestPayload {
   prizeName: string;
   nickname: string;
   sourceTicketNumber?: number;
+  prizeImageUrl?: string;
 }
 
 interface RouletteOverlayTestPayload {
@@ -50,7 +52,7 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
   const [pending, setPending] = useState(false);
   const [testPending, setTestPending] = useState(false);
   const [testMode, setTestMode] = useState<'kuji' | 'roulette'>('kuji');
-  const [test, setTest] = useState<OverlayTestPayload>({ number: 1, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자' });
+  const [test, setTest] = useState<OverlayTestPayload>({ number: 1, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자', prizeImageUrl: examplePrizeImage });
   const [rouletteTest, setRouletteTest] = useState<RouletteOverlayTestPayload>({ label: '테스트 룰렛 결과', nickname: '테스트 후원자', amount: 5000 });
   const origin = typeof window === 'undefined' ? '' : window.location.origin;
   const kujiUrl = `${origin}/overlay-kuji.html`;
@@ -130,7 +132,7 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
           <button className={testMode === 'roulette' ? 'active' : ''} onClick={() => setTestMode('roulette')}>룰렛</button>
         </div>
         {testMode === 'kuji' ? <div className="overlay-test-form">
-          <label className="overlay-prize-source">등록 상품<select value={test.sourceTicketNumber ?? ''} onChange={(event) => selectRegisteredTicket(event.target.value)}><option value="">직접 입력</option>{registeredTickets.map((ticket) => <option value={ticket.number} key={ticket.number}>{ticket.number}번 · {ticket.prizeGrade ? `${ticket.prizeGrade}상 · ` : ''}{ticket.prizeName}{ticket.prizeImageUrl ? ' · 이미지' : ''}</option>)}</select></label>
+          <label className="overlay-prize-source">등록 상품<select value={test.sourceTicketNumber ?? ''} onChange={(event) => selectRegisteredTicket(event.target.value)}><option value="">직접 입력 · 예시 이미지</option>{registeredTickets.map((ticket) => <option value={ticket.number} key={ticket.number}>{ticket.number}번 · {ticket.prizeGrade ? `${ticket.prizeGrade}상 · ` : ''}{ticket.prizeName}{ticket.prizeImageUrl ? ' · 이미지' : ''}</option>)}</select></label>
           <label>번호<input type="number" min={1} max={9999} disabled={test.sourceTicketNumber != null} value={test.number} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, number: Number(event.target.value) }))} /></label>
           <label>등급<input type="text" maxLength={8} disabled={test.sourceTicketNumber != null} value={test.grade} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, grade: event.target.value }))} /></label>
           <label>상품명<input type="text" maxLength={80} disabled={test.sourceTicketNumber != null} value={test.prizeName} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, prizeName: event.target.value }))} /></label>
