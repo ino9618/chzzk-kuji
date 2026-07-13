@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
+import mascotSuccessUrl from '../assets/mascot-success.png';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -123,7 +124,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
       isDevPreview = preview === 'kuji' || preview === 'roulette';
-      if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: '/assets/mascot-success.png', nickname: '테스트 후원자', test: true });
+      if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: mascotSuccessUrl, nickname: '테스트 후원자', test: true });
       if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], test: true });
     }
     if (!isDevPreview && showKuji) {

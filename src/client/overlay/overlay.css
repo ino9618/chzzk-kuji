@@ -284,8 +284,10 @@
 
 .draw-image-frame {
   position: relative;
-  width: 100%;
+  width: calc(100% - 48px);
+  max-width: calc(100% - 48px);
   height: 280px;
+  box-sizing: border-box;
   display: grid;
   place-items: center;
   margin: 18px 24px 0;
