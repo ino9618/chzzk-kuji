@@ -43,6 +43,7 @@ export type OverlayMode = 'kuji' | 'roulette' | 'combined';
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
   const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
+  const revealDone = useRef(false);
   const { sequence, winningIndex } = useMemo(() => {
     const source = Array.from(new Set((result.items ?? []).map((item) => item.trim()).filter(Boolean)));
     if (!source.includes(result.label)) source.push(result.label);
@@ -52,9 +53,10 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     return { sequence: items, winningIndex: items.length - 2 };
   }, [result]);
   useEffect(() => {
+    revealDone.current = false;
     setRevealed(false);
     playRouletteSpinSound();
-    const timer = window.setTimeout(() => { setRevealed(true); playRouletteStopSound(); }, 3300);
+    const timer = window.setTimeout(() => finishSpin(), 3600);
     return () => window.clearTimeout(timer);
   }, [result]);
   useEffect(() => {
@@ -67,13 +69,19 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     '--roulette-window-height': `${rowHeight * 3}px`,
     '--roulette-reel-end': `${rowHeight - winningIndex * rowHeight}px`,
   } as CSSProperties;
+  const finishSpin = () => {
+    if (revealDone.current) return;
+    revealDone.current = true;
+    setRevealed(true);
+    playRouletteStopSound();
+  };
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
       <div className="roulette-reel-header"><span>후원 룰렛</span><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
       <div className="roulette-reel-window">
-        <div className="roulette-reel-track">
-          {sequence.map((item, index) => <div className={`roulette-reel-item ${index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
+        <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
+          {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
         </div>
         <div className="roulette-reel-focus" aria-hidden="true" />
       </div>
