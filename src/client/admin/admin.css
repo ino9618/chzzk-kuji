@@ -1,24 +1,24 @@
-/* CHZZK-style tone & manner: near-black surfaces, neon-green (#00ffa3)
-   brand accent, Pretendard type. Layout is a service-style shell with a
-   left sidebar (대시보드/이치방쿠지/당첨자/설정) and a content pane. */
+/* Snow-leopard broadcast console: crisp snow surfaces, ink-navy navigation,
+   ice-blue actions, and small coral/gold utility accents. */
 :root {
-  --bg: #111315;
-  --bg-deep: #0b0d0e;
-  --panel: #181c1f;
-  --panel-border: #343a40;
-  --border-strong: #454b51;
-  --text: #f1f4f2;
-  --text-dim: #b0b6b2;
-  --accent: #00ffa3;
-  --accent-dim: rgba(0, 255, 163, 0.12);
-  --accent-text: #0b0c0d;
-  --capsule-yellow: #ffd438;
-  --capsule-coral: #ff7a70;
-  --success: #00ffa3;
-  --success-bg: rgba(0, 255, 163, 0.09);
-  --danger: #ff5454;
-  --danger-bg: rgba(255, 84, 84, 0.09);
-  --warning: #ffc84b;
+  color-scheme: light;
+  --bg: #edf4fa;
+  --bg-deep: #e3edf6;
+  --panel: #ffffff;
+  --panel-border: #c9d9e7;
+  --border-strong: #8eaac1;
+  --text: #17283b;
+  --text-dim: #60758a;
+  --accent: #287fbd;
+  --accent-dim: #e2f2fd;
+  --accent-text: #ffffff;
+  --capsule-yellow: #eebd55;
+  --capsule-coral: #e97983;
+  --success: #258f82;
+  --success-bg: #e6f5f1;
+  --danger: #cf5260;
+  --danger-bg: #fbecef;
+  --warning: #b87919;
 }
 
 .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -121,7 +121,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at 50% -20%, rgba(0, 255, 163, 0.08), transparent 60%), var(--bg-deep);
+  background: var(--bg-deep);
   padding: 24px;
 }
 
@@ -1127,6 +1127,160 @@ button.danger-button {
   }
 }
 
+/* ---------- Snow leopard visual system ---------- */
+body {
+  background: #edf4fa;
+  color: var(--text);
+}
+
+.admin-shell {
+  background: #edf4fa;
+}
+
+.shell-sidebar {
+  background: #15283e;
+  border-right-color: #29445e;
+  box-shadow: 8px 0 28px rgba(27, 57, 83, 0.12);
+}
+
+.shell-brand .brand-mark { color: #f6fbff; }
+.shell-brand .brand-mascot { width: 38px; height: 38px; flex-basis: 38px; }
+.shell-nav-group { color: #86a2ba; }
+.shell-nav-item { color: #c4d5e4; }
+.shell-nav-item:hover { background: #203a55; color: #ffffff; }
+.shell-nav-item.active { background: #e5f3fc; border-color: #78bce8; color: #183b59; box-shadow: inset 3px 0 #3a95d0; }
+.shell-connection { border-top-color: #29445e; color: #9eb4c7; }
+.shell-connection.connected { color: #71d6c4; }
+
+.shell-content {
+  max-width: 1240px;
+  padding-top: 42px;
+}
+
+.page-header {
+  min-height: 56px;
+  padding-left: 16px;
+  border-left: 4px solid #5ba8db;
+}
+
+.page-header h1 { color: #14283e; font-size: 1.62rem; }
+.page-header p { color: #61778c; }
+
+.feature-item,
+.feature-quick-action,
+.operations-summary,
+.workflow-section,
+.workflow-panel,
+.setup-section,
+.winner-group,
+.roulette-config-panel,
+.roulette-log-panel,
+.overlay-preview-section,
+.history-session,
+.history-detail-summary,
+.history-detail-panel,
+.winner-session-row,
+.board-ticket,
+.page-empty,
+.connection-overview,
+.preflight-checks > div,
+.stat-card,
+.panel {
+  border-color: #c9d9e7;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(39, 75, 105, 0.055);
+}
+
+.feature-item {
+  min-height: 118px;
+  border-top: 3px solid #5aa8dc;
+}
+
+.feature-item:nth-child(2) { border-top-color: #e58a98; }
+.feature-item:nth-child(2) .feature-item-icon { background: #fae9ed; color: #c95f70; }
+.feature-item-icon { background: #e3f2fc; color: #287fbd; }
+.feature-quick-action:hover { border-color: #72acd4; background: #f0f8fd; }
+.feature-upcoming { border-color: #a8bdce; background: #e6eef5; }
+
+button {
+  background: #287fbd;
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(40, 127, 189, 0.16);
+}
+
+button:hover { filter: brightness(0.94); }
+.secondary-button,
+.button-link { border-color: #91acc2; background: #ffffff; color: #274159; box-shadow: none; }
+.danger-solid-button { background: #d8616d; color: #ffffff; }
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+textarea,
+.roulette-item-row input,
+.overlay-test-form select,
+.test-donation-form input {
+  border-color: #bfd1df;
+  background: #f6f9fc;
+  color: #17283b;
+}
+
+input::placeholder,
+textarea::placeholder { color: #8ba0b2; }
+
+.segmented-control { border-color: #bfd1df; background: #e7eff6; }
+.segmented-control button { box-shadow: none; color: #5f7488; }
+.segmented-control button.active { background: #ffffff; color: #246faa; box-shadow: 0 2px 7px rgba(38, 82, 118, 0.12); }
+
+.operations-summary.ready { border-color: #70b9ad; box-shadow: inset 4px 0 #2f9b8c; }
+.operations-summary.warning { border-color: #e598a1; box-shadow: inset 4px 0 #db6875; }
+.operations-summary.idle { border-color: #dfbd75; box-shadow: inset 4px 0 #c99635; }
+.summary-symbol { background: #2f9b8c; color: #ffffff; }
+.warning .summary-symbol { background: #db6875; }
+.idle .summary-symbol { background: #d4a141; color: #ffffff; }
+
+.setting-row,
+.workflow-heading,
+.roulette-config-head,
+.roulette-item-row,
+.roulette-actions,
+.winner-row,
+.history-detail-summary > div,
+.log-row { border-color: #d5e1eb; }
+.workflow-heading,
+.roulette-item-head,
+.log-head { background: #f1f6fa; }
+
+.switch-track { background: #b7c8d5; }
+.switch input:checked ~ .switch-track { background: #388fc8; }
+.row-status.connected,
+.winner-row strong,
+.winner-session-count,
+.roulette-log-row strong,
+.history-ticket.sold small { color: #258f82; }
+
+.board-ticket.sold { border-color: #68b7aa; background: #e9f6f3; }
+.board-ticket small { color: #287fbd; }
+.roulette-icon { background: #e4f2fb; color: #287fbd; }
+.roulette-registration,
+.history-ticket-list,
+.history-ticket { background: #f2f6fa; }
+
+.overlay-preview-frame { border-color: #9eb8cc; background: #12243a; box-shadow: inset 0 0 0 4px #dcebf5; }
+.overlay-audio-state { border-color: #82b9dc; background: #e5f3fc; color: #246faa; }
+.inline-feedback.success { color: #258f82; }
+.inline-feedback.error { color: #cf5260; }
+
+.login-screen { background: #eaf2f8; }
+.login-panel { border-color: #b9d0e1; background: #ffffff; box-shadow: 0 24px 60px rgba(28, 62, 90, 0.14); }
+.login-panel h1 { color: #15283e; }
+.login-mascot { filter: drop-shadow(0 18px 24px rgba(43, 83, 115, 0.16)); }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible { outline-color: #e0a93e; }
+
 /* ---------- Simple + advanced admin shell ---------- */
 .admin-shell {
   min-height: 100%;
@@ -1766,4 +1920,39 @@ button.danger-button {
   .overlay-actions { align-items: stretch; flex-direction: column; }
   .overlay-actions button { min-height: 44px; }
   .overlay-actions code { width: 100%; }
+}
+
+/* Keep the desktop shell on the snow-leopard palette after base shell rules. */
+@media (min-width: 721px) {
+  .shell-sidebar {
+    background: #15283e;
+    border-right-color: #29445e;
+    box-shadow: 8px 0 28px rgba(27, 57, 83, 0.12);
+  }
+
+  .shell-brand .brand-mark { color: #f6fbff; }
+  .shell-nav-group { color: #86a2ba; }
+  .shell-nav-item { color: #c4d5e4; }
+  .shell-nav-item:hover { background: #203a55; color: #ffffff; }
+  .shell-nav-item.active {
+    background: #e5f3fc;
+    border-color: #78bce8;
+    color: #183b59;
+    box-shadow: inset 3px 0 #3a95d0;
+  }
+
+  .shell-sidebar nav {
+    scrollbar-color: #52708a #15283e;
+  }
+
+  .shell-sidebar nav::-webkit-scrollbar { width: 8px; }
+  .shell-sidebar nav::-webkit-scrollbar-track { background: #15283e; }
+  .shell-sidebar nav::-webkit-scrollbar-thumb {
+    border: 2px solid #15283e;
+    border-radius: 4px;
+    background: #52708a;
+  }
+
+  .shell-connection { border-top-color: #29445e; color: #9eb4c7; }
+  .shell-connection.connected { color: #71d6c4; }
 }

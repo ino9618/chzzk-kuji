@@ -1,3 +1,5 @@
+import mascotFaceUrl from '../assets/mascot-face.png';
+
 export interface OverlayAnnouncement {
   key: number;
   number: number;
@@ -30,7 +32,7 @@ export function DrawResultCard({ announce }: { announce: OverlayAnnouncement }) 
   return <div className={`draw-card ${gradeClass(announce.grade)} ${announce.prizeImageUrl ? 'has-image' : ''}`}>
     {announce.test && <div className="draw-test-badge">미리보기 테스트</div>}
     <div className="draw-ticket-head">
-      <div><span className="draw-kicker">ICHIBAN KUJI</span><strong className="draw-label">당첨 결과</strong></div>
+      <div className="draw-title-lockup"><img src={mascotFaceUrl} alt="" /><div><span className="draw-kicker">ICHIBAN KUJI</span><strong className="draw-label">당첨 결과</strong></div></div>
       <div className="draw-number"><span>선택 번호</span><strong>{announce.number}번</strong></div>
     </div>
     {announce.prizeImageUrl && <div className="draw-image-frame"><img src={announce.prizeImageUrl} alt={announce.prizeName ? `${announce.prizeName} 상품` : '당첨 상품'} /></div>}

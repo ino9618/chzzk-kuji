@@ -18,35 +18,35 @@
 
 /* Grade color themes: A gold, B silver, C bronze, everything else green. */
 .grade-a {
-  --grade-color: #f5c451;
-  --grade-color-dim: rgba(245, 196, 81, 0.22);
-  --grade-text: #ffe9b3;
-  --grade-badge-bg: #f5c451;
-  --grade-badge-text: #2a1a00;
+  --grade-color: #efbd55;
+  --grade-color-dim: rgba(239, 189, 85, 0.22);
+  --grade-text: #ffe8ad;
+  --grade-badge-bg: #efbd55;
+  --grade-badge-text: #3d2a05;
 }
 
 .grade-b {
-  --grade-color: #a9c4d8;
-  --grade-color-dim: rgba(169, 196, 216, 0.2);
-  --grade-text: #dcebf5;
-  --grade-badge-bg: #b8cfdf;
-  --grade-badge-text: #14202a;
+  --grade-color: #70b9e5;
+  --grade-color-dim: rgba(112, 185, 229, 0.2);
+  --grade-text: #dff4ff;
+  --grade-badge-bg: #a9dcf5;
+  --grade-badge-text: #173247;
 }
 
 .grade-c {
-  --grade-color: #e8946a;
-  --grade-color-dim: rgba(232, 148, 106, 0.2);
-  --grade-text: #ffd9c4;
-  --grade-badge-bg: #e8946a;
-  --grade-badge-text: #2a1200;
+  --grade-color: #e47c8d;
+  --grade-color-dim: rgba(228, 124, 141, 0.2);
+  --grade-text: #ffe1e7;
+  --grade-badge-bg: #e99ba8;
+  --grade-badge-text: #401820;
 }
 
 .grade-x {
-  --grade-color: #00ffa3;
-  --grade-color-dim: rgba(0, 255, 163, 0.2);
-  --grade-text: #b8ffe4;
-  --grade-badge-bg: #00e895;
-  --grade-badge-text: #002a12;
+  --grade-color: #87aee5;
+  --grade-color-dim: rgba(135, 174, 229, 0.2);
+  --grade-text: #e1ecff;
+  --grade-badge-bg: #b8d0f3;
+  --grade-badge-text: #1c3150;
 }
 
 /* Header bar: session name + draw progress */
@@ -443,4 +443,115 @@
     transform: translateY(110vh) rotate(var(--rot));
     opacity: 0.85;
   }
+}
+
+/* ---------- Snow leopard broadcast theme ---------- */
+.overlay-header {
+  min-height: 104px;
+  padding: 16px 24px;
+  border: 2px solid #78bce6;
+  background: rgba(18, 40, 62, 0.96);
+  box-shadow: 0 12px 34px rgba(13, 34, 53, 0.34), inset 0 -3px #294c69;
+}
+
+.overlay-brand-lockup { min-width: 0; display: flex; align-items: center; gap: 16px; }
+.overlay-brand-lockup > img { width: 72px; height: 72px; flex: 0 0 72px; object-fit: contain; }
+.overlay-eyebrow { color: #8ed5fa; }
+.overlay-header-title { color: #ffffff; }
+.overlay-progress-block { border-left-color: #466985; }
+.overlay-progress-block > span { color: #adc4d5; }
+.overlay-header-count { color: #efbd55; }
+.overlay-header-count small { color: #b8ccda; }
+
+.grade-legend-item {
+  border-width: 2px;
+  background: rgba(20, 43, 66, 0.96);
+  color: #eef8ff;
+  box-shadow: 0 6px 18px rgba(10, 27, 42, 0.24);
+}
+.grade-legend-count { color: #a9c0d1; }
+.grade-legend-done { background: #d96977; color: #ffffff; }
+
+.overlay-grid { gap: 9px; }
+.overlay-cell {
+  border: 2px dashed #5d7d98;
+  background: rgba(21, 43, 65, 0.93);
+  color: #f3f9fd;
+  box-shadow: 0 5px 14px rgba(10, 27, 42, 0.24);
+}
+.overlay-cell.sold { border-width: 2px; background: #1d3852; }
+.overlay-prize { color: #ffffff; }
+
+.draw-card {
+  border: 3px solid #9ccde9;
+  background: #f7fbfe;
+  color: #162b40;
+  box-shadow: 0 0 0 7px rgba(21, 44, 66, .9), 0 0 42px 8px var(--grade-color-dim), 0 18px 44px rgba(8, 26, 42, .48);
+}
+.draw-card::before,
+.draw-card::after { border-color: #8fc4e4; background: #e9f4fb; }
+.draw-ticket-head {
+  min-height: 126px;
+  border-bottom: 3px dashed #82bfe2;
+  background: #17314b;
+}
+.draw-title-lockup { min-width: 0; display: flex !important; grid-template-columns: none !important; align-items: center; gap: 14px; }
+.draw-title-lockup > img { width: 76px; height: 76px; flex: 0 0 76px; object-fit: contain; }
+.draw-title-lockup > div { min-width: 0; display: grid; gap: 5px; }
+.draw-kicker { color: #8dd7fa; }
+.draw-label { color: #ffffff; }
+.draw-number { border-left-color: #42627e; }
+.draw-number span { color: #b6d6e8; }
+.draw-number strong { color: #ffffff; }
+.draw-image-frame { border-color: #bad4e5; background: #eaf4fa; }
+.draw-result-body { background: #f7fbfe; }
+.draw-prize span,
+.draw-winner span { color: #2b7fb8; }
+.draw-prize strong { color: #152b40; }
+.draw-winner { border-top-color: #c9dae6; }
+.draw-winner strong { color: #50677a; }
+.draw-test-badge { border-color: #84b9da; background: #e7f3fa; color: #234d6b; }
+
+.roulette-reel-shell {
+  background: rgba(14, 30, 48, .98);
+  color: #f2f8fc;
+  box-shadow: inset 0 0 0 8px #203d58;
+}
+.roulette-reel-header,
+.roulette-reel-donor { padding-right: 12px; padding-left: 12px; }
+.roulette-reel-header { border-bottom: 2px solid #3c5d78; }
+.roulette-brand { display: flex; align-items: center; gap: 14px; }
+.roulette-brand img { width: clamp(50px, 5vw, 76px); height: clamp(50px, 5vw, 76px); object-fit: contain; }
+.roulette-reel-header .roulette-brand span { color: #94d8f7; }
+.roulette-reel-header strong { color: #efbd55; }
+.roulette-reel-window {
+  border: 3px solid #5d89a8;
+  background: #172d43;
+  box-shadow: 0 0 0 8px #102539, 0 28px 72px rgba(3, 15, 25, .52);
+}
+.roulette-reel-item { border-bottom-color: #385570; color: #b9ccda; }
+.roulette-reel-item.winning { color: #173149; text-shadow: 0 0 16px rgba(94, 185, 231, .52); }
+.roulette-reel-focus { border-color: #5e7890; }
+.roulette-reel-focus::before { border-left-color: #9eb6c8; }
+.roulette-reel-focus::after { border-right-color: #9eb6c8; }
+.roulette-result-overlay.revealed .roulette-reel-focus {
+  border-color: #70c5ee;
+  background: rgba(222, 244, 255, .94);
+  box-shadow: inset 0 0 48px rgba(88, 174, 218, .18), 0 0 34px rgba(89, 183, 229, .4);
+}
+.roulette-result-overlay.revealed .roulette-reel-focus::before { border-left-color: #efbd55; }
+.roulette-result-overlay.revealed .roulette-reel-focus::after { border-right-color: #efbd55; }
+.roulette-reel-donor { border-top: 2px solid #3c5d78; color: #abc1d1; }
+.roulette-reel-donor strong { color: #ffffff; }
+.roulette-test-badge { border-color: #638ba7; background: #203d58; color: #dff3ff; }
+
+@keyframes cardGlow {
+  from { box-shadow: 0 0 0 7px rgba(21,44,66,.9), 0 0 22px 2px var(--grade-color-dim), 0 18px 44px rgba(8,26,42,.48); }
+  to { box-shadow: 0 0 0 7px rgba(21,44,66,.9), 0 0 48px 10px var(--grade-color-dim), 0 18px 44px rgba(8,26,42,.48); }
+}
+@keyframes rouletteWinnerReveal { 0% { opacity: .78; color: #10283c; transform: scale(.82); } 55% { opacity: 1; color: #0e2940; transform: scale(1.08); text-shadow: 0 0 24px #7ac9ef; } 100% { opacity: 1; color: #10283c; transform: scale(1); text-shadow: 0 0 12px rgba(83,163,205,.62); } }
+
+.roulette-result-overlay.revealed .roulette-reel-item.winning {
+  color: #10283c;
+  opacity: 1;
 }

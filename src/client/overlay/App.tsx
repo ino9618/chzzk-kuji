@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
+import mascotFaceUrl from '../assets/mascot-face.png';
 import mascotSuccessUrl from '../assets/mascot-success.png';
 import './overlay.css';
 
@@ -88,7 +89,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
-      <div className="roulette-reel-header"><span>후원 룰렛</span><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
+      <div className="roulette-reel-header"><div className="roulette-brand"><img src={mascotFaceUrl} alt="" /><span>후원 룰렛</span></div><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
       <div className="roulette-reel-window">
         <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
           {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
@@ -105,7 +106,7 @@ const socket = io();
 const ANNOUNCE_MS = 8000;
 const HIGHLIGHT_MS = 2600;
 
-const CONFETTI_COLORS = ['#f5c451', '#00ffa3', '#7fd4ff', '#ff8fb1', '#ffffff'];
+const CONFETTI_COLORS = ['#efbd55', '#67b9e8', '#b9e5fb', '#e77f91', '#ffffff'];
 
 function makeConfetti(count: number): ConfettiPiece[] {
   return Array.from({ length: count }, () => ({
@@ -239,10 +240,10 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   return (
     <div className="overlay-root">
       {showKuji && board.active && <><div className="overlay-header">
-        <div className="overlay-title-block">
+        <div className="overlay-brand-lockup"><img src={mascotFaceUrl} alt="" /><div className="overlay-title-block">
           <span className="overlay-eyebrow">이치방쿠지</span>
           <span className="overlay-header-title">{board.name || '호갱 API'}</span>
-        </div>
+        </div></div>
         <div className="overlay-progress-block">
           <span>판매 현황</span>
           <strong className="overlay-header-count">{soldCount}<small>/ {totalCount}</small></strong>
