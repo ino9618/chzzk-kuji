@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { getActiveSession, getTicketsForSession, getSetting, type Db, type Ticket } from '../db';
 import { maskNickname } from '../maskNickname';
 
+const overlayVersion = process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || `startup-${Date.now()}`;
+
 export interface GradeSummary {
   grade: string;
   prizeName: string;
@@ -69,6 +71,11 @@ export async function buildBoardPayload(db: Db) {
 
 export function createOverlayRouter(db: Db): Router {
   const router = Router();
+
+  router.get('/version', (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ version: overlayVersion });
+  });
 
   router.get('/board', async (_req, res) => {
     res.json(await buildBoardPayload(db));

@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import bcrypt from 'bcryptjs';
 import { createServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
-import { createPgDb, getSetting, setSetting, listPendingIssues, type Db } from './db';
+import { createPgDb, getActiveSession, getTicketsForSession, getSetting, setSetting, listPendingIssues, type Db } from './db';
 import { createAuthRouter } from './routes/auth';
 import { createAdminRouter } from './routes/admin';
 import { createOverlayRouter, buildBoardPayload } from './routes/overlay';
@@ -66,11 +66,18 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
 
       const payload = input && typeof input === 'object' ? input as Record<string, unknown> : {};
       const number = Number(payload.number);
+      const sourceTicketNumber = Number(payload.sourceTicketNumber);
+      let sourceTicket: Awaited<ReturnType<typeof getTicketsForSession>>[number] | undefined;
+      if (Number.isInteger(sourceTicketNumber) && sourceTicketNumber > 0) {
+        const session = await getActiveSession(db);
+        if (session) sourceTicket = (await getTicketsForSession(db, session.id)).find((ticket) => ticket.number === sourceTicketNumber);
+      }
       const testEvent = {
-        number: Number.isInteger(number) && number > 0 ? Math.min(number, 9999) : 1,
-        grade: String(payload.grade ?? 'A').trim().slice(0, 8) || 'A',
-        prizeName: String(payload.prizeName ?? '테스트 상품').trim().slice(0, 80) || '테스트 상품',
+        number: sourceTicket?.number ?? (Number.isInteger(number) && number > 0 ? Math.min(number, 9999) : 1),
+        grade: sourceTicket?.prizeGrade ?? (String(payload.grade ?? 'A').trim().slice(0, 8) || 'A'),
+        prizeName: sourceTicket?.prizeName ?? (String(payload.prizeName ?? '테스트 상품').trim().slice(0, 80) || '테스트 상품'),
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
+        ...(sourceTicket?.prizeImageUrl ? { prizeImageUrl: sourceTicket.prizeImageUrl } : {}),
       };
       io.emit('overlay:test', testEvent);
       if (createWinnerAudio) {

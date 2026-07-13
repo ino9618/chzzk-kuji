@@ -254,12 +254,6 @@
   z-index: 10;
 }
 
-.reveal-burst { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.reveal-burst::before,
-.reveal-burst::after { position: absolute; top: 50%; left: 58%; width: 360px; height: 360px; border: 14px solid rgba(245,196,81,.58); border-radius: 50%; content: ''; transform: translate(-50%, -50%); animation: revealRing 1.1s ease-out both; }
-.reveal-burst::after { width: 520px; height: 520px; border-width: 4px; border-color: rgba(255,255,255,.42); animation-delay: .08s; }
-@keyframes revealRing { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.25); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); } }
-
 .draw-card {
   position: fixed;
   z-index: 3;
@@ -408,14 +402,9 @@
 .roulette-reel-focus::after { right: -1px; border-right: 12px solid #f5c451; }
 .roulette-reel-donor { color: #aeb5b1; font-size: .82rem; }
 .roulette-reel-donor strong { color: #f2f4f3; font-size: .88rem; }
-.roulette-result-card { position: fixed; left: 72px; bottom: 72px; z-index: 3; width: 520px; min-height: 230px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 32px 40px; border: 2px solid #f5c451; border-radius: 8px; background: rgba(8,10,11,.96); box-shadow: 0 20px 64px rgba(0,0,0,.6), 0 0 38px rgba(245,196,81,.2); color: #f2f4f3; animation: rouletteCardIn .55s cubic-bezier(.18,1.2,.3,1); }
-.roulette-result-label { color: #f5c451; font-size: .9rem; font-weight: 900; }
-.roulette-result-card > strong { max-width: 100%; margin-top: 12px; overflow-wrap: anywhere; color: #fff; font-size: 3rem; line-height: 1.16; text-align: left; }
-.roulette-result-card > p { width: 100%; display: flex; justify-content: space-between; gap: 20px; margin: 22px 0 0; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.15); color: #aeb5b1; font-size: 1rem; }
-.roulette-result-card > p b { color: #f2f4f3; }
+.roulette-test-badge { top: -14px; right: 14px; }
 @keyframes rouletteShellIn { from { opacity: 0; transform: translate(-50%,-46%) scale(.94); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 @keyframes rouletteReelSpin { from { transform: translateY(0); } to { transform: translateY(var(--roulette-reel-end)); } }
-@keyframes rouletteCardIn { from { opacity: 0; transform: translateY(24px) scale(.88); } to { opacity: 1; transform: none; } }
 
 /* Confetti burst */
 .confetti {

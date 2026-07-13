@@ -49,7 +49,7 @@ export function FeaturesPage({ onNavigate }: FeaturesPageProps) {
       <section className="feature-quick-section" aria-labelledby="quick-actions-title">
         <div className="feature-section-heading">
           <div><h2 id="quick-actions-title">빠른 실행</h2><p>방송 전과 운영 중 자주 쓰는 화면입니다.</p></div>
-          <a className="button-link secondary-button icon-text" href="/overlay.html" target="_blank" rel="noreferrer"><MonitorIcon />오버레이 새 창</a>
+          <a className="button-link secondary-button icon-text" href="/overlay-kuji.html" target="_blank" rel="noreferrer"><MonitorIcon />쿠지 오버레이</a>
         </div>
         <div className="feature-quick-actions">
           {quickActions.map((action) => {

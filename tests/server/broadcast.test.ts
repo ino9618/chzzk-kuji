@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import type { Server as HttpServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
 import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
-import type { Db } from '../../src/server/db';
+import { createSession, type Db } from '../../src/server/db';
 import { registerSocketHandlers, parseCookie } from '../../src/server/index';
 import { createTestDb } from '../helpers/testDb';
 import { broadcastQueueUpdate, broadcastConnectionStatus, broadcastBoardUpdate } from '../../src/server/broadcast';
@@ -109,6 +109,8 @@ describe('admin-room broadcast scoping (integration)', () => {
   });
 
   it('lets an authenticated admin trigger a public overlay test without allowing public clients to trigger one', async () => {
+    const image = 'data:image/webp;base64,UklGRg==';
+    await createSession(db, { name: '이미지 회차', ticketPrice: 1000, numberRangeMin: 7, numberRangeMax: 7, tickets: [{ number: 7, prizeName: '한정판 피규어', prizeGrade: 'A', prizeImageUrl: image }] });
     const token = 'overlay-admin-token';
     registerAdminToken(token);
     adminClient = ioClient(`http://localhost:${port}`, { transports: ['websocket'], extraHeaders: { Cookie: `admin_token=${token}` } });
@@ -124,14 +126,15 @@ describe('admin-room broadcast scoping (integration)', () => {
     expect(denied).toEqual({ ok: false, error: 'unauthorized' });
 
     const accepted = await adminClient.emitWithAck('overlay:test', {
-      number: 7,
-      grade: 'A',
-      prizeName: '테스트 상품',
+      number: 99,
+      grade: 'C',
+      prizeName: '직접 입력 상품',
       nickname: '테스트 후원자',
+      sourceTicketNumber: 7,
     });
     expect(accepted).toEqual({ ok: true });
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(received).toContainEqual({ number: 7, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자' });
+    expect(received).toContainEqual({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: image, nickname: '테스트 후원자' });
   });
 
   it('broadcasts roulette overlay tests without recording a real roulette result', async () => {

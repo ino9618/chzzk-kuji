@@ -26,6 +26,14 @@ beforeEach(async () => {
 });
 
 describe('GET /api/overlay/board', () => {
+  it('exposes a non-cacheable version for automatic OBS refresh', async () => {
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/overlay/version');
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toContain('no-store');
+    expect(res.body.version).toEqual(expect.any(String));
+  });
+
   it('requires no authentication and masks nicknames by default', async () => {
     await agent.post('/api/admin/session').send({
       name: '1회차',

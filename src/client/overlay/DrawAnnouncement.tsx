@@ -46,7 +46,7 @@ export function DrawResultCard({ announce }: { announce: OverlayAnnouncement }) 
 
 export function DrawAnnouncement({ announce, confetti }: { announce: OverlayAnnouncement; confetti: ConfettiPiece[] }) {
   return <div className="draw-announce" key={announce.key}>
-    <div className="reveal-burst" /><div className="confetti">
+    <div className="confetti">
       {confetti.map((piece, index) => <span key={index} className="confetti-piece" style={{
         left: `${piece.left}%`, width: piece.size, height: piece.size * 0.5, background: piece.color,
         animationDelay: `${piece.delay}s`, animationDuration: `${piece.duration}s`, ['--rot' as string]: `${piece.rotate}deg`,

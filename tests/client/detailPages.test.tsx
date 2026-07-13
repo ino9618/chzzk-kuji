@@ -24,7 +24,7 @@ describe('FeaturesPage', () => {
     expect(html).toContain('후원 룰렛');
     expect(html).toContain('빠른 실행');
     expect(html).toContain('방송 전 점검');
-    expect(html).toContain('오버레이 새 창');
+    expect(html).toContain('쿠지 오버레이');
     expect(html).toContain('판매 번호판');
     expect(html).toContain('기능 확장 예정');
   });
@@ -64,8 +64,13 @@ describe('detail settings pages', () => {
   });
 
   it('renders overlay controls', () => {
-    const html = renderToStaticMarkup(<OverlaySettingsPage nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} onTestOverlay={vi.fn(async () => undefined)} onTestRoulette={vi.fn(async () => undefined)} />);
-    expect(html).toContain('OBS 브라우저 소스');
+    const html = renderToStaticMarkup(<OverlaySettingsPage session={{ active: true, tickets: [{ number: 7, prizeName: '한정판 피규어', prizeGrade: 'A', prizeImageUrl: 'data:image/webp;base64,UklGRg==', status: 'available', ownerNickname: null }] }} nicknameMode="masked" onSetNicknameMode={vi.fn(async () => undefined)} onTestOverlay={vi.fn(async () => undefined)} onTestRoulette={vi.fn(async () => undefined)} />);
+    expect(html).toContain('이치방쿠지 OBS 소스');
+    expect(html).toContain('룰렛 OBS 소스');
+    expect(html).toContain('/overlay-kuji.html');
+    expect(html).toContain('/overlay-roulette.html');
+    expect(html).toContain('한정판 피규어');
+    expect(html).toContain('· 이미지');
     expect(html).toContain('새 창 미리보기');
     expect(html).toContain('부분 마스킹');
     expect(html).toContain('실시간 오버레이 미리보기');
@@ -101,7 +106,7 @@ describe('BroadcastPreflightPage', () => {
     expect(html).toContain('방송 준비 완료');
     expect(html).toContain('모의 후원 검사');
     expect(html).toContain('실제 번호를 판매 처리하지 않고');
-    expect(html).toContain('오버레이 미리보기');
+    expect(html).toContain('쿠지 오버레이 미리보기');
   });
 });
 

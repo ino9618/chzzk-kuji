@@ -37,6 +37,8 @@ interface RouletteResult {
   test?: boolean;
 }
 
+export type OverlayMode = 'kuji' | 'roulette' | 'combined';
+
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
   const sequence = useMemo(() => {
@@ -54,6 +56,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const reelStyle = { '--roulette-reel-end': `${88 - (sequence.length - 1) * 88}px` } as CSSProperties;
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     <div className="roulette-reel-shell">
+      {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
       <div className="roulette-reel-header"><span>후원 룰렛</span><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
       <div className="roulette-reel-window">
         <div className="roulette-reel-track" style={reelStyle}>
@@ -63,12 +66,6 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
       </div>
       <div className="roulette-reel-donor"><span>{result.nickname}</span><strong>{result.amount.toLocaleString('ko-KR')} 치즈</strong></div>
     </div>
-    {revealed && <><div className="reveal-burst" /><div className="roulette-result-card">
-      {result.test && <div className="draw-test-badge">미리보기 테스트</div>}
-      <span className="roulette-result-label">룰렛 당첨 결과</span>
-      <strong>{result.label}</strong>
-      <p><b>{result.nickname}</b><span>{result.amount.toLocaleString('ko-KR')} 치즈</span></p>
-    </div></>}
   </div>;
 }
 
@@ -90,7 +87,7 @@ function makeConfetti(count: number): ConfettiPiece[] {
   }));
 }
 
-export function App() {
+export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const [board, setBoard] = useState<BoardPayload>({ active: false });
   const [justSold, setJustSold] = useState<number | null>(null);
   const [announce, setAnnounce] = useState<OverlayAnnouncement | null>(null);
@@ -98,6 +95,8 @@ export function App() {
   const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rouletteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showKuji = mode !== 'roulette';
+  const showRoulette = mode !== 'kuji';
 
   const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
@@ -108,17 +107,24 @@ export function App() {
 
   useEffect(() => {
     let isDevPreview = false;
+    let boardPoll: number | undefined;
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
       isDevPreview = preview === 'kuji' || preview === 'roulette';
       if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: null, nickname: '테스트 후원자', test: true });
       if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], test: true });
     }
-    if (!isDevPreview) fetch('/api/overlay/board')
-      .then((r) => r.json())
-      .then(setBoard);
+    if (!isDevPreview && showKuji) {
+      const refreshBoard = () => fetch('/api/overlay/board', { cache: 'no-store' })
+        .then((response) => response.json())
+        .then(setBoard)
+        .catch(() => undefined);
+      void refreshBoard();
+      boardPoll = window.setInterval(refreshBoard, 15_000);
+    }
 
     socket.on('board:update', (next: BoardPayload) => {
+      if (!showKuji) return;
       setBoard((prev) => {
         const prevSoldNumbers = new Set(prev.tickets?.filter((t) => t.status === 'sold').map((t) => t.number));
         const newlySold = next.tickets?.find((t) => t.status === 'sold' && !prevSoldNumbers.has(t.number));
@@ -140,9 +146,10 @@ export function App() {
     });
 
     socket.on('overlay:test', (event: Omit<OverlayAnnouncement, 'key'>) => {
-      showAnnouncement({ ...event, test: true });
+      if (showKuji) showAnnouncement({ ...event, test: true });
     });
     socket.on('roulette:result', (result: RouletteResult) => {
+      if (!showRoulette) return;
       setRouletteResult(result);
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
       rouletteTimer.current = setTimeout(() => setRouletteResult(null), 8000);
@@ -157,6 +164,29 @@ export function App() {
       if (announceTimer.current) clearTimeout(announceTimer.current);
       if (highlightTimer.current) clearTimeout(highlightTimer.current);
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
+      if (boardPoll) window.clearInterval(boardPoll);
+    };
+  }, [mode]);
+
+  useEffect(() => {
+    let currentVersion = '';
+    const checkVersion = async () => {
+      try {
+        const response = await fetch('/api/overlay/version', { cache: 'no-store' });
+        const { version } = await response.json() as { version: string };
+        if (currentVersion && currentVersion !== version) window.location.reload();
+        currentVersion = version;
+      } catch {
+        // A temporary network failure is handled by the next interval.
+      }
+    };
+    const handleVisibility = () => { if (document.visibilityState === 'visible') void checkVersion(); };
+    void checkVersion();
+    const interval = window.setInterval(checkVersion, 60_000);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 
@@ -165,7 +195,7 @@ export function App() {
     return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 70 : 32);
   }, [announce?.key]);
 
-  if (!board.active && !announce && !rouletteResult) {
+  if (!(showKuji && board.active) && !announce && !rouletteResult) {
     return <div className="overlay-empty" />;
   }
 
@@ -177,7 +207,7 @@ export function App() {
 
   return (
     <div className="overlay-root">
-      {board.active && <><div className="overlay-header">
+      {showKuji && board.active && <><div className="overlay-header">
         <div className="overlay-title-block">
           <span className="overlay-eyebrow">이치방쿠지</span>
           <span className="overlay-header-title">{board.name || '호갱 API'}</span>
