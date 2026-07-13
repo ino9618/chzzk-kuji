@@ -5,8 +5,8 @@ import { refreshAccessToken, type TokenResponse } from './chzzkAuth';
 interface RawDonationData {
   donationType: 'CHAT' | 'VIDEO';
   channelId: string;
-  donatorChannelId: string;
-  donatorNickname: string;
+  donatorChannelId?: string | null;
+  donatorNickname?: string | null;
   payAmount: string | number;
   donationText: string;
 }
@@ -18,9 +18,11 @@ export function parseDonationPayload(raw: unknown): DonationEvent | null {
   const data = envelope.data as RawDonationData;
   const amount = Number(data.payAmount);
   if (!Number.isFinite(amount) || amount < 0) return null;
+  const nickname = typeof data.donatorNickname === 'string' ? data.donatorNickname.trim() : '';
+  const donorChannelId = typeof data.donatorChannelId === 'string' ? data.donatorChannelId.trim() : '';
   return {
-    channelId: data.donatorChannelId,
-    nickname: data.donatorNickname || '익명',
+    channelId: donorChannelId || 'anonymous',
+    nickname: nickname || '익명 후원자',
     amount,
     message: data.donationText ?? '',
   };

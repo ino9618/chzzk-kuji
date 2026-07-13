@@ -8,7 +8,7 @@ import { BasicSettingsPage } from '../../src/client/admin/pages/BasicSettingsPag
 import { OperationsLogPage } from '../../src/client/admin/pages/OperationsLogPage';
 import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPreflightPage';
 import { DonationSimulatorPage } from '../../src/client/admin/pages/DonationSimulatorPage';
-import { SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
+import { SessionHistoryDetail, SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
 import { DrawAnnouncement } from '../../src/client/overlay/DrawAnnouncement';
 import type { Winner } from '../../src/client/admin/api';
@@ -96,7 +96,17 @@ describe('new operation tools', () => {
   it('renders previous sessions and clone action', () => {
     const html = renderToStaticMarkup(<SessionHistoryPage sessions={[previousSession]} activeSession={false} onClone={vi.fn()} />);
     expect(html).toContain('지난 회차');
+    expect(html).toContain('상세 보기');
     expect(html).toContain('신규 회차로 불러오기');
+    expect(html).not.toContain('history-detail-panel');
+  });
+
+  it('renders a separate session detail view with ticket information', () => {
+    const html = renderToStaticMarkup(<SessionHistoryDetail session={previousSession} activeSession={false} onBack={vi.fn()} onClone={vi.fn()} />);
+    expect(html).toContain('목록으로');
+    expect(html).toContain('티켓 상세');
+    expect(html).toContain('1,500 치즈');
+    expect(html).toContain('A상 · 커피');
   });
 
   it('prefills session setup from a previous session template', () => {

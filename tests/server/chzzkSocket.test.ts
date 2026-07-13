@@ -29,19 +29,19 @@ describe('parseDonationPayload', () => {
     });
   });
 
-  it('defaults an anonymous donation nickname to 익명', () => {
+  it('normalizes a fully anonymous donation without a nickname or channel id', () => {
     const raw = {
       type: 'DONATION',
       data: {
         donationType: 'CHAT',
         channelId: 'streamer-channel',
-        donatorChannelId: 'anonymous',
-        donatorNickname: '',
+        donatorChannelId: '',
+        donatorNickname: '   ',
         payAmount: 1000,
         donationText: '3번',
       },
     };
-    expect(parseDonationPayload(raw)?.nickname).toBe('익명');
+    expect(parseDonationPayload(raw)).toMatchObject({ channelId: 'anonymous', nickname: '익명 후원자' });
   });
 
   it('returns null for a non-donation message', () => {
