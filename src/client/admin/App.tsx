@@ -16,7 +16,6 @@ import { ConnectionPage } from './pages/ConnectionPage';
 import { BasicSettingsPage } from './pages/BasicSettingsPage';
 import { OperationsLogPage } from './pages/OperationsLogPage';
 import { BroadcastPreflightPage } from './pages/BroadcastPreflightPage';
-import { DonationSimulatorPage } from './pages/DonationSimulatorPage';
 import { SessionHistoryPage } from './pages/SessionHistoryPage';
 import { RoulettePage } from './pages/RoulettePage';
 import { FeaturesPage } from './pages/FeaturesPage';
@@ -172,7 +171,6 @@ export function App() {
       {page === 'session-history' && <SessionHistoryPage sessions={sessionHistory} activeSession={session.active} onClone={(template) => { setSessionTemplate(template); setPage('session-setup'); }} />}
       {page === 'log' && <OperationsLogPage entries={log} />}
       {page === 'roulette' && <RoulettePage />}
-      {page === 'donation-simulator' && <DonationSimulatorPage session={session} onSend={async (payload) => { const result = await api.simulateDonation(payload); await loadData(); return result; }} />}
       {page === 'connection' && <ConnectionPage connection={connection} onRefresh={async () => { const next = await api.getChzzkConnection(); setConnection(next); setChzzkStatus(next.status); }} onDisconnect={async () => { await api.disconnectChzzk(); const next = { status: 'not_configured', channelId: null, channelName: null, lastEventAt: connection.lastEventAt }; setConnection(next); setChzzkStatus(next.status); }} />}
       {page === 'settings' && <BasicSettingsPage settings={basicSettings} onSave={async (next) => { const saved = await api.setBasicSettings(next); setBasicSettings(saved); setKujiEnabled(saved.kujiEnabled); setNicknameMode(saved.nicknameMode); }} />}
       {page === 'session-setup' && (session.active ? <div className="admin-page"><header className="page-header"><h1>회차 설정</h1></header><div className="page-empty"><p>현재 회차가 진행 중입니다.</p><button onClick={() => setPage('operations')}>간편 운영으로 이동</button></div></div> : <SessionSetupPage key={sessionTemplate?.id ?? 'new'} onCreate={api.createSession} onCreated={refreshCreatedSession} defaultTicketPrice={basicSettings.defaultTicketPrice} template={sessionTemplate ? { id: sessionTemplate.id, name: sessionTemplate.name, ticketPrice: sessionTemplate.ticketPrice, tickets: sessionTemplate.tickets.map(({ number, prizeName, prizeGrade, prizeImageUrl }) => ({ number, prizeName, prizeGrade: prizeGrade ?? undefined, prizeImageUrl: prizeImageUrl ?? undefined })) } : null} />)}

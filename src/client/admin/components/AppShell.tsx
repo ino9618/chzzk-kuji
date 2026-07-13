@@ -10,7 +10,6 @@ import {
   SlidersIcon,
   TicketIcon,
   TrophyIcon,
-  SendIcon,
   RouletteIcon,
 } from './Icons';
 import { adminNavigationSections, type AdminIconName } from '../adminFeatures';
@@ -32,7 +31,6 @@ const iconMap: Record<AdminIconName, typeof DashboardIcon> = {
   book: BookIcon,
   settings: SettingsIcon,
   sliders: SlidersIcon,
-  send: SendIcon,
   roulette: RouletteIcon,
 };
 

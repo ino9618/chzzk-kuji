@@ -68,13 +68,6 @@ export interface SessionHistoryEntry {
   tickets: Ticket[];
 }
 
-export type DonationSimulationResult =
-  | { status: 'feature_disabled' }
-  | { status: 'session_inactive' }
-  | { status: 'amount_mismatch'; ticketPrice: number }
-  | { status: 'number_missing'; expectedCount: number; foundNumbers: number[] }
-  | { status: 'processed'; sessionId: number; outcomes: Array<{ number: number; result: 'success' | 'duplicate_rejected' | 'out_of_range'; prizeName?: string }> };
-
 export interface RouletteItem { label: string; weight: number; }
 export interface RouletteConfig { enabled: boolean; minimumAmount: number; registrationAmount: number; items: RouletteItem[]; }
 export interface RouletteLogEntry { id: number; donorNickname: string; donorChannelId: string; amount: number; resultLabel: string; createdAt: string; }
@@ -105,8 +98,6 @@ export const api = {
   getLog: () => jsonFetch<QueueEntry[]>('/api/admin/log'),
   getWinners: () => jsonFetch<Winner[]>('/api/admin/winners'),
   getSessions: () => jsonFetch<SessionHistoryEntry[]>('/api/admin/sessions'),
-  simulateDonation: (payload: { nickname: string; amount: number; message: string }) =>
-    jsonFetch<DonationSimulationResult>('/api/admin/donation-simulator', { method: 'POST', body: JSON.stringify(payload) }),
   getRoulette: () => jsonFetch<RouletteConfig>('/api/admin/roulette'),
   setRoulette: (config: RouletteConfig) => jsonFetch<RouletteConfig>('/api/admin/roulette', { method: 'POST', body: JSON.stringify(config) }),
   getRouletteLog: () => jsonFetch<RouletteLogEntry[]>('/api/admin/roulette/log'),

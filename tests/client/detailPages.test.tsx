@@ -7,7 +7,6 @@ import { ConnectionPage } from '../../src/client/admin/pages/ConnectionPage';
 import { BasicSettingsPage } from '../../src/client/admin/pages/BasicSettingsPage';
 import { OperationsLogPage } from '../../src/client/admin/pages/OperationsLogPage';
 import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPreflightPage';
-import { DonationSimulatorPage } from '../../src/client/admin/pages/DonationSimulatorPage';
 import { SessionHistoryDetail, SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
 import { DrawResultCard } from '../../src/client/overlay/DrawAnnouncement';
@@ -23,6 +22,10 @@ describe('FeaturesPage', () => {
     expect(html).toContain('방송 기능');
     expect(html).toContain('이치방쿠지');
     expect(html).toContain('후원 룰렛');
+    expect(html).toContain('빠른 실행');
+    expect(html).toContain('방송 전 점검');
+    expect(html).toContain('오버레이 새 창');
+    expect(html).toContain('판매 번호판');
     expect(html).toContain('기능 확장 예정');
   });
 });
@@ -108,13 +111,6 @@ describe('new operation tools', () => {
     status: 'closed' as const, createdAt: '2026-07-01T00:00:00.000Z', soldCount: 0,
     tickets: [{ number: 1, prizeName: '커피', prizeGrade: 'A', status: 'available' as const, ownerNickname: null }],
   };
-
-  it('renders a real donation simulator warning and send control', () => {
-    const html = renderToStaticMarkup(<DonationSimulatorPage session={{ active: true, name: '현재 회차', ticketPrice: 1000, tickets: previousSession.tickets }} onSend={vi.fn(async () => ({ status: 'processed', sessionId: 1, outcomes: [] }))} />);
-    expect(html).toContain('도네이션 테스트');
-    expect(html).toContain('실제로 판매 처리');
-    expect(html).toContain('테스트 도네이션 보내기');
-  });
 
   it('renders previous sessions and clone action', () => {
     const html = renderToStaticMarkup(<SessionHistoryPage sessions={[previousSession]} activeSession={false} onClone={vi.fn()} />);

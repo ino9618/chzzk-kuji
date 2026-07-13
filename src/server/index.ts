@@ -104,7 +104,6 @@ export function registerSocketHandlers(io: SocketIOServer, db: Db, createWinnerA
 export interface AppOptions {
   adminPasswordHash: string;
   disconnectChzzk?: () => Promise<void> | void;
-  simulateDonation?: (event: import('./donationProcessor').DonationEvent) => Promise<import('./donationProcessor').ProcessDonationResult>;
   simulateRoulette?: (event: import('./donationProcessor').DonationEvent) => Promise<import('./rouletteProcessor').RouletteProcessResult>;
 }
 
@@ -138,7 +137,6 @@ export async function createApp(db: Db, options: AppOptions) {
   app.use('/api/admin', createAdminRouter(db, {
     getChzzkStatus: () => chzzkStatus,
     disconnectChzzk: options.disconnectChzzk,
-    simulateDonation: options.simulateDonation ?? ((event) => processDonation(db, event)),
     simulateRoulette: options.simulateRoulette ?? ((event) => processRouletteDonation(db, event)),
   }));
   app.use('/api/overlay', createOverlayRouter(db));
@@ -172,12 +170,10 @@ async function main(): Promise<void> {
   }
 
   let disconnectActiveChzzk = () => undefined;
-  let simulateDonation = (event: import('./donationProcessor').DonationEvent) => processDonation(db, event);
   let simulateRoulette = (event: import('./donationProcessor').DonationEvent) => processRouletteDonation(db, event);
   const { app, setChzzkStatus } = await createApp(db, {
     adminPasswordHash,
     disconnectChzzk: () => disconnectActiveChzzk(),
-    simulateDonation: (event) => simulateDonation(event),
     simulateRoulette: (event) => simulateRoulette(event),
   });
 
@@ -198,13 +194,6 @@ async function main(): Promise<void> {
       try { broadcastWinnerAudio(io, await createWinnerAudio({ nickname: event.nickname, number: outcome.number, prizeName: outcome.prizeName })); }
       catch (error) { console.error('Google Cloud TTS generation failed:', error); }
     }
-  };
-  simulateDonation = async (event) => {
-    const result = await processDonation(db, event);
-    await announceProcessedWinners(event, result);
-    broadcastBoardUpdate(io, await buildBoardPayload(db));
-    broadcastQueueUpdate(io, await listPendingIssues(db));
-    return result;
   };
   simulateRoulette = async (event) => {
     const result = await processRouletteDonation(db, event);

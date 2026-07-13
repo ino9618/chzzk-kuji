@@ -26,6 +26,11 @@ beforeEach(async () => {
 });
 
 describe('admin session routes', () => {
+  it('does not expose the removed donation simulator endpoint', async () => {
+    const res = await agent.post('/api/admin/donation-simulator').send({ nickname: '테스트', amount: 1000, message: '1번' });
+    expect(res.status).toBe(404);
+  });
+
   it('reports no active session initially', async () => {
     const res = await agent.get('/api/admin/session');
     expect(res.body).toEqual({ active: false });
@@ -92,26 +97,6 @@ describe('admin session routes', () => {
     });
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'invalid_prize_image' });
-  });
-});
-
-describe('donation simulator', () => {
-  it('uses the real donation pipeline and sells the requested ticket', async () => {
-    await agent.post('/api/admin/session').send({
-      name: '테스트 회차', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
-      tickets: [{ number: 1, prizeName: '테스트 상품', prizeGrade: 'A' }],
-    });
-    const simulate = await agent.post('/api/admin/donation-simulator').send({ nickname: '테스트 후원자', amount: 1000, message: '1번' });
-    expect(simulate.status).toBe(200);
-    expect(simulate.body).toMatchObject({ status: 'processed', outcomes: [{ number: 1, result: 'success', prizeName: '테스트 상품' }] });
-
-    const session = await agent.get('/api/admin/session');
-    expect(session.body.tickets[0]).toMatchObject({ status: 'sold', ownerNickname: '테스트 후원자' });
-  });
-
-  it('rejects malformed simulator payloads', async () => {
-    const res = await agent.post('/api/admin/donation-simulator').send({ nickname: '', amount: 0, message: '' });
-    expect(res.status).toBe(400);
   });
 });
 
