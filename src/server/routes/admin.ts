@@ -6,6 +6,7 @@ import {
   getTicketsForSession,
   listPendingIssues,
   resolveDonationLog,
+  resolveAllDonationLogs,
   listDonationLog,
   listAllWinners,
   listSessionHistory,
@@ -81,6 +82,10 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
   router.post('/queue/:id/resolve', async (req, res) => {
     await resolveDonationLog(db, Number(req.params.id));
     res.json({ ok: true });
+  });
+
+  router.post('/queue/resolve-all', async (_req, res) => {
+    res.json({ ok: true, resolvedCount: await resolveAllDonationLogs(db) });
   });
 
   router.get('/log', async (_req, res) => {

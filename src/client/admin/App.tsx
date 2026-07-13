@@ -124,6 +124,12 @@ export function App() {
     await api.resolveQueueItem(id);
     setQueue(await api.getQueue());
   };
+  const resolveAllQueue = async () => {
+    await api.resolveAllQueueItems();
+    const [nextQueue, nextLog] = await Promise.all([api.getQueue(), api.getLog()]);
+    setQueue(nextQueue);
+    setLog(nextLog);
+  };
   const closeSession = async () => {
     setClosingSession(true);
     setMutationError('');
@@ -169,7 +175,7 @@ export function App() {
       {mutationError && <InlineFeedback tone="error">{mutationError}</InlineFeedback>}
       {chzzkStatus === 'needs_reauth' && <div className="reauth-banner">치지직 인증이 만료되어 후원 수신이 중단되었습니다. <a href="/api/chzzk/oauth/login">네이버로 다시 로그인</a>하면 즉시 복구됩니다.</div>}
       {page === 'features' && <FeaturesPage onNavigate={setPage} />}
-      {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} kujiPending={savingKuji} onToggleKuji={toggleKuji} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
+      {page === 'operations' && <OperationsPage session={session} queue={queue} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} kujiPending={savingKuji} onToggleKuji={toggleKuji} onNavigateSetup={() => setPage('session-setup')} onNavigateBoard={() => setPage('board')} onResolveQueue={resolveQueue} onResolveAllQueue={resolveAllQueue} onRequestClose={() => setCloseDialogOpen(true)} />}
       {page === 'preflight' && <BroadcastPreflightPage session={session} chzzkStatus={chzzkStatus} kujiEnabled={kujiEnabled} />}
       {page === 'board' && <TicketBoardPage session={session} onNavigateSetup={() => setPage('session-setup')} />}
       {page === 'winners' && <WinnersPage winners={winners} />}

@@ -95,6 +95,7 @@ export const api = {
   closeSession: () => jsonFetch('/api/admin/session/close', { method: 'POST' }),
   getQueue: () => jsonFetch<QueueEntry[]>('/api/admin/queue'),
   resolveQueueItem: (id: number) => jsonFetch(`/api/admin/queue/${id}/resolve`, { method: 'POST' }),
+  resolveAllQueueItems: () => jsonFetch<{ ok: true; resolvedCount: number }>('/api/admin/queue/resolve-all', { method: 'POST' }),
   getLog: () => jsonFetch<QueueEntry[]>('/api/admin/log'),
   getWinners: () => jsonFetch<Winner[]>('/api/admin/winners'),
   getSessions: () => jsonFetch<SessionHistoryEntry[]>('/api/admin/sessions'),

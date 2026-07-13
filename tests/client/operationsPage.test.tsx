@@ -35,6 +35,7 @@ const baseProps = {
   onNavigateSetup: vi.fn(),
   onNavigateBoard: vi.fn(),
   onResolveQueue: vi.fn(async () => undefined),
+  onResolveAllQueue: vi.fn(async () => undefined),
   onRequestClose: vi.fn(),
 };
 
@@ -52,6 +53,7 @@ describe('OperationsPage', () => {
     expect(html).toContain('확인 필요');
     expect(html).toContain('7월 이치방쿠지');
     expect(html).toContain('이미 팔린 번호');
+    expect(html).toContain('전체 처리 완료');
     expect(html).toContain('회차 종료');
   });
 });

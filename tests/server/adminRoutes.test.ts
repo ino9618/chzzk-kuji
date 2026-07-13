@@ -140,16 +140,29 @@ describe('admin queue and log routes', () => {
       status: 'amount_mismatch',
       needsAttention: true,
     });
+    await insertDonationLog(db, {
+      sessionId: null,
+      donorNickname: 'also-bad',
+      donorChannelId: 'c2',
+      amount: 1000,
+      rawMessage: '',
+      status: 'number_missing',
+      needsAttention: true,
+    });
 
     const queueRes = await agent.get('/api/admin/queue');
-    expect(queueRes.body).toHaveLength(1);
+    expect(queueRes.body).toHaveLength(2);
     const logId = queueRes.body[0].id;
 
     const resolveRes = await agent.post(`/api/admin/queue/${logId}/resolve`);
     expect(resolveRes.status).toBe(200);
 
     const queueAfter = await agent.get('/api/admin/queue');
-    expect(queueAfter.body).toHaveLength(0);
+    expect(queueAfter.body).toHaveLength(1);
+
+    const resolveAllRes = await agent.post('/api/admin/queue/resolve-all');
+    expect(resolveAllRes.body).toEqual({ ok: true, resolvedCount: 1 });
+    expect((await agent.get('/api/admin/queue')).body).toHaveLength(0);
   });
 });
 

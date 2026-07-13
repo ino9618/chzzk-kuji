@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import type { QueueEntry, SessionState } from '../api';
 import { getOperationsStatus } from '../adminModel';
 import { AttentionQueue } from '../components/AttentionQueue';
 import { CurrentSessionSummary } from '../components/CurrentSessionSummary';
 import { SettingRow } from '../components/SettingRow';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { InlineFeedback } from '../components/InlineFeedback';
 
 interface OperationsPageProps {
   session: SessionState;
@@ -14,16 +17,29 @@ interface OperationsPageProps {
   onNavigateSetup: () => void;
   onNavigateBoard: () => void;
   onResolveQueue: (id: number) => Promise<void>;
+  onResolveAllQueue: () => Promise<void>;
   onRequestClose: () => void;
 }
 
 export function OperationsPage(props: OperationsPageProps) {
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkPending, setBulkPending] = useState(false);
+  const [bulkError, setBulkError] = useState(false);
   const status = getOperationsStatus({
     connected: props.chzzkStatus === 'connected',
     enabled: props.kujiEnabled,
     active: props.session.active,
     issueCount: props.queue.length,
   });
+  const resolveAll = async () => {
+    setBulkPending(true);
+    setBulkError(false);
+    try {
+      await props.onResolveAllQueue();
+      setBulkDialogOpen(false);
+    } catch { setBulkError(true); }
+    finally { setBulkPending(false); }
+  };
 
   return (
     <div className="admin-page operations-page">
@@ -44,7 +60,8 @@ export function OperationsPage(props: OperationsPageProps) {
       </section>
 
       <section className="workflow-panel">
-        <div className="workflow-heading"><h2>처리 필요</h2><span>{props.queue.length}건</span></div>
+        <div className="workflow-heading attention-heading"><div><h2>처리 필요</h2><span>{props.queue.length}건</span></div>{props.queue.length > 0 && <button className="secondary-button" onClick={() => setBulkDialogOpen(true)}>전체 처리 완료</button>}</div>
+        {bulkError && <InlineFeedback tone="error">일괄 처리하지 못했습니다. 다시 시도해 주세요.</InlineFeedback>}
         <AttentionQueue queue={props.queue} onResolve={props.onResolveQueue} />
       </section>
 
@@ -55,6 +72,7 @@ export function OperationsPage(props: OperationsPageProps) {
           </SettingRow>
         </section>
       )}
+      <ConfirmDialog open={bulkDialogOpen} title={`${props.queue.length}건을 모두 처리 완료할까요?`} description="실제 후원과 번호 배정 결과는 변경되지 않으며, 현재 항목을 처리 필요 목록에서 확인 완료 상태로 정리합니다." confirmLabel="전체 처리 완료" pending={bulkPending} onConfirm={resolveAll} onCancel={() => setBulkDialogOpen(false)} />
     </div>
   );
 }

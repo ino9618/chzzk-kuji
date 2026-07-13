@@ -1588,6 +1588,10 @@ textarea:focus-visible { outline-color: #e0a93e; }
   font-size: 0.75rem;
 }
 
+.attention-heading > div { display: flex; align-items: center; gap: 8px; }
+.attention-heading > button { min-height: 34px; }
+.workflow-panel > .inline-feedback { margin: 10px 16px; }
+
 .attention-empty {
   min-height: 140px;
   display: grid;

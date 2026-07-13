@@ -374,6 +374,13 @@ export async function resolveDonationLog(db: Db, logId: number): Promise<void> {
   await db.query(`UPDATE donation_log SET resolved = true WHERE id = $1`, [logId]);
 }
 
+export async function resolveAllDonationLogs(db: Db): Promise<number> {
+  const { rows } = await db.query(
+    `UPDATE donation_log SET resolved = true WHERE needs_attention = true AND resolved = false RETURNING id`
+  );
+  return rows.length;
+}
+
 export async function listDonationLog(db: Db, limit: number): Promise<DonationLogEntry[]> {
   const { rows } = await db.query(`SELECT * FROM donation_log ORDER BY id DESC LIMIT $1`, [limit]);
   return rows.map(rowToLogEntry);
