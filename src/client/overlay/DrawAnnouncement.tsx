@@ -1,5 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
+import kujiMascotPeekUrl from '../assets/kuji-mascot-peek.png';
+import kujiMascotCheerUrl from '../assets/kuji-mascot-cheer.png';
+import kujiMascotLoungeUrl from '../assets/kuji-mascot-lounge.png';
 
 const DRAW_STAGE_WIDTH = 1920;
 const DRAW_STAGE_HEIGHT = 1080;
@@ -16,6 +18,7 @@ export interface OverlayAnnouncement {
   prizeImageUrl?: string | null;
   nickname: string | null;
   test?: boolean;
+  audioDataUrl?: string;
 }
 
 export interface ConfettiPiece {
@@ -51,7 +54,7 @@ export function DrawResultCard({ announce }: { announce: OverlayAnnouncement }) 
   return <div className={`draw-card ${gradeClass(announce.grade)} ${announce.prizeImageUrl ? 'has-image' : ''}`}>
     {announce.test && <div className="draw-test-badge">미리보기 테스트</div>}
     <div className="draw-ticket-head">
-      <div className="draw-title-lockup"><img className="draw-duo-mascot" src={loginMascotDuoUrl} alt="" /><div><span className="draw-kicker">ICHIBAN KUJI</span><strong className="draw-label">당첨 결과</strong></div></div>
+      <div className="draw-title-lockup"><div><span className="draw-kicker">ICHIBAN KUJI</span><strong className="draw-label">당첨 결과</strong></div></div>
       <div className="draw-number"><span>선택 번호</span><strong>{announce.number}번</strong></div>
     </div>
     {announce.prizeImageUrl && <div className="draw-image-frame"><img src={announce.prizeImageUrl} alt={announce.prizeName ? `${announce.prizeName} 상품` : '당첨 상품'} /></div>}
@@ -79,6 +82,11 @@ export function DrawAnnouncement({ announce, confetti }: { announce: OverlayAnno
   return <div className="draw-announce" key={announce.key}>
     <div className="draw-stage" style={stageStyle}>
       <Snowfall pieces={confetti} />
+      <div className={`draw-mascot-scene ${announce.prizeImageUrl ? 'has-image' : ''}`} aria-hidden="true">
+        <img className="draw-mascot-peek" src={kujiMascotPeekUrl} alt="" />
+        <img className="draw-mascot-cheer" src={kujiMascotCheerUrl} alt="" />
+        <img className="draw-mascot-lounge" src={kujiMascotLoungeUrl} alt="" />
+      </div>
       <DrawResultCard announce={announce} />
     </div>
   </div>;

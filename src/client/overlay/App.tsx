@@ -5,6 +5,7 @@ import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playW
 import mascotSuccessUrl from '../assets/mascot-success.png';
 import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
 import rouletteMascotGroupUrl from '../assets/roulette-mascot-group.png';
+import { SequentialEventQueue } from './eventQueue';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -57,6 +58,7 @@ interface RouletteListPayload {
 export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'combined';
 
 const ROULETTE_SPIN_MS = 2500;
+const ROULETTE_RESULT_HOLD_MS = 2000;
 
 function formatProbability(probability: number): string {
   const digits = probability < 1 ? 2 : 1;
@@ -90,11 +92,12 @@ function RouletteListOverlay({ config }: { config: RouletteListPayload }) {
   </div>;
 }
 
-function RouletteAnnouncement({ result }: { result: RouletteResult }) {
+function RouletteAnnouncement({ result, onComplete }: { result: RouletteResult; onComplete: () => void }) {
   const [revealed, setRevealed] = useState(false);
   const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(108, Math.min(window.innerHeight * 0.14, 150))));
   const revealDone = useRef(false);
   const speechTimer = useRef<number>();
+  const dismissTimer = useRef<number>();
   const snowflakes = useMemo(() => makeConfetti(36), [result]);
   const { sequence, winningIndex } = useMemo(() => {
     const source = Array.from(new Set((result.items ?? []).map((item) => item.trim()).filter(Boolean)));
@@ -112,6 +115,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     return () => {
       window.clearTimeout(timer);
       if (speechTimer.current) window.clearTimeout(speechTimer.current);
+      if (dismissTimer.current) window.clearTimeout(dismissTimer.current);
     };
   }, [result]);
   useEffect(() => {
@@ -134,6 +138,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     if (result.audioDataUrl) {
       speechTimer.current = window.setTimeout(() => playGoogleTtsAudio(result.audioDataUrl!), 800);
     }
+    dismissTimer.current = window.setTimeout(onComplete, ROULETTE_RESULT_HOLD_MS);
   };
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     {revealed && <Snowfall pieces={snowflakes} />}
@@ -162,6 +167,10 @@ const socket = io();
 const ANNOUNCE_MS = 8000;
 const HIGHLIGHT_MS = 2600;
 
+type QueuedOverlayEvent =
+  | { id: number; kind: 'kuji'; payload: Omit<OverlayAnnouncement, 'key'> }
+  | { id: number; kind: 'roulette'; payload: RouletteResult };
+
 const CONFETTI_COLORS = ['#ffffff', '#dff4ff', '#b9e5fb', '#eadffc', '#fbdde7'];
 
 function makeConfetti(count: number): ConfettiPiece[] {
@@ -179,24 +188,43 @@ function makeConfetti(count: number): ConfettiPiece[] {
 export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const [board, setBoard] = useState<BoardPayload>({ active: false });
   const [justSold, setJustSold] = useState<number | null>(null);
-  const [announce, setAnnounce] = useState<OverlayAnnouncement | null>(null);
-  const [rouletteResult, setRouletteResult] = useState<RouletteResult | null>(null);
+  const [activeEvent, setActiveEvent] = useState<QueuedOverlayEvent | null>(null);
   const [rouletteList, setRouletteList] = useState<RouletteListPayload | null>(null);
-  const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const rouletteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const eventQueue = useRef(new SequentialEventQueue<QueuedOverlayEvent>());
+  const eventId = useRef(0);
   const showBoard = mode === 'combined' || mode === 'kuji' || mode === 'kuji-board';
   const showKujiResult = mode === 'combined' || mode === 'kuji' || mode === 'kuji-result';
   const receiveKuji = showBoard || showKujiResult;
   const showRoulette = mode === 'combined' || mode === 'roulette';
   const showRouletteList = mode === 'roulette-list';
 
-  const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
-    setAnnounce({ ...next, key: Date.now() });
-    playWinnerFanfare();
-    if (announceTimer.current) clearTimeout(announceTimer.current);
-    announceTimer.current = setTimeout(() => setAnnounce(null), ANNOUNCE_MS);
+  const enqueueKuji = (payload: Omit<OverlayAnnouncement, 'key'>) => {
+    const activated = eventQueue.current.enqueue({ id: ++eventId.current, kind: 'kuji', payload });
+    if (activated) setActiveEvent(activated);
   };
+  const enqueueRoulette = (payload: RouletteResult) => {
+    const activated = eventQueue.current.enqueue({ id: ++eventId.current, kind: 'roulette', payload });
+    if (activated) setActiveEvent(activated);
+  };
+  const completeActiveEvent = () => setActiveEvent(eventQueue.current.complete());
+  const announce: OverlayAnnouncement | null = activeEvent?.kind === 'kuji'
+    ? { ...activeEvent.payload, key: activeEvent.id }
+    : null;
+  const rouletteResult = activeEvent?.kind === 'roulette' ? activeEvent.payload : null;
+
+  useEffect(() => {
+    if (activeEvent?.kind !== 'kuji') return;
+    playWinnerFanfare();
+    const speechTimer = activeEvent.payload.audioDataUrl
+      ? window.setTimeout(() => playGoogleTtsAudio(activeEvent.payload.audioDataUrl!), 600)
+      : undefined;
+    const dismissTimer = window.setTimeout(completeActiveEvent, ANNOUNCE_MS);
+    return () => {
+      if (speechTimer) window.clearTimeout(speechTimer);
+      window.clearTimeout(dismissTimer);
+    };
+  }, [activeEvent?.id]);
 
   useEffect(() => {
     let isDevPreview = false;
@@ -204,9 +232,15 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     let rouletteListPoll: number | undefined;
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
-      isDevPreview = preview === 'kuji' || preview === 'roulette' || preview === 'roulette-list' || preview === 'roulette-list-many' || preview === 'board';
-      if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: mascotSuccessUrl, nickname: '테스트 후원자', test: true });
-      if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], probability: 40, test: true });
+      isDevPreview = preview === 'kuji' || preview === 'kuji-no-image' || preview === 'roulette' || preview === 'queue' || preview === 'roulette-list' || preview === 'roulette-list-many' || preview === 'board';
+      if (preview === 'kuji') enqueueKuji({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: mascotSuccessUrl, nickname: '테스트 후원자', test: true });
+      if (preview === 'kuji-no-image') enqueueKuji({ number: 12, grade: 'B', prizeName: '설냥갱 스페셜 굿즈', nickname: '테스트 후원자', test: true });
+      if (preview === 'roulette') enqueueRoulette({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], probability: 40, test: true });
+      if (preview === 'queue') {
+        enqueueKuji({ number: 3, grade: 'A', prizeName: '첫 번째 쿠지 결과', nickname: '첫 후원자', test: true });
+        enqueueRoulette({ label: '두 번째 룰렛 결과', nickname: '두 번째 후원자', amount: 5000, items: ['첫 항목', '두 번째 룰렛 결과', '세 번째 항목'], probability: 33.3, test: true });
+        enqueueKuji({ number: 9, grade: 'B', prizeName: '세 번째 쿠지 결과', nickname: '세 번째 후원자', test: true });
+      }
       if (preview === 'roulette-list') setRouletteList({
         enabled: true,
         minimumAmount: 5000,
@@ -263,31 +297,28 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
             if (highlightTimer.current) clearTimeout(highlightTimer.current);
             highlightTimer.current = setTimeout(() => setJustSold(null), HIGHLIGHT_MS);
           }
-          if (showKujiResult) showAnnouncement({ number: newlySold.number, grade: newlySold.prizeGrade, prizeName: newlySold.prizeName, prizeImageUrl: newlySold.prizeImageUrl, nickname: newlySold.ownerNickname });
         }
         return next;
       });
     });
 
     socket.on('overlay:test', (event: Omit<OverlayAnnouncement, 'key'>) => {
-      if (showKujiResult) showAnnouncement({ ...event, test: true });
+      if (showKujiResult) enqueueKuji({ ...event, test: true });
+    });
+    socket.on('kuji:result', (event: Omit<OverlayAnnouncement, 'key'>) => {
+      if (showKujiResult) enqueueKuji(event);
     });
     socket.on('roulette:result', (result: RouletteResult) => {
-      if (!showRoulette) return;
-      setRouletteResult(result);
-      if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
-      rouletteTimer.current = setTimeout(() => setRouletteResult(null), 11_000);
+      if (showRoulette) enqueueRoulette(result);
     });
-    socket.on('winner:audio', ({ audioDataUrl }: { audioDataUrl: string }) => { if (showKujiResult) playGoogleTtsAudio(audioDataUrl); });
 
     return () => {
       socket.off('board:update');
       socket.off('overlay:test');
+      socket.off('kuji:result');
       socket.off('roulette:result');
-      socket.off('winner:audio');
-      if (announceTimer.current) clearTimeout(announceTimer.current);
       if (highlightTimer.current) clearTimeout(highlightTimer.current);
-      if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
+      eventQueue.current.clear();
       if (boardPoll) window.clearInterval(boardPoll);
       if (rouletteListPoll) window.clearInterval(rouletteListPoll);
     };
@@ -387,7 +418,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       </div></>}
 
       {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
-      {rouletteResult && <RouletteAnnouncement result={rouletteResult} />}
+      {rouletteResult && <RouletteAnnouncement result={rouletteResult} onComplete={completeActiveEvent} />}
       {showRouletteList && rouletteList && <RouletteListOverlay config={rouletteList} />}
     </div>
   );

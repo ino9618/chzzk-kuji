@@ -13,7 +13,7 @@ import { processDonation } from './donationProcessor';
 import { ChzzkSocketClient } from './chzzkSocket';
 import { loadTokens, saveTokens } from './chzzkAuth';
 import { broadcastBoardUpdate, broadcastQueueUpdate, broadcastConnectionStatus } from './broadcast';
-import { broadcastRouletteResult, broadcastWinnerAudio } from './broadcast';
+import { broadcastKujiResult, broadcastRouletteResult } from './broadcast';
 import { getRouletteConfig, processRouletteDonation } from './rouletteProcessor';
 import { buildRouletteSpeech, buildWinnerSpeech, synthesizeGoogleTts, type RouletteSpeechInput, type WinnerSpeechInput } from './googleTts';
 import { isValidAdminToken } from './middleware/adminAuth';
@@ -91,14 +91,15 @@ export function registerSocketHandlers(
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
         ...(prizeImageUrl ? { prizeImageUrl } : {}),
       };
-      io.emit('overlay:test', testEvent);
       let tts: TtsStatus = createWinnerAudio ? 'failed' : 'not_configured';
+      let audioDataUrl: string | undefined;
       if (createWinnerAudio) {
         try {
-          broadcastWinnerAudio(io, await createWinnerAudio(testEvent));
+          audioDataUrl = await createWinnerAudio(testEvent);
           tts = 'sent';
         } catch (error) { console.error('Google Cloud TTS test failed:', error); }
       }
+      io.emit('overlay:test', { ...testEvent, ...(audioDataUrl ? { audioDataUrl } : {}) });
       acknowledge?.({ ok: true, tts });
     });
 
@@ -231,11 +232,27 @@ async function main(): Promise<void> {
   const createWinnerAudio = googleTtsKey ? (input: WinnerSpeechInput) => synthesizeGoogleTts(buildWinnerSpeech(input), googleTtsKey) : undefined;
   const createRouletteAudio = googleTtsKey ? (input: RouletteSpeechInput) => synthesizeGoogleTts(buildRouletteSpeech(input), googleTtsKey) : undefined;
   registerSocketHandlers(io, db, createWinnerAudio, createRouletteAudio);
-  const announceProcessedWinners = async (event: import('./donationProcessor').DonationEvent, result: import('./donationProcessor').ProcessDonationResult) => {
-    if (!createWinnerAudio || result.status !== 'processed') return;
+  const announceProcessedWinners = async (
+    event: import('./donationProcessor').DonationEvent,
+    result: import('./donationProcessor').ProcessDonationResult,
+    board: Awaited<ReturnType<typeof buildBoardPayload>>,
+  ) => {
+    if (result.status !== 'processed') return;
     for (const outcome of result.outcomes.filter((item) => item.result === 'success')) {
-      try { broadcastWinnerAudio(io, await createWinnerAudio({ nickname: event.nickname, number: outcome.number, prizeName: outcome.prizeName })); }
-      catch (error) { console.error('Google Cloud TTS generation failed:', error); }
+      const ticket = board.active ? board.tickets.find((item) => item.number === outcome.number) : undefined;
+      let audioDataUrl: string | undefined;
+      if (createWinnerAudio) {
+        try { audioDataUrl = await createWinnerAudio({ nickname: event.nickname, number: outcome.number, prizeName: outcome.prizeName }); }
+        catch (error) { console.error('Google Cloud TTS generation failed:', error); }
+      }
+      broadcastKujiResult(io, {
+        number: outcome.number,
+        grade: ticket?.prizeGrade ?? null,
+        prizeName: outcome.prizeName ?? ticket?.prizeName ?? null,
+        prizeImageUrl: ticket?.prizeImageUrl ?? null,
+        nickname: event.nickname,
+        ...(audioDataUrl ? { audioDataUrl } : {}),
+      });
     }
   };
   const addRouletteAudio = async (result: import('./rouletteProcessor').RouletteResult) => {
@@ -308,18 +325,21 @@ async function main(): Promise<void> {
       console.error('CHZZK session connection error:', err instanceof Error ? err.message : err);
     });
 
+    let donationProcessing = Promise.resolve();
     socketClient.on('donation', (event) => {
-      (async () => {
+      donationProcessing = donationProcessing.then(async () => {
         const roulette = await processRouletteDonation(db, event);
         if (roulette.status === 'triggered') broadcastRouletteResult(io, await addRouletteAudio(roulette.result));
         if (roulette.status === 'registered') io.to('admin').emit('roulette:config-updated', { label: roulette.label, nickname: roulette.nickname, amount: roulette.amount });
+        let kujiResult: import('./donationProcessor').ProcessDonationResult | undefined;
         if (roulette.status === 'ignored') {
-          const result = await processDonation(db, event);
-          await announceProcessedWinners(event, result);
+          kujiResult = await processDonation(db, event);
         }
-        broadcastBoardUpdate(io, await buildBoardPayload(db));
+        const board = await buildBoardPayload(db);
+        broadcastBoardUpdate(io, board);
+        if (kujiResult) await announceProcessedWinners(event, kujiResult, board);
         broadcastQueueUpdate(io, await listPendingIssues(db));
-      })().catch((err) => console.error('Failed to process a donation event:', err));
+      }).catch((err) => console.error('Failed to process a donation event:', err));
     });
 
     socketClient.connect().catch((err) => {

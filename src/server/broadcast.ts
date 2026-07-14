@@ -16,6 +16,6 @@ export function broadcastRouletteResult(io: SocketIOServer, result: unknown): vo
   io.emit('roulette:result', result);
 }
 
-export function broadcastWinnerAudio(io: SocketIOServer, audioDataUrl: string): void {
-  io.emit('winner:audio', { audioDataUrl });
+export function broadcastKujiResult(io: SocketIOServer, result: unknown): void {
+  io.emit('kuji:result', result);
 }

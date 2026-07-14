@@ -1069,6 +1069,58 @@
   object-fit: contain;
   filter: drop-shadow(0 8px 10px rgba(69, 102, 120, .2));
 }
+
+/* Fan mascots overlap the Kuji ticket without competing with its result copy. */
+.draw-mascot-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.draw-mascot-scene img {
+  position: absolute;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 15px rgba(66, 104, 124, .2));
+  transform-origin: center bottom;
+  animation: drawMascotIn .55s cubic-bezier(.2, 1.35, .35, 1) both;
+}
+.draw-mascot-peek {
+  top: 245px;
+  left: 200px;
+  width: 340px;
+}
+.draw-mascot-cheer {
+  top: 300px;
+  right: 220px;
+  width: 250px;
+  animation-delay: .08s !important;
+}
+.draw-mascot-lounge {
+  right: 300px;
+  bottom: 190px;
+  width: 440px;
+  animation-delay: .16s !important;
+}
+.draw-mascot-scene.has-image .draw-mascot-peek {
+  top: 30px;
+  left: 215px;
+  width: 360px;
+}
+.draw-mascot-scene.has-image .draw-mascot-cheer {
+  top: 110px;
+  right: 160px;
+  width: 240px;
+}
+.draw-mascot-scene.has-image .draw-mascot-lounge {
+  right: 230px;
+  bottom: 24px;
+  width: 470px;
+}
+@keyframes drawMascotIn {
+  from { opacity: 0; transform: translateY(28px) scale(.88); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 .roulette-result-bar {
   grid-template-columns: 180px minmax(0, 1fr) 180px;
 }

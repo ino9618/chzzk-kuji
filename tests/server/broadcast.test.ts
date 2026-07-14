@@ -139,7 +139,14 @@ describe('admin-room broadcast scoping (integration)', () => {
     });
     expect(accepted).toEqual({ ok: true, tts: 'sent' });
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(received).toContainEqual({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: image, nickname: '테스트 후원자' });
+    expect(received).toContainEqual(expect.objectContaining({
+      number: 7,
+      grade: 'A',
+      prizeName: '한정판 피규어',
+      prizeImageUrl: image,
+      nickname: '테스트 후원자',
+      audioDataUrl: 'data:audio/mpeg;base64,V0lOTkVS',
+    }));
 
     expect(await adminClient.emitWithAck('overlay:test', {
       number: 3,
@@ -149,7 +156,14 @@ describe('admin-room broadcast scoping (integration)', () => {
       prizeImageUrl: '/assets/mascot-success-example.png',
     })).toEqual({ ok: true, tts: 'sent' });
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(received).toContainEqual({ number: 3, grade: 'B', prizeName: '예시 상품', prizeImageUrl: '/assets/mascot-success-example.png', nickname: '예시 후원자' });
+    expect(received).toContainEqual(expect.objectContaining({
+      number: 3,
+      grade: 'B',
+      prizeName: '예시 상품',
+      prizeImageUrl: '/assets/mascot-success-example.png',
+      nickname: '예시 후원자',
+      audioDataUrl: 'data:audio/mpeg;base64,V0lOTkVS',
+    }));
   });
 
   it('broadcasts roulette overlay tests without recording a real roulette result', async () => {
