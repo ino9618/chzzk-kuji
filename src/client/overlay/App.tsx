@@ -287,7 +287,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
         </div>
       )}
 
-      <div className="overlay-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 118px))` }}>
+      <div className="overlay-grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 92px))` }}>
         {board.tickets?.map((t) => (
           <div
             key={t.number}

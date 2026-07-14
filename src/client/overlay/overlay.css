@@ -820,6 +820,68 @@
   text-shadow: 0 2px 5px rgba(91, 130, 151, .24);
   animation: snowflakeFall linear forwards;
 }
+
+/* Readability pass: compact number board, stronger product hierarchy. */
+.overlay-header {
+  min-height: 104px;
+  padding: 16px 22px;
+}
+.overlay-brand-lockup > img { width: 68px; height: 68px; flex-basis: 68px; }
+.overlay-eyebrow { font-size: 1.2rem; }
+.overlay-header-title { font-size: 2.2rem; }
+.overlay-progress-block > span { font-size: 1.2rem; }
+.overlay-header-count { font-size: 2.35rem; }
+.overlay-header-count small { font-size: 1.2rem; }
+
+.grade-legend { gap: 16px; padding-top: 16px; }
+.grade-legend-item {
+  min-width: 220px;
+  min-height: 64px;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.grade-legend-badge { flex: 0 0 auto; font-size: 1.15rem; }
+.grade-legend-name { flex: 1 1 auto; font-size: 1.3rem; }
+.grade-legend-count,
+.grade-legend-done { flex: 0 0 auto; font-size: 1.05rem; }
+
+.overlay-grid { gap: 12px; padding-top: 16px; }
+.overlay-cell {
+  min-height: 92px;
+  padding: 16px;
+}
+.overlay-number { font-size: 2rem; }
+.overlay-grade { margin-top: 6px; font-size: 1rem; }
+.overlay-prize { margin-top: 6px; font-size: 1.1rem; }
+.overlay-owner { margin-top: 4px; font-size: 1rem; }
+
+.draw-result-body {
+  grid-template-columns: 146px minmax(0, 1fr);
+  gap: 24px;
+  padding: 24px;
+}
+.draw-grade { min-height: 120px; gap: 8px; padding: 16px; }
+.draw-grade span,
+.draw-prize span,
+.draw-winner span { font-size: 1.25rem; }
+.draw-grade strong { font-size: 2.4rem; }
+.draw-result-copy { gap: 16px; }
+.draw-prize { gap: 8px; }
+.draw-prize strong { font-size: 2rem; line-height: 1.25; }
+.draw-winner { gap: 12px; padding-top: 16px; }
+.draw-winner strong { font-size: 1.35rem; }
+
+.roulette-result-bar {
+  grid-template-columns: 170px minmax(0, 1fr) 120px;
+  gap: 16px;
+  padding: 16px 24px;
+}
+.roulette-brand span,
+.roulette-status { font-size: clamp(1.5rem, 1.8vw, 1.8rem); }
+.roulette-reel-item,
+.roulette-reel-item.winning { font-size: clamp(2rem, 2.5vw, 2.5rem); }
+.roulette-reel-donor,
+.roulette-reel-donor strong { font-size: clamp(1.3rem, 1.5vw, 1.55rem); }
 @keyframes snowflakeFall {
   0% { opacity: 0; transform: translate3d(0, -40px, 0) rotate(0); }
   10% { opacity: .96; }

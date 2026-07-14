@@ -2059,6 +2059,40 @@ textarea,
 .overlay-test-form { grid-template-columns: minmax(210px, 1.2fr) 140px 80px minmax(170px, 1fr) minmax(150px, .8fr) auto; }
 .roulette-overlay-test-form { grid-template-columns: 220px minmax(220px, 1fr) minmax(180px, .8fr) auto; }
 
+/* Desktop readability and spacing refinements */
+.workflow-heading {
+  min-height: 0;
+  padding: 16px;
+}
+.workflow-heading h2 { font-size: 1rem; }
+.workflow-heading p { font-size: .84rem; }
+
+.preflight-page .workflow-section > .inline-feedback {
+  margin: 16px;
+  padding: 16px;
+  border: 1px solid #b9d5e6;
+  border-radius: 8px;
+  background: #f3f9fd;
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.log-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 16px;
+}
+.log-toolbar button {
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-size: .9rem;
+}
+
+.board-header .segmented-control { gap: 8px; padding: 8px; }
+.board-header .segmented-control button { min-height: 42px; padding: 0 16px; font-size: .86rem; }
+
 @media (max-width: 1120px) and (min-width: 721px) {
   .overlay-test-form { grid-template-columns: 140px 80px minmax(150px, 1fr) minmax(140px, 1fr); }
 }
