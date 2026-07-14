@@ -1073,3 +1073,173 @@
   grid-template-columns: 180px minmax(0, 1fr) 180px;
 }
 .roulette-brand { justify-content: center; }
+
+/* Persistent roulette item list for a dedicated OBS browser source. */
+.roulette-list-stage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  color: #3f5664;
+  font-family: 'Ownglyph_ParkDaHyun', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+.roulette-list-card {
+  position: absolute;
+  top: 92px;
+  right: 72px;
+  width: 660px;
+  padding: 32px;
+  border: 4px solid #a7d8e9;
+  border-bottom-color: #efb6c4;
+  border-radius: 8px;
+  background: #f8fcff;
+  box-shadow: inset 0 0 0 5px #e3f3f9, 0 0 0 8px rgba(255, 255, 255, .94), 0 22px 48px rgba(75, 112, 132, .22);
+}
+.roulette-list-card.many-items {
+  top: 56px;
+  width: 1000px;
+  padding: 24px;
+}
+.roulette-list-mascots {
+  position: absolute;
+  top: -100px;
+  right: 28px;
+  z-index: 2;
+  width: 350px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 7px 8px rgba(75, 112, 132, .18));
+}
+.roulette-list-header {
+  min-height: 112px;
+  display: block;
+  padding: 12px 350px 20px 12px;
+  border-bottom: 3px dashed #c5e3ee;
+}
+.roulette-list-card.many-items .roulette-list-mascots { top: -60px; }
+.roulette-list-card.many-items .roulette-list-header { min-height: 100px; padding: 8px 390px 14px 12px; }
+.roulette-list-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #d57f95;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+.roulette-list-header h1 {
+  margin: 0;
+  color: #315a70;
+  font-size: 3.3rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+.roulette-list-state {
+  display: inline-block;
+  flex: 0 0 auto;
+  min-width: 92px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 2px solid #d7dfe4;
+  border-radius: 999px;
+  background: #f1f4f6;
+  color: #768793;
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-align: center;
+}
+.roulette-list-state.active {
+  border-color: #9dd9c4;
+  background: #eaf8f2;
+  color: #35836a;
+}
+.roulette-list-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 70px;
+  padding: 16px 12px;
+  color: #6c7f8b;
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+.roulette-list-summary span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.roulette-list-summary strong { color: #bd8730; font-size: 1.45rem; }
+.roulette-list-summary span:first-child strong { color: #4f8daa; }
+.roulette-list-items {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.roulette-list-card.many-items .roulette-list-summary { min-height: 60px; padding-top: 10px; padding-bottom: 10px; }
+.roulette-list-card.many-items .roulette-list-items { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.roulette-list-card.many-items .roulette-list-item { min-height: 56px; padding-top: 6px; padding-bottom: 6px; }
+.roulette-list-item {
+  min-width: 0;
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 94px 72px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 2px solid #cfe6ef;
+  border-radius: 8px;
+  background: #eef8fc;
+}
+.roulette-list-item:nth-child(3n + 2) { border-color: #eed3dc; background: #fff5f7; }
+.roulette-list-item:nth-child(3n) { border-color: #eadcae; background: #fff9e9; }
+.roulette-list-number {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #9fcfe1;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #4f8daa;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+.roulette-list-label {
+  min-width: 0;
+  overflow: hidden;
+  color: #3f5664;
+  font-size: 1.48rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.roulette-list-meter {
+  width: 94px;
+  height: 12px;
+  overflow: hidden;
+  border: 2px solid #c4dde8;
+  border-radius: 999px;
+  background: #ffffff;
+}
+.roulette-list-meter i { height: 100%; display: block; border-radius: inherit; background: #82c7e4; }
+.roulette-list-item:nth-child(3n + 2) .roulette-list-meter i { background: #e8aabd; }
+.roulette-list-item:nth-child(3n) .roulette-list-meter i { background: #e8c35f; }
+.roulette-list-probability {
+  color: #b87918;
+  font-size: 1.35rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.roulette-list-disabled-note {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border: 2px solid #eadcae;
+  border-radius: 8px;
+  background: #fff9e9;
+  color: #7d6b3d;
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-align: center;
+}

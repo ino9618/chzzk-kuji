@@ -8,6 +8,8 @@ const mode: OverlayMode = path.endsWith('/overlay-kuji-board.html')
     ? 'kuji-result'
     : path.endsWith('/overlay-kuji.html')
       ? 'kuji'
+      : path.endsWith('/overlay-roulette-list.html')
+        ? 'roulette-list'
       : path.endsWith('/overlay-roulette.html')
         ? 'roulette'
         : 'combined';

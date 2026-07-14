@@ -149,3 +149,28 @@ describe('GET /api/overlay/board', () => {
     expect(res.body.grades).toEqual([]);
   });
 });
+
+describe('GET /api/overlay/roulette', () => {
+  it('exposes the configured items with their exact weighted probabilities', async () => {
+    await agent.post('/api/admin/roulette').send({
+      enabled: true,
+      minimumAmount: 3000,
+      registrationAmount: 5000,
+      items: [{ label: '노래 한 곡', weight: 3 }, { label: '랜덤 미션', weight: 1 }],
+    });
+
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/overlay/roulette');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toContain('no-store');
+    expect(res.body).toEqual({
+      enabled: true,
+      minimumAmount: 3000,
+      items: [
+        { label: '노래 한 곡', weight: 3, probability: 75 },
+        { label: '랜덤 미션', weight: 1, probability: 25 },
+      ],
+    });
+  });
+});

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getActiveSession, getTicketsForSession, getSetting, type Db, type Ticket } from '../db';
 import { maskNickname } from '../maskNickname';
+import { getRouletteConfig } from '../rouletteProcessor';
 
 const overlayVersion = process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || `startup-${Date.now()}`;
 
@@ -69,6 +70,22 @@ export async function buildBoardPayload(db: Db) {
   };
 }
 
+export async function buildRouletteListPayload(db: Db) {
+  const config = await getRouletteConfig(db);
+  const items = config.items.filter((item) => item.label.trim() && Number.isFinite(item.weight) && item.weight > 0);
+  const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+
+  return {
+    enabled: config.enabled,
+    minimumAmount: config.minimumAmount,
+    items: items.map((item) => ({
+      label: item.label,
+      weight: item.weight,
+      probability: totalWeight > 0 ? item.weight / totalWeight * 100 : 0,
+    })),
+  };
+}
+
 export function createOverlayRouter(db: Db): Router {
   const router = Router();
 
@@ -79,6 +96,11 @@ export function createOverlayRouter(db: Db): Router {
 
   router.get('/board', async (_req, res) => {
     res.json(await buildBoardPayload(db));
+  });
+
+  router.get('/roulette', async (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(await buildRouletteListPayload(db));
   });
 
   return router;

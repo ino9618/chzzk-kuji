@@ -76,9 +76,11 @@ describe('detail settings pages', () => {
     expect(html).toContain('쿠지 번호판 OBS 소스');
     expect(html).toContain('쿠지 당첨 애니메이션 OBS 소스');
     expect(html).toContain('룰렛 OBS 소스');
+    expect(html).toContain('룰렛 목록 OBS 소스');
     expect(html).toContain('/overlay-kuji-board.html');
     expect(html).toContain('/overlay-kuji-result.html');
     expect(html).toContain('/overlay-roulette.html');
+    expect(html).toContain('/overlay-roulette-list.html');
     expect(html).toContain('한정판 피규어');
     expect(html).toContain('· 이미지');
     expect(html).toContain('직접 입력 · 예시 이미지');

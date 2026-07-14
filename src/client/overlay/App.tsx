@@ -42,9 +42,53 @@ interface RouletteResult {
   test?: boolean;
 }
 
-export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'combined';
+interface RouletteListItem {
+  label: string;
+  weight: number;
+  probability: number;
+}
+
+interface RouletteListPayload {
+  enabled: boolean;
+  minimumAmount: number;
+  items: RouletteListItem[];
+}
+
+export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'combined';
 
 const ROULETTE_SPIN_MS = 2500;
+
+function formatProbability(probability: number): string {
+  const digits = probability < 1 ? 2 : 1;
+  return `${Number(probability.toFixed(digits))}%`;
+}
+
+function RouletteListOverlay({ config }: { config: RouletteListPayload }) {
+  const manyItems = config.items.length > 8;
+  return <div className="roulette-list-stage">
+    <section className={`roulette-list-card ${manyItems ? 'many-items' : ''} ${config.enabled ? '' : 'disabled'}`}>
+      <img className="roulette-list-mascots" src={rouletteMascotGroupUrl} alt="" aria-hidden="true" />
+      <header className="roulette-list-header">
+        <div><span className="roulette-list-eyebrow">오늘의 룰렛</span><h1>룰렛 목록</h1></div>
+        <span className={`roulette-list-state ${config.enabled ? 'active' : ''}`}>{config.enabled ? '진행 중' : '사용 중지'}</span>
+      </header>
+      <div className="roulette-list-summary">
+        <span><strong>!룰렛</strong> 후원 명령어</span>
+        <span><strong>{config.minimumAmount.toLocaleString('ko-KR')}</strong> 치즈부터</span>
+        <span><strong>{config.items.length}</strong>개 항목</span>
+      </div>
+      <ol className="roulette-list-items">
+        {config.items.map((item, index) => <li className="roulette-list-item" key={`${item.label}-${index}`}>
+          <span className="roulette-list-number">{index + 1}</span>
+          <span className="roulette-list-label" title={item.label}>{item.label}</span>
+          <span className="roulette-list-meter" aria-hidden="true"><i style={{ width: `${Math.max(2, item.probability)}%` }} /></span>
+          <strong className="roulette-list-probability">{formatProbability(item.probability)}</strong>
+        </li>)}
+      </ol>
+      {!config.enabled && <p className="roulette-list-disabled-note">현재 룰렛이 잠시 쉬고 있어요</p>}
+    </section>
+  </div>;
+}
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
@@ -137,6 +181,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const [justSold, setJustSold] = useState<number | null>(null);
   const [announce, setAnnounce] = useState<OverlayAnnouncement | null>(null);
   const [rouletteResult, setRouletteResult] = useState<RouletteResult | null>(null);
+  const [rouletteList, setRouletteList] = useState<RouletteListPayload | null>(null);
   const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rouletteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -144,6 +189,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const showKujiResult = mode === 'combined' || mode === 'kuji' || mode === 'kuji-result';
   const receiveKuji = showBoard || showKujiResult;
   const showRoulette = mode === 'combined' || mode === 'roulette';
+  const showRouletteList = mode === 'roulette-list';
 
   const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
@@ -155,11 +201,33 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   useEffect(() => {
     let isDevPreview = false;
     let boardPoll: number | undefined;
+    let rouletteListPoll: number | undefined;
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
-      isDevPreview = preview === 'kuji' || preview === 'roulette' || preview === 'board';
+      isDevPreview = preview === 'kuji' || preview === 'roulette' || preview === 'roulette-list' || preview === 'roulette-list-many' || preview === 'board';
       if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: mascotSuccessUrl, nickname: '테스트 후원자', test: true });
       if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], probability: 40, test: true });
+      if (preview === 'roulette-list') setRouletteList({
+        enabled: true,
+        minimumAmount: 5000,
+        items: [
+          { label: '노래 한 곡', weight: 3, probability: 30 },
+          { label: '랜덤 미션', weight: 2, probability: 20 },
+          { label: '간식 타임', weight: 2, probability: 20 },
+          { label: '다시 돌리기', weight: 1, probability: 10 },
+          { label: '애교 한 번', weight: 1, probability: 10 },
+          { label: '시청자 추천곡', weight: 1, probability: 10 },
+        ],
+      });
+      if (preview === 'roulette-list-many') setRouletteList({
+        enabled: true,
+        minimumAmount: 5000,
+        items: Array.from({ length: 20 }, (_, index) => ({
+          label: `${index + 1}번 방송 미션 항목`,
+          weight: 1,
+          probability: 5,
+        })),
+      });
       if (preview === 'board') setBoard({
         active: true,
         name: '설냥갱 이치방쿠지',
@@ -174,6 +242,14 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
         .catch(() => undefined);
       void refreshBoard();
       boardPoll = window.setInterval(refreshBoard, 15_000);
+    }
+    if (!isDevPreview && showRouletteList) {
+      const refreshRouletteList = () => fetch('/api/overlay/roulette', { cache: 'no-store' })
+        .then((response) => response.json())
+        .then(setRouletteList)
+        .catch(() => undefined);
+      void refreshRouletteList();
+      rouletteListPoll = window.setInterval(refreshRouletteList, 10_000);
     }
 
     socket.on('board:update', (next: BoardPayload) => {
@@ -213,6 +289,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       if (highlightTimer.current) clearTimeout(highlightTimer.current);
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
       if (boardPoll) window.clearInterval(boardPoll);
+      if (rouletteListPoll) window.clearInterval(rouletteListPoll);
     };
   }, [mode]);
 
@@ -243,7 +320,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 42 : 26);
   }, [announce?.key]);
 
-  if (!(showBoard && board.active) && !announce && !rouletteResult) {
+  if (!(showBoard && board.active) && !announce && !rouletteResult && !(showRouletteList && rouletteList)) {
     return <div className="overlay-empty" />;
   }
 
@@ -311,6 +388,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
 
       {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
       {rouletteResult && <RouletteAnnouncement result={rouletteResult} />}
+      {showRouletteList && rouletteList && <RouletteListOverlay config={rouletteList} />}
     </div>
   );
 }
