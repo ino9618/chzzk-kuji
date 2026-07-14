@@ -19,6 +19,7 @@
     "dotenv": "^17.4.2",
     "engine.io-client": "^3.5.6",
     "express": "^4.19.2",
+    "google-auth-library": "^10.9.0",
     "pg": "^8.22.0",
     "socket.io": "^4.7.5",
     "socket.io-client-v2": "npm:socket.io-client@^2.0.3",

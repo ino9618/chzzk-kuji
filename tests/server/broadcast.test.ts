@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import type { Server as HttpServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
 import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
-import { createSession, type Db } from '../../src/server/db';
+import { createSession, setSetting, type Db } from '../../src/server/db';
 import { registerSocketHandlers, parseCookie } from '../../src/server/index';
 import { createTestDb } from '../helpers/testDb';
 import { broadcastQueueUpdate, broadcastConnectionStatus, broadcastBoardUpdate } from '../../src/server/broadcast';
@@ -164,6 +164,16 @@ describe('admin-room broadcast scoping (integration)', () => {
       nickname: '예시 후원자',
       audioDataUrl: 'data:audio/mpeg;base64,V0lOTkVS',
     }));
+
+    await setSetting(db, 'overlay_tts_enabled', 'false');
+    expect(await adminClient.emitWithAck('overlay:test', {
+      number: 4,
+      grade: 'C',
+      prizeName: '무음 테스트 상품',
+      nickname: '무음 후원자',
+    })).toEqual({ ok: true, tts: 'disabled' });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(received).toContainEqual({ number: 4, grade: 'C', prizeName: '무음 테스트 상품', nickname: '무음 후원자' });
   });
 
   it('broadcasts roulette overlay tests without recording a real roulette result', async () => {

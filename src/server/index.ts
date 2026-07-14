@@ -15,8 +15,9 @@ import { loadTokens, saveTokens } from './chzzkAuth';
 import { broadcastBoardUpdate, broadcastQueueUpdate, broadcastConnectionStatus } from './broadcast';
 import { broadcastKujiResult, broadcastRouletteResult } from './broadcast';
 import { getRouletteConfig, processRouletteDonation } from './rouletteProcessor';
-import { buildRouletteSpeech, buildWinnerSpeech, synthesizeGoogleTts, type RouletteSpeechInput, type WinnerSpeechInput } from './googleTts';
+import { buildRouletteSpeech, buildWinnerSpeech, createGoogleTtsSynthesizer, type RouletteSpeechInput, type WinnerSpeechInput } from './googleTts';
 import { isValidAdminToken } from './middleware/adminAuth';
+import { getOverlayAudioSettings } from './overlayAudioSettings';
 
 /**
  * Extracts the value of a single cookie by name from a raw Cookie header
@@ -44,7 +45,7 @@ export function parseCookie(cookieHeader: string | undefined, name: string): str
  * the 'admin' room receive admin-only broadcasts (queue:update,
  * connection:status); all sockets receive board:update.
  */
-type TtsStatus = 'sent' | 'not_configured' | 'failed';
+type TtsStatus = 'sent' | 'not_configured' | 'failed' | 'disabled';
 
 export function registerSocketHandlers(
   io: SocketIOServer,
@@ -91,9 +92,10 @@ export function registerSocketHandlers(
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
         ...(prizeImageUrl ? { prizeImageUrl } : {}),
       };
-      let tts: TtsStatus = createWinnerAudio ? 'failed' : 'not_configured';
+      const { ttsEnabled } = await getOverlayAudioSettings(db);
+      let tts: TtsStatus = ttsEnabled ? (createWinnerAudio ? 'failed' : 'not_configured') : 'disabled';
       let audioDataUrl: string | undefined;
-      if (createWinnerAudio) {
+      if (ttsEnabled && createWinnerAudio) {
         try {
           audioDataUrl = await createWinnerAudio(testEvent);
           tts = 'sent';
@@ -123,9 +125,10 @@ export function registerSocketHandlers(
         probability: (selectedItem?.weight ?? 1) / totalWeight * 100,
         test: true,
       };
-      let tts: TtsStatus = createRouletteAudio ? 'failed' : 'not_configured';
+      const { ttsEnabled } = await getOverlayAudioSettings(db);
+      let tts: TtsStatus = ttsEnabled ? (createRouletteAudio ? 'failed' : 'not_configured') : 'disabled';
       let audioDataUrl: string | undefined;
-      if (createRouletteAudio) {
+      if (ttsEnabled && createRouletteAudio) {
         try {
           audioDataUrl = await createRouletteAudio(result);
           tts = 'sent';
@@ -155,7 +158,7 @@ export async function createApp(db: Db, options: AppOptions) {
     'not_configured';
 
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', ttsConfigured: Boolean(process.env.GOOGLE_CLOUD_TTS_API_KEY) });
+    res.json({ status: 'ok', ttsConfigured: Boolean(process.env.GOOGLE_CLOUD_TTS_CREDENTIALS_BASE64) });
   });
 
   app.get('/', (_req, res) => {
@@ -228,9 +231,10 @@ async function main(): Promise<void> {
   const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, { cors: { origin: true } });
 
-  const googleTtsKey = process.env.GOOGLE_CLOUD_TTS_API_KEY ?? '';
-  const createWinnerAudio = googleTtsKey ? (input: WinnerSpeechInput) => synthesizeGoogleTts(buildWinnerSpeech(input), googleTtsKey) : undefined;
-  const createRouletteAudio = googleTtsKey ? (input: RouletteSpeechInput) => synthesizeGoogleTts(buildRouletteSpeech(input), googleTtsKey) : undefined;
+  const googleTtsCredentials = process.env.GOOGLE_CLOUD_TTS_CREDENTIALS_BASE64 ?? '';
+  const synthesizeSpeech = googleTtsCredentials ? createGoogleTtsSynthesizer(googleTtsCredentials) : undefined;
+  const createWinnerAudio = synthesizeSpeech ? (input: WinnerSpeechInput) => synthesizeSpeech(buildWinnerSpeech(input)) : undefined;
+  const createRouletteAudio = synthesizeSpeech ? (input: RouletteSpeechInput) => synthesizeSpeech(buildRouletteSpeech(input)) : undefined;
   registerSocketHandlers(io, db, createWinnerAudio, createRouletteAudio);
   const announceProcessedWinners = async (
     event: import('./donationProcessor').DonationEvent,
@@ -238,10 +242,11 @@ async function main(): Promise<void> {
     board: Awaited<ReturnType<typeof buildBoardPayload>>,
   ) => {
     if (result.status !== 'processed') return;
+    const { ttsEnabled } = await getOverlayAudioSettings(db);
     for (const outcome of result.outcomes.filter((item) => item.result === 'success')) {
       const ticket = board.active ? board.tickets.find((item) => item.number === outcome.number) : undefined;
       let audioDataUrl: string | undefined;
-      if (createWinnerAudio) {
+      if (createWinnerAudio && ttsEnabled) {
         try { audioDataUrl = await createWinnerAudio({ nickname: event.nickname, number: outcome.number, prizeName: outcome.prizeName }); }
         catch (error) { console.error('Google Cloud TTS generation failed:', error); }
       }
@@ -256,7 +261,7 @@ async function main(): Promise<void> {
     }
   };
   const addRouletteAudio = async (result: import('./rouletteProcessor').RouletteResult) => {
-    if (!createRouletteAudio) return result;
+    if (!createRouletteAudio || !(await getOverlayAudioSettings(db)).ttsEnabled) return result;
     try { return { ...result, audioDataUrl: await createRouletteAudio(result) }; }
     catch (error) {
       console.error('Google Cloud roulette TTS generation failed:', error);

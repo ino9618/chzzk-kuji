@@ -56,6 +56,11 @@ export interface BasicSettings {
   nicknameMode: 'masked' | 'full';
 }
 
+export interface OverlayAudioSettings {
+  soundEnabled: boolean;
+  ttsEnabled: boolean;
+}
+
 export interface SessionHistoryEntry {
   id: number;
   name: string;
@@ -108,6 +113,8 @@ export const api = {
     jsonFetch('/api/admin/nickname-mode', { method: 'POST', body: JSON.stringify({ mode }) }),
   getBasicSettings: () => jsonFetch<BasicSettings>('/api/admin/basic-settings'),
   setBasicSettings: (settings: BasicSettings) => jsonFetch<BasicSettings>('/api/admin/basic-settings', { method: 'POST', body: JSON.stringify(settings) }),
+  getOverlayAudioSettings: () => jsonFetch<OverlayAudioSettings>('/api/admin/overlay-audio-settings'),
+  setOverlayAudioSettings: (settings: OverlayAudioSettings) => jsonFetch<OverlayAudioSettings>('/api/admin/overlay-audio-settings', { method: 'POST', body: JSON.stringify(settings) }),
   getChzzkStatus: () => jsonFetch<{ status: string }>('/api/admin/chzzk-status'),
   getChzzkConnection: () => jsonFetch<ChzzkConnection>('/api/admin/chzzk-connection'),
   disconnectChzzk: () => jsonFetch<{ ok: true }>('/api/admin/chzzk-connection/disconnect', { method: 'POST' }),

@@ -21,6 +21,7 @@ import { requireAdmin } from '../middleware/adminAuth';
 import { requireOwner } from '../middleware/adminAuth';
 import type { DonationEvent } from '../donationProcessor';
 import { getRouletteConfig, type RouletteConfig, type RouletteProcessResult } from '../rouletteProcessor';
+import { getOverlayAudioSettings, saveOverlayAudioSettings } from '../overlayAudioSettings';
 
 export interface AdminRouterDeps {
   getChzzkStatus: () => 'connected' | 'disconnected' | 'reconnecting' | 'not_configured' | 'needs_reauth';
@@ -209,6 +210,19 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
     const { enabled } = req.body as { enabled: boolean };
     await setSetting(db, 'kuji_enabled', enabled ? 'true' : 'false');
     res.json({ enabled });
+  });
+
+  router.get('/overlay-audio-settings', async (_req, res) => {
+    res.json(await getOverlayAudioSettings(db));
+  });
+
+  router.post('/overlay-audio-settings', async (req, res) => {
+    const { soundEnabled, ttsEnabled } = req.body as Record<string, unknown>;
+    if (typeof soundEnabled !== 'boolean' || typeof ttsEnabled !== 'boolean') {
+      res.status(400).json({ error: 'invalid_audio_settings' });
+      return;
+    }
+    res.json(await saveOverlayAudioSettings(db, { soundEnabled, ttsEnabled }));
   });
 
   return router;

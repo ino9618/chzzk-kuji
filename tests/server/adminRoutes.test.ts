@@ -291,3 +291,18 @@ describe('basic settings', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('overlay audio settings', () => {
+  it('defaults both channels on and saves them independently', async () => {
+    expect((await agent.get('/api/admin/overlay-audio-settings')).body).toEqual({ soundEnabled: true, ttsEnabled: true });
+    const saved = await agent.post('/api/admin/overlay-audio-settings').send({ soundEnabled: false, ttsEnabled: true });
+    expect(saved.status).toBe(200);
+    expect(saved.body).toEqual({ soundEnabled: false, ttsEnabled: true });
+    expect((await agent.get('/api/admin/overlay-audio-settings')).body).toEqual({ soundEnabled: false, ttsEnabled: true });
+  });
+
+  it('rejects non-boolean settings', async () => {
+    const res = await agent.post('/api/admin/overlay-audio-settings').send({ soundEnabled: 'false', ttsEnabled: true });
+    expect(res.status).toBe(400);
+  });
+});

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
-import { createSession, type Db } from '../../src/server/db';
+import { createSession, setSetting, type Db } from '../../src/server/db';
 import { createApp } from '../../src/server/index';
 import { createTestDb, resetDb } from '../helpers/testDb';
 
@@ -147,6 +147,18 @@ describe('GET /api/overlay/board', () => {
     const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
     const res = await request(app).get('/api/overlay/board');
     expect(res.body.grades).toEqual([]);
+  });
+});
+
+describe('GET /api/overlay/audio-settings', () => {
+  it('is public, non-cacheable, and reflects saved audio switches', async () => {
+    await setSetting(db, 'overlay_sound_enabled', 'false');
+    await setSetting(db, 'overlay_tts_enabled', 'true');
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/overlay/audio-settings');
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toContain('no-store');
+    expect(res.body).toEqual({ soundEnabled: false, ttsEnabled: true });
   });
 });
 

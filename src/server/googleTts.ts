@@ -23,11 +23,11 @@ export function buildRouletteSpeech(input: RouletteSpeechInput): string {
   return `${winner}님의 룰렛 결과는 ${result}입니다. 축하합니다.`;
 }
 
-export async function synthesizeGoogleTts(text: string, apiKey: string, fetcher: typeof fetch = fetch): Promise<string> {
-  if (!apiKey) throw new Error('google_tts_not_configured');
-  const response = await fetcher(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`, {
+export async function synthesizeGoogleTts(text: string, accessToken: string, fetcher: typeof fetch = fetch): Promise<string> {
+  if (!accessToken) throw new Error('google_tts_not_configured');
+  const response = await fetcher('https://texttospeech.googleapis.com/v1/text:synthesize', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({
       input: { text: text.slice(0, 300) },
       voice: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-A' },
@@ -39,3 +39,21 @@ export async function synthesizeGoogleTts(text: string, apiKey: string, fetcher:
   if (!payload.audioContent) throw new Error('google_tts_empty_audio');
   return `data:audio/mpeg;base64,${payload.audioContent}`;
 }
+
+export function createGoogleTtsSynthesizer(credentialsBase64: string, fetcher: typeof fetch = fetch): (text: string) => Promise<string> {
+  if (!credentialsBase64) throw new Error('google_tts_not_configured');
+  let credentials: { client_email?: string; private_key?: string };
+  try {
+    credentials = JSON.parse(Buffer.from(credentialsBase64, 'base64').toString('utf8')) as typeof credentials;
+  } catch {
+    throw new Error('google_tts_invalid_credentials');
+  }
+  if (!credentials.client_email || !credentials.private_key) throw new Error('google_tts_invalid_credentials');
+  const auth = new GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+  return async (text: string) => {
+    const accessToken = await auth.getAccessToken();
+    if (!accessToken) throw new Error('google_tts_token_failed');
+    return synthesizeGoogleTts(text, accessToken, fetcher);
+  };
+}
+import { GoogleAuth } from 'google-auth-library';

@@ -55,6 +55,11 @@ interface RouletteListPayload {
   items: RouletteListItem[];
 }
 
+interface OverlayAudioSettings {
+  soundEnabled: boolean;
+  ttsEnabled: boolean;
+}
+
 export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'combined';
 
 const ROULETTE_SPIN_MS = 2500;
@@ -92,7 +97,7 @@ function RouletteListOverlay({ config }: { config: RouletteListPayload }) {
   </div>;
 }
 
-function RouletteAnnouncement({ result, onComplete }: { result: RouletteResult; onComplete: () => void }) {
+function RouletteAnnouncement({ result, audioSettings, onComplete }: { result: RouletteResult; audioSettings: OverlayAudioSettings; onComplete: () => void }) {
   const [revealed, setRevealed] = useState(false);
   const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(108, Math.min(window.innerHeight * 0.14, 150))));
   const revealDone = useRef(false);
@@ -110,7 +115,7 @@ function RouletteAnnouncement({ result, onComplete }: { result: RouletteResult; 
   useEffect(() => {
     revealDone.current = false;
     setRevealed(false);
-    playRouletteSpinSound(ROULETTE_SPIN_MS);
+    if (audioSettings.soundEnabled) playRouletteSpinSound(ROULETTE_SPIN_MS);
     const timer = window.setTimeout(() => finishSpin(), ROULETTE_SPIN_MS + 300);
     return () => {
       window.clearTimeout(timer);
@@ -134,8 +139,8 @@ function RouletteAnnouncement({ result, onComplete }: { result: RouletteResult; 
     if (revealDone.current) return;
     revealDone.current = true;
     setRevealed(true);
-    playRouletteStopSound();
-    if (result.audioDataUrl) {
+    if (audioSettings.soundEnabled) playRouletteStopSound();
+    if (audioSettings.ttsEnabled && result.audioDataUrl) {
       speechTimer.current = window.setTimeout(() => playGoogleTtsAudio(result.audioDataUrl!), 800);
     }
     dismissTimer.current = window.setTimeout(onComplete, ROULETTE_RESULT_HOLD_MS);
@@ -190,6 +195,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const [justSold, setJustSold] = useState<number | null>(null);
   const [activeEvent, setActiveEvent] = useState<QueuedOverlayEvent | null>(null);
   const [rouletteList, setRouletteList] = useState<RouletteListPayload | null>(null);
+  const [audioSettings, setAudioSettings] = useState<OverlayAudioSettings>({ soundEnabled: true, ttsEnabled: true });
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const eventQueue = useRef(new SequentialEventQueue<QueuedOverlayEvent>());
   const eventId = useRef(0);
@@ -215,8 +221,8 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
 
   useEffect(() => {
     if (activeEvent?.kind !== 'kuji') return;
-    playWinnerFanfare();
-    const speechTimer = activeEvent.payload.audioDataUrl
+    if (audioSettings.soundEnabled) playWinnerFanfare();
+    const speechTimer = audioSettings.ttsEnabled && activeEvent.payload.audioDataUrl
       ? window.setTimeout(() => playGoogleTtsAudio(activeEvent.payload.audioDataUrl!), 600)
       : undefined;
     const dismissTimer = window.setTimeout(completeActiveEvent, ANNOUNCE_MS);
@@ -225,6 +231,16 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       window.clearTimeout(dismissTimer);
     };
   }, [activeEvent?.id]);
+
+  useEffect(() => {
+    const refreshAudioSettings = () => fetch('/api/overlay/audio-settings', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then(setAudioSettings)
+      .catch(() => undefined);
+    void refreshAudioSettings();
+    const interval = window.setInterval(refreshAudioSettings, 10_000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let isDevPreview = false;
@@ -418,7 +434,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       </div></>}
 
       {announce && <DrawAnnouncement announce={announce} confetti={confetti} />}
-      {rouletteResult && <RouletteAnnouncement result={rouletteResult} onComplete={completeActiveEvent} />}
+      {rouletteResult && <RouletteAnnouncement result={rouletteResult} audioSettings={audioSettings} onComplete={completeActiveEvent} />}
       {showRouletteList && rouletteList && <RouletteListOverlay config={rouletteList} />}
     </div>
   );

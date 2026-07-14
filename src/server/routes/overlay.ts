@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getActiveSession, getTicketsForSession, getSetting, type Db, type Ticket } from '../db';
 import { maskNickname } from '../maskNickname';
 import { getRouletteConfig } from '../rouletteProcessor';
+import { getOverlayAudioSettings } from '../overlayAudioSettings';
 
 const overlayVersion = process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || `startup-${Date.now()}`;
 
@@ -101,6 +102,11 @@ export function createOverlayRouter(db: Db): Router {
   router.get('/roulette', async (_req, res) => {
     res.set('Cache-Control', 'no-store');
     res.json(await buildRouletteListPayload(db));
+  });
+
+  router.get('/audio-settings', async (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(await getOverlayAudioSettings(db));
   });
 
   return router;

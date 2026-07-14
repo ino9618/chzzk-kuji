@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { InlineFeedback } from '../components/InlineFeedback';
 import { SettingRow } from '../components/SettingRow';
-import type { SessionState } from '../api';
+import { api, type OverlayAudioSettings, type SessionState } from '../api';
 import examplePrizeImage from '../../assets/mascot-success.png';
 import { NumberStepper } from '../components/NumberStepper';
 
@@ -22,7 +22,7 @@ interface RouletteOverlayTestPayload {
 
 export interface OverlayTestResponse {
   ok: boolean;
-  tts: 'sent' | 'not_configured' | 'failed';
+  tts: 'sent' | 'not_configured' | 'failed' | 'disabled';
 }
 
 const OVERLAY_WIDTH = 1920;
@@ -58,6 +58,8 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
   const [feedback, setFeedback] = useState('');
   const [pending, setPending] = useState(false);
   const [testPending, setTestPending] = useState(false);
+  const [audioPending, setAudioPending] = useState(false);
+  const [audioSettings, setAudioSettings] = useState<OverlayAudioSettings>({ soundEnabled: true, ttsEnabled: true });
   const [testMode, setTestMode] = useState<'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list'>('kuji-result');
   const [test, setTest] = useState<OverlayTestPayload>({ number: 1, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자', prizeImageUrl: examplePrizeImage });
   const [rouletteTest, setRouletteTest] = useState<RouletteOverlayTestPayload>({ label: '테스트 룰렛 결과', nickname: '테스트 후원자', amount: 5000 });
@@ -76,6 +78,10 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
   const registeredTickets = session.active
     ? Array.from(new Map((session.tickets ?? []).map((ticket) => [`${ticket.prizeGrade ?? ''}|${ticket.prizeName}|${ticket.prizeImageUrl ?? ''}`, ticket])).values())
     : [];
+
+  useEffect(() => {
+    api.getOverlayAudioSettings().then(setAudioSettings).catch(() => setFeedback('오디오 설정을 불러오지 못했습니다.'));
+  }, []);
 
   const copy = async (url: string, label: string) => {
     try {
@@ -97,12 +103,26 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
       setPending(false);
     }
   };
+  const setAudio = async (next: OverlayAudioSettings) => {
+    setAudioPending(true);
+    setFeedback('');
+    try {
+      setAudioSettings(await api.setOverlayAudioSettings(next));
+      setFeedback('오디오 설정을 저장했습니다. OBS에는 10초 이내 반영됩니다.');
+    } catch {
+      setFeedback('오디오 설정을 저장하지 못했습니다.');
+    } finally {
+      setAudioPending(false);
+    }
+  };
   const runOverlayTest = async () => {
     setTestPending(true);
     setFeedback('');
     try {
       const result = await onTestOverlay(test);
-      setFeedback(result.tts === 'sent'
+      setFeedback(result.tts === 'disabled'
+        ? '테스트 당첨 화면을 전송했습니다. Google Cloud TTS는 현재 꺼져 있습니다.'
+        : result.tts === 'sent'
         ? '테스트 당첨 화면과 Google TTS를 전송했습니다. 실제 판매 내역은 변경되지 않습니다.'
         : result.tts === 'not_configured'
           ? '당첨 화면은 표시했지만 Google Cloud TTS API 키가 서버에 설정되지 않았습니다.'
@@ -118,7 +138,9 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
     setFeedback('');
     try {
       const result = await onTestRoulette(rouletteTest);
-      setFeedback(result.tts === 'sent'
+      setFeedback(result.tts === 'disabled'
+        ? '룰렛 테스트를 전송했습니다. Google Cloud TTS는 현재 꺼져 있습니다.'
+        : result.tts === 'sent'
         ? '룰렛 테스트와 Google TTS를 전송했습니다. TTS는 룰렛이 멈춘 뒤 재생됩니다.'
         : result.tts === 'not_configured'
           ? '룰렛은 표시했지만 Google Cloud TTS API 키가 서버에 설정되지 않았습니다.'
@@ -173,8 +195,11 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
         {testMode !== 'roulette-list' && <p className="overlay-test-note">테스트는 OBS와 위 미리보기에 동시에 표시되며 회차, 번호판, 당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다.</p>}
       </section>
       <section className="workflow-section">
-        <SettingRow title="당첨 효과음과 Google Cloud TTS" description="테스트 실행 결과에서 API 키 설정과 음성 생성 상태를 확인할 수 있습니다. 룰렛 TTS는 정지 효과음 다음에 재생됩니다.">
-          <span className="overlay-audio-state">테스트로 확인</span>
+        <SettingRow title="효과음" description="이치방쿠지 당첨음과 룰렛 회전·정지 효과음을 켜거나 끕니다.">
+          <label className="switch compact"><input type="checkbox" checked={audioSettings.soundEnabled} disabled={audioPending} onChange={(event) => setAudio({ ...audioSettings, soundEnabled: event.target.checked })} /><span className="switch-track"><span className="switch-thumb" /></span><span>{audioSettings.soundEnabled ? '사용' : '사용 안 함'}</span></label>
+        </SettingRow>
+        <SettingRow title="Google Cloud TTS" description="당첨 내용을 음성으로 안내합니다. 끄면 서버에서 음성을 생성하지 않아 API를 호출하지 않습니다.">
+          <label className="switch compact"><input type="checkbox" checked={audioSettings.ttsEnabled} disabled={audioPending} onChange={(event) => setAudio({ ...audioSettings, ttsEnabled: event.target.checked })} /><span className="switch-track"><span className="switch-thumb" /></span><span>{audioSettings.ttsEnabled ? '사용' : '사용 안 함'}</span></label>
         </SettingRow>
         <SettingRow title="쿠지 번호판 OBS 소스" description="회차 번호판과 판매 상태만 표시합니다. OBS 크기는 1920 × 1080으로 설정하세요.">
           <div className="overlay-actions"><code>{kujiBoardUrl}</code><button onClick={() => copy(kujiBoardUrl, '쿠지 번호판 오버레이')}>복사</button><button className="secondary-button" onClick={() => window.open(kujiBoardUrl, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>
