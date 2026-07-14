@@ -62,7 +62,7 @@ interface OverlayAudioSettings {
 
 export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'combined';
 
-const ROULETTE_SPIN_MS = 2500;
+const ROULETTE_SPIN_MS = 3500;
 const ROULETTE_RESULT_HOLD_MS = 2000;
 
 function formatProbability(probability: number): string {
@@ -132,6 +132,7 @@ function RouletteAnnouncement({ result, audioSettings, onComplete }: { result: R
     '--roulette-row-height': `${rowHeight}px`,
     '--roulette-window-height': `${rowHeight}px`,
     '--roulette-reel-end': `${-winningIndex * rowHeight}px`,
+    '--roulette-spin-duration': `${ROULETTE_SPIN_MS}ms`,
   } as CSSProperties;
   const probability = Math.max(0, Math.min(100, result.probability ?? 0));
   const starCount = Math.max(1, Math.min(5, Math.ceil(probability / 20)));
