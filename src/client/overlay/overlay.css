@@ -419,32 +419,6 @@
 @keyframes rouletteWinnerReveal { 0% { opacity: .5; transform: scale(.82); } 55% { color: #fff; transform: scale(1.08); text-shadow: 0 0 28px #f5c451; } 100% { opacity: 1; transform: scale(1); text-shadow: 0 0 12px rgba(245,196,81,.75); } }
 @keyframes rouletteFocusReveal { 0% { opacity: 0; transform: scaleX(.72); } 60% { opacity: 1; transform: scaleX(1.025); } 100% { opacity: 1; transform: scaleX(1); } }
 
-/* Confetti burst */
-.confetti {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.confetti-piece {
-  position: absolute;
-  top: -20px;
-  border-radius: 2px;
-  opacity: 0.95;
-  animation-name: confettiFall;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-@keyframes confettiFall {
-  to {
-    transform: translateY(110vh) rotate(var(--rot));
-    opacity: 0.85;
-  }
-}
-
 /* ---------- Snow leopard broadcast theme ---------- */
 .overlay-header {
   min-height: 104px;
@@ -711,4 +685,145 @@
 @keyframes rouletteStarsIn {
   from { opacity: 0; transform: translateY(18px) scale(.65); }
   to { opacity: 1; transform: none; }
+}
+
+/* Pastel snow-leopard palette */
+.grade-a {
+  --grade-color: #e8bd58;
+  --grade-color-dim: #fff4ce;
+  --grade-text: #66501f;
+  --grade-badge-bg: #f5d77f;
+  --grade-badge-text: #594614;
+}
+.grade-b {
+  --grade-color: #87c6e5;
+  --grade-color-dim: #e2f3fb;
+  --grade-text: #315b70;
+  --grade-badge-bg: #bde3f5;
+  --grade-badge-text: #31566a;
+}
+.grade-c {
+  --grade-color: #e5a1b1;
+  --grade-color-dim: #fbe8ed;
+  --grade-text: #70404b;
+  --grade-badge-bg: #f2c2cd;
+  --grade-badge-text: #6b3541;
+}
+.grade-x {
+  --grade-color: #afa3d8;
+  --grade-color-dim: #eeebf9;
+  --grade-text: #554b76;
+  --grade-badge-bg: #d3cbed;
+  --grade-badge-text: #4f456f;
+}
+
+.overlay-header {
+  border-color: #a9d8ec;
+  background: rgba(244, 250, 253, .97);
+  color: #465562;
+  box-shadow: 0 12px 30px rgba(90, 126, 145, .2), inset 0 -3px #d7edf6;
+}
+.overlay-eyebrow { color: #67aecd; }
+.overlay-header-title { color: #44515d; }
+.overlay-progress-block { border-left-color: #c7dfe9; }
+.overlay-progress-block > span { color: #71838f; }
+.overlay-header-count { color: #d39d31; }
+.overlay-header-count small { color: #81919b; }
+.grade-legend-item {
+  background: rgba(255, 255, 255, .96);
+  color: #4d5963;
+  box-shadow: 0 6px 16px rgba(94, 126, 143, .16);
+}
+.grade-legend-name { color: #4d5963; }
+.grade-legend-count { color: #758792; }
+.grade-legend-done { background: #efb2bf; color: #68404a; }
+.overlay-cell {
+  border-color: #b8d5e2;
+  background: rgba(248, 252, 254, .96);
+  color: #4c5964;
+  box-shadow: 0 5px 14px rgba(87, 118, 135, .16);
+}
+.overlay-cell.sold { background: var(--grade-color-dim); color: var(--grade-text); }
+.overlay-prize { color: #4d5963; }
+
+.draw-card {
+  border-color: var(--grade-color);
+  background: #ffffff;
+  color: #48545f;
+  box-shadow: 0 0 0 7px rgba(241, 248, 252, .94), 0 0 38px 8px rgba(143, 197, 220, .28), 0 18px 44px rgba(81, 111, 128, .24);
+}
+.draw-card::before,
+.draw-card::after { border-color: #9ccfe5; background: #f7fbfd; }
+.draw-ticket-head {
+  border-bottom-color: #b9ddea;
+  background: #eaf6fb;
+}
+.draw-kicker { color: #5d9fbe; }
+.draw-label,
+.draw-number strong { color: #44515d; }
+.draw-number { border-left-color: #c5dfe9; }
+.draw-number span { color: #718793; }
+.draw-image-frame { border-color: #c6e1eb; background: #f5fafc; }
+.draw-result-body { background: #ffffff; }
+.draw-prize span,
+.draw-winner span { color: #669fba; }
+.draw-prize strong { color: #45515c; }
+.draw-winner { border-top-color: #d8e8ef; }
+.draw-winner strong { color: #677985; }
+.draw-test-badge,
+.roulette-test-badge { border-color: #b8d8e7; background: #f5fafc; color: #587387; }
+
+.roulette-result-bar {
+  border-color: #9fd4e9;
+  background: #f5fafc;
+  box-shadow: inset 0 0 0 4px #dcedf4, 0 0 0 8px rgba(255, 255, 255, .92), 0 22px 50px rgba(81, 111, 128, .24);
+}
+.roulette-brand span { color: #5d96b1; }
+.roulette-status { color: #d69c32; }
+.roulette-reel-window {
+  border-color: #b6dce9;
+  background: #eaf5fa;
+  box-shadow: inset 0 0 22px rgba(116, 158, 178, .18);
+}
+.roulette-reel-item { color: #637580; text-shadow: none; }
+.roulette-result-overlay.revealed .roulette-reel-item.winning {
+  background: #fff0c9;
+  color: #4e5760 !important;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, .9) !important;
+}
+.roulette-reel-donor {
+  border-color: #c7bde6;
+  background: rgba(255, 255, 255, .97);
+  color: #687681;
+  box-shadow: 0 8px 22px rgba(91, 112, 126, .18);
+}
+.roulette-reel-donor strong { color: #bd8730; }
+.roulette-star {
+  color: #f1c85f;
+  -webkit-text-stroke-color: #91c9e2;
+  text-shadow: 0 3px 0 #d9cfee, 0 8px 16px rgba(96, 122, 137, .24);
+}
+
+.snowfall {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+.snowflake-piece {
+  position: absolute;
+  top: -60px;
+  display: block;
+  opacity: .96;
+  line-height: 1;
+  text-shadow: 0 2px 5px rgba(91, 130, 151, .24);
+  animation: snowflakeFall linear forwards;
+}
+@keyframes snowflakeFall {
+  0% { opacity: 0; transform: translate3d(0, -40px, 0) rotate(0); }
+  10% { opacity: .96; }
+  35% { transform: translate3d(32px, 36vh, 0) rotate(120deg); }
+  65% { transform: translate3d(-24px, 70vh, 0) rotate(240deg); }
+  100% { opacity: .82; transform: translate3d(var(--drift), 112vh, 0) rotate(var(--rot)); }
 }

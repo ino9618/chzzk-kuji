@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { io } from 'socket.io-client';
-import { DrawAnnouncement, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
+import { DrawAnnouncement, Snowfall, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
 import mascotFaceUrl from '../assets/mascot-face.png';
 import mascotSuccessUrl from '../assets/mascot-success.png';
@@ -50,6 +50,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(108, Math.min(window.innerHeight * 0.14, 150))));
   const revealDone = useRef(false);
   const speechTimer = useRef<number>();
+  const snowflakes = useMemo(() => makeConfetti(36), [result]);
   const { sequence, winningIndex } = useMemo(() => {
     const source = Array.from(new Set((result.items ?? []).map((item) => item.trim()).filter(Boolean)));
     if (!source.includes(result.label)) source.push(result.label);
@@ -90,6 +91,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     }
   };
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
+    {revealed && <Snowfall pieces={snowflakes} />}
     <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
       <div className="roulette-stars" aria-label={`당첨 확률 ${probability.toFixed(1)}%, 별 ${starCount}개`}>
@@ -114,16 +116,17 @@ const socket = io();
 const ANNOUNCE_MS = 8000;
 const HIGHLIGHT_MS = 2600;
 
-const CONFETTI_COLORS = ['#efbd55', '#67b9e8', '#b9e5fb', '#e77f91', '#ffffff'];
+const CONFETTI_COLORS = ['#ffffff', '#dff4ff', '#b9e5fb', '#eadffc', '#fbdde7'];
 
 function makeConfetti(count: number): ConfettiPiece[] {
   return Array.from({ length: count }, () => ({
     left: Math.random() * 100,
     delay: Math.random() * 0.6,
-    duration: 2.2 + Math.random() * 1.6,
-    size: 6 + Math.random() * 8,
+    duration: 3.6 + Math.random() * 2.4,
+    size: 18 + Math.random() * 22,
     color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
     rotate: (Math.random() - 0.5) * 720,
+    drift: (Math.random() - 0.5) * 240,
   }));
 }
 
@@ -235,7 +238,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
 
   const confetti = useMemo(() => {
     if (!announce) return [];
-    return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 70 : 32);
+    return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 42 : 26);
   }, [announce?.key]);
 
   if (!(showBoard && board.active) && !announce && !rouletteResult) {

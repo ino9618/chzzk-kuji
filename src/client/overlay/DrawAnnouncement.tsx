@@ -17,6 +17,17 @@ export interface ConfettiPiece {
   size: number;
   color: string;
   rotate: number;
+  drift: number;
+}
+
+export function Snowfall({ pieces }: { pieces: ConfettiPiece[] }) {
+  return <div className="snowfall" aria-hidden="true">
+    {pieces.map((piece, index) => <span key={index} className="snowflake-piece" style={{
+      left: `${piece.left}%`, fontSize: piece.size, color: piece.color,
+      animationDelay: `${piece.delay}s`, animationDuration: `${piece.duration}s`,
+      ['--rot' as string]: `${piece.rotate}deg`, ['--drift' as string]: `${piece.drift}px`,
+    }}>❄</span>)}
+  </div>;
 }
 
 export function gradeClass(grade: string | null | undefined): string {
@@ -48,12 +59,7 @@ export function DrawResultCard({ announce }: { announce: OverlayAnnouncement }) 
 
 export function DrawAnnouncement({ announce, confetti }: { announce: OverlayAnnouncement; confetti: ConfettiPiece[] }) {
   return <div className="draw-announce" key={announce.key}>
-    <div className="confetti">
-      {confetti.map((piece, index) => <span key={index} className="confetti-piece" style={{
-        left: `${piece.left}%`, width: piece.size, height: piece.size * 0.5, background: piece.color,
-        animationDelay: `${piece.delay}s`, animationDuration: `${piece.duration}s`, ['--rot' as string]: `${piece.rotate}deg`,
-      }} />)}
-    </div>
+    <Snowfall pieces={confetti} />
     <DrawResultCard announce={announce} />
   </div>;
 }
