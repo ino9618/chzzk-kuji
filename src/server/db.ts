@@ -287,6 +287,20 @@ export async function listSessionHistory(db: Db): Promise<SessionHistoryEntry[]>
   });
 }
 
+export async function clearBroadcastHistory(db: Db): Promise<{ sessions: number; donations: number; rouletteResults: number }> {
+  return db.transaction(async (tx) => {
+    await tx.query(`DELETE FROM tickets`);
+    const donationResult = await tx.query(`DELETE FROM donation_log`);
+    const sessionResult = await tx.query(`DELETE FROM sessions`);
+    const rouletteResult = await tx.query(`DELETE FROM roulette_log`);
+    return {
+      sessions: sessionResult.rowCount,
+      donations: donationResult.rowCount,
+      rouletteResults: rouletteResult.rowCount,
+    };
+  });
+}
+
 export async function tryAssignTicket(
   db: Db,
   sessionId: number,

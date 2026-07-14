@@ -98,6 +98,28 @@ describe('admin session routes', () => {
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'invalid_prize_image' });
   });
+
+  it('clears kuji and roulette history without deleting configuration', async () => {
+    await agent.post('/api/admin/session').send({
+      name: '초기화 회차', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
+      tickets: [{ number: 1, prizeName: 'A상' }],
+    });
+    const { insertDonationLog, insertRouletteLog, setSetting } = await import('../../src/server/db');
+    await insertDonationLog(db, {
+      sessionId: null, donorNickname: '후원자', donorChannelId: 'c1', amount: 1000,
+      rawMessage: '1번', status: 'processed', needsAttention: false,
+    });
+    await insertRouletteLog(db, { donorNickname: '후원자', donorChannelId: 'c1', amount: 1000, resultLabel: 'A' });
+    await setSetting(db, 'roulette_items', JSON.stringify([{ label: 'A', weight: 1 }, { label: 'B', weight: 1 }]));
+
+    const reset = await agent.post('/api/admin/history/reset');
+    expect(reset.status).toBe(200);
+    expect(reset.body).toEqual({ ok: true, deleted: { sessions: 1, donations: 1, rouletteResults: 1 } });
+    expect((await agent.get('/api/admin/sessions')).body).toEqual([]);
+    expect((await agent.get('/api/admin/log')).body).toEqual([]);
+    expect((await agent.get('/api/admin/roulette/log')).body).toEqual([]);
+    expect((await agent.get('/api/admin/roulette')).body.items).toEqual([{ label: 'A', weight: 1 }, { label: 'B', weight: 1 }]);
+  });
 });
 
 describe('roulette settings', () => {

@@ -10,6 +10,7 @@ import {
   listDonationLog,
   listAllWinners,
   listSessionHistory,
+  clearBroadcastHistory,
   getSetting,
   setSetting,
   deleteSetting,
@@ -98,6 +99,10 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
 
   router.get('/sessions', async (_req, res) => {
     res.json(await listSessionHistory(db));
+  });
+
+  router.post('/history/reset', async (_req, res) => {
+    res.json({ ok: true, deleted: await clearBroadcastHistory(db) });
   });
 
   router.get('/roulette', async (_req, res) => {

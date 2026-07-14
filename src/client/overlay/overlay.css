@@ -623,8 +623,8 @@
 }
 .roulette-brand { min-width: 0; display: flex; align-items: center; gap: 10px; }
 .roulette-brand img { width: 62px; height: 62px; flex: 0 0 62px; object-fit: contain; }
-.roulette-brand span { color: #a9dcf5; font-size: 1.2rem; font-weight: 900; white-space: nowrap; }
-.roulette-status { color: #efbd55; font-size: 1.08rem; text-align: right; }
+.roulette-brand span { color: #a9dcf5; font-size: clamp(1.25rem, 1.6vw, 1.6rem); font-weight: 900; white-space: nowrap; }
+.roulette-status { color: #efbd55; font-size: clamp(1.25rem, 1.6vw, 1.6rem); text-align: right; }
 .roulette-reel-window {
   width: 100%;
   height: var(--roulette-window-height);
@@ -666,10 +666,10 @@
   border-radius: 999px;
   background: rgba(14, 30, 48, .96);
   color: #c5d8e5;
-  font-size: 1rem;
+  font-size: clamp(1.25rem, 1.4vw, 1.45rem);
   box-shadow: 0 8px 24px rgba(5, 18, 29, .36);
 }
-.roulette-reel-donor strong { color: #efbd55; font-size: 1rem; }
+.roulette-reel-donor strong { color: #efbd55; font-size: clamp(1.25rem, 1.4vw, 1.45rem); }
 .roulette-result-overlay:not(.revealed) .roulette-reel-donor strong { visibility: hidden; }
 .roulette-test-badge { top: -10px; right: 12px; }
 
