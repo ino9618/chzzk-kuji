@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { io } from 'socket.io-client';
 import { DrawAnnouncement, Snowfall, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
-import mascotFaceUrl from '../assets/mascot-face.png';
 import mascotSuccessUrl from '../assets/mascot-success.png';
 import fanMascotUrl from '../assets/fan-mascot.png';
+import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -255,7 +255,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   return (
     <div className="overlay-root">
       {showBoard && board.active && <><div className="overlay-header">
-        <div className="overlay-brand-lockup"><img src={mascotFaceUrl} alt="" /><div className="overlay-title-block">
+        <div className="overlay-brand-lockup"><img className="overlay-duo-mascot" src={loginMascotDuoUrl} alt="" /><div className="overlay-title-block">
           <span className="overlay-eyebrow">이치방쿠지</span>
           <span className="overlay-header-title">{board.name || '호갱 API'}</span>
         </div></div>

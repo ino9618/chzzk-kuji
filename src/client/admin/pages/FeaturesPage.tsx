@@ -1,5 +1,6 @@
 import { MonitorIcon, RouletteIcon, SettingsIcon, TicketIcon } from '../components/Icons';
 import type { AdminPage } from '../adminModel';
+import loginMascotDuoUrl from '../../assets/login-mascot-duo.png';
 
 interface FeaturesPageProps {
   onNavigate: (page: AdminPage) => void;
@@ -31,8 +32,9 @@ const quickActions = [
 export function FeaturesPage({ onNavigate }: FeaturesPageProps) {
   return (
     <div className="admin-page features-page">
-      <header className="page-header">
+      <header className="page-header feature-page-header">
         <div><h1>방송 기능</h1><p>방송에서 사용할 기능을 선택해 관리하세요.</p></div>
+        <img className="feature-page-mascot" src={loginMascotDuoUrl} alt="" aria-hidden="true" />
       </header>
       <section className="feature-grid" aria-label="사용 가능한 방송 기능">
         {features.map((feature) => {

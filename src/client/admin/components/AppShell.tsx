@@ -14,6 +14,7 @@ import {
 } from './Icons';
 import { adminNavigationSections, type AdminIconName } from '../adminFeatures';
 import { MoreSheet } from './MoreSheet';
+import loginMascotDuoUrl from '../../assets/login-mascot-duo.png';
 
 interface AppShellProps {
   page: AdminPage;
@@ -74,6 +75,7 @@ export function AppShell({ page, onNavigate, status, children, onLogout = () => 
         <nav aria-label="관리자 메뉴">
           {adminNavigationSections.map((section) => <div className="shell-nav-section" key={section.label}><p className="shell-nav-group">{section.label}</p>{renderItems(section.items)}</div>)}
         </nav>
+        <img className="shell-duo-mascot" src={loginMascotDuoUrl} alt="" aria-hidden="true" />
         <div className={`shell-connection ${status}`}>
           <span className="dot" />
           {statusLabels[status] ?? status}
