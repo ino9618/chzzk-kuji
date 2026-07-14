@@ -10,7 +10,7 @@ describe('LoginScreen', () => {
     expect(html).toContain('href="/api/chzzk/oauth/login"');
     expect(html).toContain('네이버 계정으로 로그인');
     expect(html).toContain('후원을 받는 스트리머의 네이버 계정으로 로그인하세요.');
-    expect(html).toContain('인사하는 설표 안내원');
+    expect(html).toContain('머리 위 호갱이를 쓰다듬는 설냥갱');
   });
 
   it('shows a useful setup message when OAuth is unavailable', () => {

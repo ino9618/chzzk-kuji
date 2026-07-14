@@ -1,13 +1,11 @@
-import { Mascot } from './Mascot';
-import fanMascotUrl from '../../assets/fan-mascot.png';
+import loginMascotDuoUrl from '../../assets/login-mascot-duo.png';
 
 export function LoginScreen({ oauthAvailable, loginError }: { oauthAvailable: boolean; loginError: string }) {
   return (
     <main className="login-screen">
       <div className="login-composition">
-        <div className="login-mascot-duo" aria-label="설냥갱과 팬 캐릭터">
-          <Mascot className="login-main-mascot" />
-          <img className="login-fan-mascot" src={fanMascotUrl} alt="설냥갱 팬 캐릭터" />
+        <div className="login-mascot-duo" aria-label="설냥갱과 머리 위에 올라간 호갱이">
+          <img className="login-mascot-art" src={loginMascotDuoUrl} alt="머리 위 호갱이를 쓰다듬는 설냥갱" />
         </div>
         <section className="login-panel" aria-labelledby="login-title">
           <h1 id="login-title">호갱 API</h1>
