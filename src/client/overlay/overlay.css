@@ -973,16 +973,6 @@
   background: rgba(249, 253, 255, .98);
   box-shadow: 0 12px 28px rgba(78, 120, 143, .18);
 }
-.overlay-header::after {
-  position: absolute;
-  right: 154px;
-  bottom: -15px;
-  padding: 0 10px;
-  background: #ffffff;
-  color: #e5afbd;
-  font-size: 1.15rem;
-  content: '✦  ❄  ✦';
-}
 .overlay-brand-lockup .overlay-duo-mascot {
   width: 78px;
   height: 88px;
