@@ -18,6 +18,7 @@ export interface RouletteResult {
   nickname: string;
   amount: number;
   items: string[];
+  probability: number;
 }
 
 export type RouletteProcessResult =
@@ -76,7 +77,8 @@ export async function processRouletteDonation(db: Db, event: DonationEvent, rand
   if (!config.enabled) return { status: 'disabled' };
   if (event.amount < config.minimumAmount) return { status: 'below_minimum', minimumAmount: config.minimumAmount };
   const item = pickRouletteItem(config.items, random);
-  const result = { label: item.label, nickname: event.nickname, amount: event.amount, items: config.items.map(({ label }) => label) };
+  const totalWeight = config.items.reduce((sum, current) => sum + current.weight, 0);
+  const result = { label: item.label, nickname: event.nickname, amount: event.amount, items: config.items.map(({ label }) => label), probability: item.weight / totalWeight * 100 };
   await insertRouletteLog(db, { donorNickname: event.nickname, donorChannelId: event.channelId, amount: event.amount, resultLabel: item.label });
   return { status: 'triggered', result };
 }

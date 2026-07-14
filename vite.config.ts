@@ -13,6 +13,8 @@ export default defineConfig({
         admin: path.resolve(__dirname, 'src/client/admin.html'),
         overlay: path.resolve(__dirname, 'src/client/overlay.html'),
         overlayKuji: path.resolve(__dirname, 'src/client/overlay-kuji.html'),
+        overlayKujiBoard: path.resolve(__dirname, 'src/client/overlay-kuji-board.html'),
+        overlayKujiResult: path.resolve(__dirname, 'src/client/overlay-kuji-result.html'),
         overlayRoulette: path.resolve(__dirname, 'src/client/overlay-roulette.html'),
         manual: path.resolve(__dirname, 'src/client/manual.html'),
         preview3d: path.resolve(__dirname, 'src/client/preview-3d.html'),

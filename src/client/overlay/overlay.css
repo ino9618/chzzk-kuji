@@ -561,3 +561,154 @@
   opacity: 1;
   text-shadow: 0 2px 12px rgba(0, 0, 0, .78) !important;
 }
+
+/* Larger Full HD typography */
+.overlay-header { min-height: 124px; padding: 20px 28px; }
+.overlay-brand-lockup > img { width: 84px; height: 84px; flex-basis: 84px; }
+.overlay-eyebrow { font-size: 1.15rem; }
+.overlay-header-title { font-size: 2.55rem; }
+.overlay-progress-block > span { font-size: 1.08rem; }
+.overlay-header-count { font-size: 2.7rem; }
+.overlay-header-count small { font-size: 1.25rem; }
+.grade-legend-item { min-height: 54px; padding: 9px 14px 9px 9px; font-size: 1.28rem; }
+.grade-legend-badge { font-size: 1.08rem; }
+.grade-legend-count,
+.grade-legend-done { font-size: .94rem; }
+.overlay-cell { min-height: 126px; padding: 14px 10px; }
+.overlay-number { font-size: 2.35rem; }
+.overlay-grade { font-size: 1.12rem; }
+.overlay-prize { font-size: 1.12rem; }
+.overlay-owner { font-size: 1.04rem; }
+.draw-label { font-size: 2rem; }
+.draw-kicker,
+.draw-number span,
+.draw-grade span,
+.draw-prize span,
+.draw-winner span { font-size: .84rem; }
+.draw-number strong { font-size: 3.5rem; }
+.draw-grade strong { font-size: 2.8rem; }
+.draw-prize strong { font-size: 1.72rem; }
+.draw-winner strong { font-size: 1.12rem; }
+
+/* Compact horizontal roulette inspired by the reference result bar. */
+.roulette-reel-shell {
+  position: fixed;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: min(1180px, calc(100vw - 96px));
+  height: auto;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #f7fbfe;
+  box-shadow: none;
+  animation: rouletteBarIn .42s cubic-bezier(.2, 1.3, .35, 1) both;
+}
+
+.roulette-stars {
+  position: relative;
+  z-index: 4;
+  min-height: 62px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: -13px;
+  transition: opacity .2s ease;
+}
+.roulette-result-overlay:not(.revealed) .roulette-stars { opacity: 0; }
+.roulette-result-overlay.revealed .roulette-stars { animation: rouletteStarsIn .55s .08s cubic-bezier(.16, 1.5, .35, 1) both; }
+.roulette-star {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  color: #efbd55;
+  font-size: 3.25rem;
+  line-height: 1;
+  -webkit-text-stroke: 2px #17314b;
+  text-shadow: 0 3px 0 #5c7f99, 0 8px 18px rgba(8, 25, 39, .58);
+  transform: rotate(-4deg);
+}
+.roulette-star:nth-child(even) { transform: rotate(5deg) translateY(-3px); }
+
+.roulette-result-bar {
+  min-height: var(--roulette-row-height);
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 104px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 22px;
+  border: 4px solid #78bce6;
+  border-radius: 24px;
+  background: #17314b;
+  box-shadow: inset 0 0 0 4px #294f6d, 0 0 0 8px rgba(14, 31, 48, .92), 0 22px 54px rgba(5, 18, 29, .52);
+}
+.roulette-brand { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.roulette-brand img { width: 62px; height: 62px; flex: 0 0 62px; object-fit: contain; }
+.roulette-brand span { color: #a9dcf5; font-size: 1.2rem; font-weight: 900; white-space: nowrap; }
+.roulette-status { color: #efbd55; font-size: 1.08rem; text-align: right; }
+.roulette-reel-window {
+  width: 100%;
+  height: var(--roulette-window-height);
+  border: 2px solid #5d89a8;
+  border-radius: 14px;
+  background: #102940;
+  box-shadow: inset 0 0 24px rgba(5, 18, 29, .7);
+}
+.roulette-result-overlay:not(.revealed) .roulette-reel-window { animation: rouletteBarDrive 2.5s ease-out both; }
+.roulette-reel-item {
+  height: var(--roulette-row-height);
+  padding: 0 30px;
+  border: 0;
+  color: #c4d9e7;
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, .55);
+}
+.roulette-reel-focus { display: none; }
+.roulette-result-overlay.revealed .roulette-reel-item.winning {
+  margin: 0;
+  border: 0;
+  border-radius: 12px;
+  background: #214c6b;
+  color: #ffffff !important;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, .75) !important;
+}
+.roulette-reel-donor {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: fit-content;
+  margin: 15px auto 0;
+  padding: 0 22px;
+  border: 2px solid #3c5d78;
+  border-radius: 999px;
+  background: rgba(14, 30, 48, .96);
+  color: #c5d8e5;
+  font-size: 1rem;
+  box-shadow: 0 8px 24px rgba(5, 18, 29, .36);
+}
+.roulette-reel-donor strong { color: #efbd55; font-size: 1rem; }
+.roulette-result-overlay:not(.revealed) .roulette-reel-donor strong { visibility: hidden; }
+.roulette-test-badge { top: -10px; right: 12px; }
+
+@keyframes rouletteBarIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.88); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes rouletteBarDrive {
+  0% { box-shadow: inset 0 0 24px rgba(5,18,29,.7), 0 0 0 rgba(120,188,230,0); }
+  35% { box-shadow: inset 0 0 24px rgba(5,18,29,.7), 0 0 28px rgba(120,188,230,.5); }
+  100% { box-shadow: inset 0 0 24px rgba(5,18,29,.7), 0 0 8px rgba(120,188,230,.2); }
+}
+@keyframes rouletteStarsIn {
+  from { opacity: 0; transform: translateY(18px) scale(.65); }
+  to { opacity: 1; transform: none; }
+}

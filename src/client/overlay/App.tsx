@@ -36,17 +36,18 @@ interface RouletteResult {
   nickname: string;
   amount: number;
   items?: string[];
+  probability?: number;
   audioDataUrl?: string;
   test?: boolean;
 }
 
-export type OverlayMode = 'kuji' | 'roulette' | 'combined';
+export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'combined';
 
 const ROULETTE_SPIN_MS = 2500;
 
 function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   const [revealed, setRevealed] = useState(false);
-  const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
+  const [rowHeight, setRowHeight] = useState(() => Math.round(Math.max(108, Math.min(window.innerHeight * 0.14, 150))));
   const revealDone = useRef(false);
   const speechTimer = useRef<number>();
   const { sequence, winningIndex } = useMemo(() => {
@@ -68,15 +69,17 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     };
   }, [result]);
   useEffect(() => {
-    const resize = () => setRowHeight(Math.round(Math.max(120, Math.min(window.innerHeight * 0.18, 210))));
+    const resize = () => setRowHeight(Math.round(Math.max(108, Math.min(window.innerHeight * 0.14, 150))));
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
   const reelStyle = {
     '--roulette-row-height': `${rowHeight}px`,
-    '--roulette-window-height': `${rowHeight * 3}px`,
-    '--roulette-reel-end': `${rowHeight - winningIndex * rowHeight}px`,
+    '--roulette-window-height': `${rowHeight}px`,
+    '--roulette-reel-end': `${-winningIndex * rowHeight}px`,
   } as CSSProperties;
+  const probability = Math.max(0, Math.min(100, result.probability ?? 0));
+  const starCount = Math.max(1, Math.min(5, Math.ceil(probability / 20)));
   const finishSpin = () => {
     if (revealDone.current) return;
     revealDone.current = true;
@@ -89,14 +92,19 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
   return <div className={`roulette-result-overlay ${revealed ? 'revealed' : ''}`}>
     <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
-      <div className="roulette-reel-header"><div className="roulette-brand"><img src={mascotFaceUrl} alt="" /><span>후원 룰렛</span></div><strong>{revealed ? '추첨 완료' : '추첨 중'}</strong></div>
-      <div className="roulette-reel-window">
-        <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
-          {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
-        </div>
-        <div className="roulette-reel-focus" aria-hidden="true" />
+      <div className="roulette-stars" aria-label={`당첨 확률 ${probability.toFixed(1)}%, 별 ${starCount}개`}>
+        {Array.from({ length: starCount }, (_, index) => <span className="roulette-star" key={index}>★</span>)}
       </div>
-      <div className="roulette-reel-donor"><span>{result.nickname}</span><strong>{result.amount.toLocaleString('ko-KR')} 치즈</strong></div>
+      <div className="roulette-result-bar">
+        <div className="roulette-brand"><img src={mascotFaceUrl} alt="" /><span>{revealed ? '당첨' : '추첨 중'}</span></div>
+        <div className="roulette-reel-window">
+          <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
+            {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
+          </div>
+        </div>
+        <strong className="roulette-status">{revealed ? '결과' : '회전'}</strong>
+      </div>
+      <div className="roulette-reel-donor"><span>{result.nickname} · {result.amount.toLocaleString('ko-KR')} 치즈</span><strong>당첨 확률 {probability.toFixed(1)}%</strong></div>
     </div>
   </div>;
 }
@@ -127,8 +135,10 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rouletteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showKuji = mode !== 'roulette';
-  const showRoulette = mode !== 'kuji';
+  const showBoard = mode === 'combined' || mode === 'kuji' || mode === 'kuji-board';
+  const showKujiResult = mode === 'combined' || mode === 'kuji' || mode === 'kuji-result';
+  const receiveKuji = showBoard || showKujiResult;
+  const showRoulette = mode === 'combined' || mode === 'roulette';
 
   const showAnnouncement = (next: Omit<OverlayAnnouncement, 'key'>) => {
     setAnnounce({ ...next, key: Date.now() });
@@ -142,11 +152,17 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     let boardPoll: number | undefined;
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
-      isDevPreview = preview === 'kuji' || preview === 'roulette';
+      isDevPreview = preview === 'kuji' || preview === 'roulette' || preview === 'board';
       if (preview === 'kuji') showAnnouncement({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: mascotSuccessUrl, nickname: '테스트 후원자', test: true });
-      if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], test: true });
+      if (preview === 'roulette') setRouletteResult({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], probability: 40, test: true });
+      if (preview === 'board') setBoard({
+        active: true,
+        name: '설냥갱 이치방쿠지',
+        tickets: Array.from({ length: 12 }, (_, index) => ({ number: index + 1, status: index < 4 ? 'sold' as const : 'available' as const, ownerNickname: index < 4 ? `참여자 ${index + 1}` : null, prizeName: index < 4 ? `${String.fromCharCode(65 + index)}상 상품` : null, prizeGrade: index < 4 ? String.fromCharCode(65 + index) : null, prizeImageUrl: null })),
+        grades: [{ grade: 'A', prizeName: '한정판 피규어', total: 1, claimed: 1 }, { grade: 'B', prizeName: '굿즈 세트', total: 3, claimed: 1 }, { grade: 'C', prizeName: '랜덤 상품', total: 8, claimed: 2 }],
+      });
     }
-    if (!isDevPreview && showKuji) {
+    if (!isDevPreview && receiveKuji) {
       const refreshBoard = () => fetch('/api/overlay/board', { cache: 'no-store' })
         .then((response) => response.json())
         .then(setBoard)
@@ -156,29 +172,24 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     }
 
     socket.on('board:update', (next: BoardPayload) => {
-      if (!showKuji) return;
+      if (!receiveKuji) return;
       setBoard((prev) => {
         const prevSoldNumbers = new Set(prev.tickets?.filter((t) => t.status === 'sold').map((t) => t.number));
         const newlySold = next.tickets?.find((t) => t.status === 'sold' && !prevSoldNumbers.has(t.number));
         if (newlySold) {
-          setJustSold(newlySold.number);
-          if (highlightTimer.current) clearTimeout(highlightTimer.current);
-          highlightTimer.current = setTimeout(() => setJustSold(null), HIGHLIGHT_MS);
-
-          showAnnouncement({
-            number: newlySold.number,
-            grade: newlySold.prizeGrade,
-            prizeName: newlySold.prizeName,
-            prizeImageUrl: newlySold.prizeImageUrl,
-            nickname: newlySold.ownerNickname,
-          });
+          if (showBoard) {
+            setJustSold(newlySold.number);
+            if (highlightTimer.current) clearTimeout(highlightTimer.current);
+            highlightTimer.current = setTimeout(() => setJustSold(null), HIGHLIGHT_MS);
+          }
+          if (showKujiResult) showAnnouncement({ number: newlySold.number, grade: newlySold.prizeGrade, prizeName: newlySold.prizeName, prizeImageUrl: newlySold.prizeImageUrl, nickname: newlySold.ownerNickname });
         }
         return next;
       });
     });
 
     socket.on('overlay:test', (event: Omit<OverlayAnnouncement, 'key'>) => {
-      if (showKuji) showAnnouncement({ ...event, test: true });
+      if (showKujiResult) showAnnouncement({ ...event, test: true });
     });
     socket.on('roulette:result', (result: RouletteResult) => {
       if (!showRoulette) return;
@@ -186,7 +197,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
       rouletteTimer.current = setTimeout(() => setRouletteResult(null), 11_000);
     });
-    socket.on('winner:audio', ({ audioDataUrl }: { audioDataUrl: string }) => playGoogleTtsAudio(audioDataUrl));
+    socket.on('winner:audio', ({ audioDataUrl }: { audioDataUrl: string }) => { if (showKujiResult) playGoogleTtsAudio(audioDataUrl); });
 
     return () => {
       socket.off('board:update');
@@ -227,7 +238,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 70 : 32);
   }, [announce?.key]);
 
-  if (!(showKuji && board.active) && !announce && !rouletteResult) {
+  if (!(showBoard && board.active) && !announce && !rouletteResult) {
     return <div className="overlay-empty" />;
   }
 
@@ -239,7 +250,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
 
   return (
     <div className="overlay-root">
-      {showKuji && board.active && <><div className="overlay-header">
+      {showBoard && board.active && <><div className="overlay-header">
         <div className="overlay-brand-lockup"><img src={mascotFaceUrl} alt="" /><div className="overlay-title-block">
           <span className="overlay-eyebrow">이치방쿠지</span>
           <span className="overlay-header-title">{board.name || '호갱 API'}</span>

@@ -112,11 +112,14 @@ export function registerSocketHandlers(
       const amount = Number(payload.amount);
       const label = String(payload.label ?? '테스트 룰렛 결과').trim().slice(0, 40) || '테스트 룰렛 결과';
       const config = await getRouletteConfig(db);
+      const selectedItem = config.items.find((item) => item.label === label);
+      const totalWeight = config.items.reduce((sum, item) => sum + item.weight, 0) + (selectedItem ? 0 : 1);
       const result = {
         label,
         nickname: String(payload.nickname ?? '테스트 후원자').trim().slice(0, 40) || '테스트 후원자',
         amount: Number.isInteger(amount) && amount > 0 ? Math.min(amount, 100_000_000) : 5000,
         items: Array.from(new Set([...config.items.map((item) => item.label), label])),
+        probability: (selectedItem?.weight ?? 1) / totalWeight * 100,
         test: true,
       };
       let tts: TtsStatus = createRouletteAudio ? 'failed' : 'not_configured';

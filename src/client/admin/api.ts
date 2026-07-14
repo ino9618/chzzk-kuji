@@ -71,7 +71,7 @@ export interface SessionHistoryEntry {
 export interface RouletteItem { label: string; weight: number; }
 export interface RouletteConfig { enabled: boolean; minimumAmount: number; registrationAmount: number; items: RouletteItem[]; }
 export interface RouletteLogEntry { id: number; donorNickname: string; donorChannelId: string; amount: number; resultLabel: string; createdAt: string; }
-export type RouletteProcessResult = { status: 'ignored' | 'disabled' } | { status: 'below_minimum' | 'registration_below_minimum'; minimumAmount: number } | { status: 'registration_rejected'; reason: string } | { status: 'registered'; label: string; nickname: string; amount: number } | { status: 'triggered'; result: { label: string; nickname: string; amount: number; items: string[] } };
+export type RouletteProcessResult = { status: 'ignored' | 'disabled' } | { status: 'below_minimum' | 'registration_below_minimum'; minimumAmount: number } | { status: 'registration_rejected'; reason: string } | { status: 'registered'; label: string; nickname: string; amount: number } | { status: 'triggered'; result: { label: string; nickname: string; amount: number; items: string[]; probability: number } };
 
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
