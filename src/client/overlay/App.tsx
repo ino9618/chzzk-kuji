@@ -62,8 +62,8 @@ interface OverlayAudioSettings {
 
 export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'combined';
 
-const ROULETTE_SPIN_MS = 3500;
-const ROULETTE_RESULT_HOLD_MS = 2000;
+const ROULETTE_SPIN_MS = 2500;
+const ROULETTE_RESULT_HOLD_MS = 2500;
 
 function formatProbability(probability: number): string {
   const digits = probability < 1 ? 2 : 1;
