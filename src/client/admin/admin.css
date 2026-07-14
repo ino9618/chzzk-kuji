@@ -2149,15 +2149,6 @@ textarea,
   .shell-connection.connected { color: #3a9d8d; }
 }
 
-.shell-duo-mascot {
-  width: 100%;
-  height: 102px;
-  margin: 8px 0 10px;
-  object-fit: contain;
-  object-position: center bottom;
-  filter: drop-shadow(0 8px 12px rgba(81, 126, 149, .12));
-}
-
 .feature-page-header {
   position: relative;
   min-height: 112px;
