@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Ownglyph_ParkDaHyun';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .overlay-root,
 .overlay-root * {
   box-sizing: border-box;
@@ -13,7 +21,7 @@
   min-height: 100vh;
   overflow: hidden;
   padding: 32px;
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Ownglyph_ParkDaHyun', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 
 /* Grade color themes: A gold, B silver, C bronze, everything else green. */
@@ -85,7 +93,7 @@
 
 .overlay-header-count {
   flex: 0 0 auto;
-  font-family: monospace;
+  font-family: inherit;
   font-weight: 700;
   font-size: 2.1rem;
   line-height: 1.05;
@@ -139,7 +147,7 @@
 
 .grade-legend-count {
   color: #9a9aa0;
-  font-family: monospace;
+  font-family: inherit;
 }
 
 .grade-legend-done {
