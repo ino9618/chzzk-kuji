@@ -3,8 +3,8 @@ import { io } from 'socket.io-client';
 import { DrawAnnouncement, Snowfall, gradeClass, type ConfettiPiece, type OverlayAnnouncement } from './DrawAnnouncement';
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
 import mascotSuccessUrl from '../assets/mascot-success.png';
-import fanMascotUrl from '../assets/fan-mascot.png';
 import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
+import rouletteMascotWalkUrl from '../assets/roulette-mascot-walk.png';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -95,11 +95,12 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     {revealed && <Snowfall pieces={snowflakes} />}
     <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
+      <div className="roulette-mascot-track" aria-hidden="true"><span><img src={rouletteMascotWalkUrl} alt="" /></span></div>
       <div className="roulette-stars" aria-label={`당첨 확률 ${probability.toFixed(1)}%, 별 ${starCount}개`}>
         {Array.from({ length: starCount }, (_, index) => <span className="roulette-star" key={index}>★</span>)}
       </div>
       <div className="roulette-result-bar">
-        <div className="roulette-brand"><span className="roulette-avatar"><img src={fanMascotUrl} alt="" /></span><span>{revealed ? '당첨' : '추첨 중'}</span></div>
+        <div className="roulette-brand"><span>{revealed ? '당첨' : '추첨 중'}</span></div>
         <div className="roulette-reel-window">
           <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
             {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
