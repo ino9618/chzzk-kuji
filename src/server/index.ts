@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import bcrypt from 'bcryptjs';
 import { createServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
-import { createPgDb, getActiveSession, getTicketsForSession, getSetting, setSetting, listPendingIssues, type Db } from './db';
+import { clearBroadcastHistory, createPgDb, getActiveSession, getTicketsForSession, getSetting, setSetting, listPendingIssues, type Db } from './db';
 import { createAuthRouter } from './routes/auth';
 import { createAdminRouter } from './routes/admin';
 import { createOverlayRouter, buildBoardPayload } from './routes/overlay';
@@ -193,6 +193,13 @@ async function main(): Promise<void> {
     );
   }
   const db = await createPgDb(databaseUrl);
+
+  const historyResetMarker = 'maintenance_history_reset_2026_07_14';
+  if (!(await getSetting(db, historyResetMarker))) {
+    const deleted = await clearBroadcastHistory(db);
+    await setSetting(db, historyResetMarker, new Date().toISOString());
+    console.info('One-time broadcast history reset completed:', deleted);
+  }
 
   let adminPasswordHash = await getSetting(db, 'admin_password_hash');
   if (!adminPasswordHash) {
