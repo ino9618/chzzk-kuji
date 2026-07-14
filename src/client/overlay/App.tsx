@@ -98,7 +98,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
         {Array.from({ length: starCount }, (_, index) => <span className="roulette-star" key={index}>★</span>)}
       </div>
       <div className="roulette-result-bar">
-        <div className="roulette-brand"><img src={mascotFaceUrl} alt="" /><span>{revealed ? '당첨' : '추첨 중'}</span></div>
+        <div className="roulette-brand"><span className="roulette-avatar"><img src={mascotFaceUrl} alt="" /></span><span>{revealed ? '당첨' : '추첨 중'}</span></div>
         <div className="roulette-reel-window">
           <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
             {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}

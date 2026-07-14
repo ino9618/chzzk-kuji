@@ -890,6 +890,83 @@
 .roulette-reel-item.winning { font-size: clamp(2rem, 2.5vw, 2.5rem); }
 .roulette-reel-donor,
 .roulette-reel-donor strong { font-size: clamp(1.3rem, 1.5vw, 1.55rem); }
+
+/* Roulette readability and character badge. */
+.roulette-result-bar {
+  grid-template-columns: 220px minmax(0, 1fr) 180px;
+  gap: 24px;
+  padding: 18px 32px;
+}
+.roulette-brand {
+  justify-content: center;
+  gap: 16px;
+}
+.roulette-avatar {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  flex: 0 0 82px;
+  overflow: hidden;
+  border: 3px solid #9fd4e9;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 5px #e0f2f8, 0 8px 18px rgba(91, 125, 144, .2);
+}
+.roulette-brand .roulette-avatar img {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 138px;
+  height: 138px;
+  max-width: none;
+  object-fit: contain;
+  transform: translateX(-50%);
+}
+.roulette-brand > span:last-child,
+.roulette-status {
+  font-size: clamp(1.9rem, 2.2vw, 2.3rem);
+  line-height: 1;
+}
+.roulette-status {
+  justify-self: stretch;
+  padding: 14px 16px;
+  border: 2px solid #f0cb73;
+  border-radius: 12px;
+  background: #fff7df;
+  text-align: center;
+}
+.roulette-reel-window {
+  border-width: 3px;
+  box-shadow: inset 0 0 0 5px #dff0f6, inset 0 0 24px rgba(116, 158, 178, .2);
+}
+.roulette-reel-window::before,
+.roulette-reel-window::after {
+  position: absolute;
+  right: 20px;
+  left: 20px;
+  z-index: 3;
+  overflow: hidden;
+  color: #8fcbe3;
+  font-size: 1.05rem;
+  line-height: 1;
+  letter-spacing: 18px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  content: '✦  ❄  ✦  ❄  ✦';
+}
+.roulette-reel-window::before { top: 9px; }
+.roulette-reel-window::after { bottom: 9px; color: #d3a94d; transform: rotate(180deg); }
+.roulette-reel-item,
+.roulette-reel-item.winning { font-size: clamp(2.35rem, 3vw, 3rem); }
+.roulette-reel-donor {
+  min-height: 62px;
+  gap: 28px;
+  margin-top: 20px;
+  padding: 0 30px;
+}
+.roulette-reel-donor,
+.roulette-reel-donor strong { font-size: clamp(1.55rem, 1.8vw, 1.85rem); }
 @keyframes snowflakeFall {
   0% { opacity: 0; transform: translate3d(0, -40px, 0) rotate(0); }
   10% { opacity: .96; }
