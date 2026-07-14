@@ -4,7 +4,7 @@ import { DrawAnnouncement, Snowfall, gradeClass, type ConfettiPiece, type Overla
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
 import mascotSuccessUrl from '../assets/mascot-success.png';
 import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
-import rouletteMascotWalkUrl from '../assets/roulette-mascot-walk.png';
+import rouletteMascotGroupUrl from '../assets/roulette-mascot-group.png';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -95,7 +95,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
     {revealed && <Snowfall pieces={snowflakes} />}
     <div className="roulette-reel-shell" style={reelStyle}>
       {result.test && <div className="draw-test-badge roulette-test-badge">미리보기 테스트</div>}
-      <div className="roulette-mascot-track" aria-hidden="true"><span><img src={rouletteMascotWalkUrl} alt="" /></span></div>
+      <div className="roulette-mascot-scene" aria-hidden="true"><img src={rouletteMascotGroupUrl} alt="" /></div>
       <div className="roulette-stars" aria-label={`당첨 확률 ${probability.toFixed(1)}%, 별 ${starCount}개`}>
         {Array.from({ length: starCount }, (_, index) => <span className="roulette-star" key={index}>★</span>)}
       </div>
