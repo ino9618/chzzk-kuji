@@ -1054,11 +1054,11 @@
 
 .roulette-mascot-scene {
   position: absolute;
-  top: -128px;
+  top: -265px;
   left: 50%;
   z-index: 7;
-  width: min(780px, calc(100% - 120px));
-  height: 210px;
+  width: min(920px, calc(100% - 160px));
+  aspect-ratio: 1778 / 885;
   pointer-events: none;
   transform: translateX(-50%);
 }
