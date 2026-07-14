@@ -914,10 +914,10 @@
 }
 .roulette-brand .roulette-avatar img {
   position: absolute;
-  top: -8px;
+  top: -6px;
   left: 50%;
-  width: 138px;
-  height: 138px;
+  width: 120px;
+  height: 123px;
   max-width: none;
   object-fit: contain;
   transform: translateX(-50%);
@@ -929,10 +929,10 @@
 }
 .roulette-status {
   justify-self: stretch;
-  padding: 14px 16px;
-  border: 2px solid #f0cb73;
-  border-radius: 12px;
-  background: #fff7df;
+  padding: 14px 24px 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   text-align: center;
 }
 .roulette-reel-window {

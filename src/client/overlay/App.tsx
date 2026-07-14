@@ -4,6 +4,7 @@ import { DrawAnnouncement, Snowfall, gradeClass, type ConfettiPiece, type Overla
 import { playGoogleTtsAudio, playRouletteSpinSound, playRouletteStopSound, playWinnerFanfare } from './overlayAudio';
 import mascotFaceUrl from '../assets/mascot-face.png';
 import mascotSuccessUrl from '../assets/mascot-success.png';
+import fanMascotUrl from '../assets/fan-mascot.png';
 import './overlay.css';
 
 interface OverlayTicket {
@@ -98,7 +99,7 @@ function RouletteAnnouncement({ result }: { result: RouletteResult }) {
         {Array.from({ length: starCount }, (_, index) => <span className="roulette-star" key={index}>★</span>)}
       </div>
       <div className="roulette-result-bar">
-        <div className="roulette-brand"><span className="roulette-avatar"><img src={mascotFaceUrl} alt="" /></span><span>{revealed ? '당첨' : '추첨 중'}</span></div>
+        <div className="roulette-brand"><span className="roulette-avatar"><img src={fanMascotUrl} alt="" /></span><span>{revealed ? '당첨' : '추첨 중'}</span></div>
         <div className="roulette-reel-window">
           <div className="roulette-reel-track" onAnimationEnd={finishSpin}>
             {sequence.map((item, index) => <div className={`roulette-reel-item ${revealed && index === winningIndex ? 'winning' : ''}`} key={`${item}-${index}`}>{item}</div>)}
