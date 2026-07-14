@@ -9,12 +9,20 @@ import { OperationsLogPage } from '../../src/client/admin/pages/OperationsLogPag
 import { BroadcastPreflightPage } from '../../src/client/admin/pages/BroadcastPreflightPage';
 import { SessionHistoryDetail, SessionHistoryPage } from '../../src/client/admin/pages/SessionHistoryPage';
 import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage';
-import { DrawResultCard } from '../../src/client/overlay/DrawAnnouncement';
+import { DrawResultCard, drawStageScale } from '../../src/client/overlay/DrawAnnouncement';
 import { RoulettePage } from '../../src/client/admin/pages/RoulettePage';
 import { FeaturesPage } from '../../src/client/admin/pages/FeaturesPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
+
+describe('draw overlay stage', () => {
+  it('scales the fixed Full HD stage while preserving its aspect ratio', () => {
+    expect(drawStageScale(1920, 1080)).toBe(1);
+    expect(drawStageScale(1280, 720)).toBeCloseTo(2 / 3);
+    expect(drawStageScale(1000, 1000)).toBeCloseTo(1000 / 1920);
+  });
+});
 
 describe('FeaturesPage', () => {
   it('presents kuji and roulette as equal broadcast features', () => {

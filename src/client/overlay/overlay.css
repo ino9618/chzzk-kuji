@@ -255,20 +255,29 @@
 .draw-announce {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
   pointer-events: none;
   z-index: 10;
 }
 
+.draw-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  transform: translate(-50%, -50%) scale(var(--draw-stage-scale, 1));
+  transform-origin: center;
+}
+
 .draw-card {
-  position: fixed;
+  position: absolute;
   z-index: 3;
   left: 72px;
   bottom: 72px;
-  width: min(600px, calc(100vw - 48px));
-  max-height: calc(100vh - 48px);
+  width: 600px;
+  max-height: 936px;
   overflow: visible;
   text-align: left;
   padding: 0;
@@ -284,7 +293,7 @@
 .draw-card::after { position: absolute; top: 106px; width: 24px; height: 24px; border: 3px solid var(--grade-color); border-radius: 50%; background: #080a0b; content: ''; }
 .draw-card::before { left: -15px; }
 .draw-card::after { right: -15px; }
-.draw-card.has-image { width: min(700px, calc(100vw - 48px)); }
+.draw-card.has-image { width: 700px; }
 
 .draw-ticket-head { min-height: 128px; display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 24px 34px; border-bottom: 2px dashed rgba(255,255,255,.22); border-radius: 5px 5px 0 0; background: var(--grade-color-dim); }
 .draw-ticket-head > div:first-child { min-width: 0; display: grid; gap: 6px; }

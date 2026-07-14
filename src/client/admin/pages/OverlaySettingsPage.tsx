@@ -171,7 +171,7 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
         <SettingRow title="쿠지 번호판 OBS 소스" description="회차 번호판과 판매 상태만 표시합니다. OBS 크기는 1920 × 1080으로 설정하세요.">
           <div className="overlay-actions"><code>{kujiBoardUrl}</code><button onClick={() => copy(kujiBoardUrl, '쿠지 번호판 오버레이')}>복사</button><button className="secondary-button" onClick={() => window.open(kujiBoardUrl, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>
         </SettingRow>
-        <SettingRow title="쿠지 당첨 애니메이션 OBS 소스" description="당첨 카드, 상품 이미지, 효과음과 TTS만 표시합니다. 번호판과 별도 소스로 추가하세요.">
+        <SettingRow title="쿠지 당첨 애니메이션 OBS 소스" description="1920 × 1080 기준 당첨 카드이며, OBS 소스 크기를 바꾸면 전체 애니메이션이 같은 비율로 조절됩니다. 번호판과 별도 소스로 추가하세요.">
           <div className="overlay-actions"><code>{kujiResultUrl}</code><button onClick={() => copy(kujiResultUrl, '쿠지 당첨 애니메이션')}>복사</button><button className="secondary-button" onClick={() => window.open(kujiResultUrl, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>
         </SettingRow>
         <SettingRow title="룰렛 OBS 소스" description="룰렛 회전과 추첨 결과만 표시합니다. OBS 크기는 1920 × 1080으로 설정하세요.">

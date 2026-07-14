@@ -1,4 +1,12 @@
+import { useEffect, useState, type CSSProperties } from 'react';
 import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
+
+const DRAW_STAGE_WIDTH = 1920;
+const DRAW_STAGE_HEIGHT = 1080;
+
+export function drawStageScale(width: number, height: number): number {
+  return Math.min(width / DRAW_STAGE_WIDTH, height / DRAW_STAGE_HEIGHT);
+}
 
 export interface OverlayAnnouncement {
   key: number;
@@ -58,8 +66,20 @@ export function DrawResultCard({ announce }: { announce: OverlayAnnouncement }) 
 }
 
 export function DrawAnnouncement({ announce, confetti }: { announce: OverlayAnnouncement; confetti: ConfettiPiece[] }) {
+  const [scale, setScale] = useState(() => typeof window === 'undefined' ? 1 : drawStageScale(window.innerWidth, window.innerHeight));
+
+  useEffect(() => {
+    const resize = () => setScale(drawStageScale(window.innerWidth, window.innerHeight));
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  const stageStyle = { '--draw-stage-scale': scale } as CSSProperties;
+
   return <div className="draw-announce" key={announce.key}>
-    <Snowfall pieces={confetti} />
-    <DrawResultCard announce={announce} />
+    <div className="draw-stage" style={stageStyle}>
+      <Snowfall pieces={confetti} />
+      <DrawResultCard announce={announce} />
+    </div>
   </div>;
 }
