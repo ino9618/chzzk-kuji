@@ -893,7 +893,7 @@
 
 /* Roulette readability and character badge. */
 .roulette-result-bar {
-  grid-template-columns: 220px minmax(0, 1fr) 180px;
+  grid-template-columns: 232px minmax(0, 1fr) 180px;
   gap: 24px;
   padding: 18px 32px;
 }
@@ -903,9 +903,9 @@
 }
 .roulette-avatar {
   position: relative;
-  width: 82px;
-  height: 82px;
-  flex: 0 0 82px;
+  width: 94px;
+  height: 94px;
+  flex: 0 0 94px;
   overflow: hidden;
   border: 3px solid #9fd4e9;
   border-radius: 50%;
@@ -914,10 +914,10 @@
 }
 .roulette-brand .roulette-avatar img {
   position: absolute;
-  top: -6px;
+  top: -7px;
   left: 50%;
-  width: 120px;
-  height: 123px;
+  width: 136px;
+  height: 139px;
   max-width: none;
   object-fit: contain;
   transform: translateX(-50%);
