@@ -1,6 +1,6 @@
 @font-face {
-  font-family: 'Ownglyph_ParkDaHyun';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');
+  font-family: 'Moneygraphy-Rounded';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-2@1.0/Moneygraphy-Rounded.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -21,7 +21,7 @@
   min-height: 100vh;
   overflow: hidden;
   padding: 32px;
-  font-family: 'Ownglyph_ParkDaHyun', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: 'Moneygraphy-Rounded', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 
 /* Grade color themes: A gold, B silver, C bronze, everything else green. */
@@ -1134,7 +1134,7 @@
   height: 100vh;
   overflow: hidden;
   color: #3f5664;
-  font-family: 'Ownglyph_ParkDaHyun', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: 'Moneygraphy-Rounded', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 .roulette-list-card {
   position: absolute;
