@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS draw_ticket_sessions (
   name TEXT NOT NULL,
   command TEXT NOT NULL,
   ticket_price INTEGER NOT NULL,
+  selection_mode TEXT NOT NULL DEFAULT 'probability',
   status TEXT NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   closed_at TIMESTAMPTZ
@@ -152,6 +153,7 @@ CREATE TABLE IF NOT EXISTS draw_ticket_results (
 );
 
 ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prize_image_url TEXT;
+ALTER TABLE draw_ticket_sessions ADD COLUMN IF NOT EXISTS selection_mode TEXT NOT NULL DEFAULT 'probability';
 ALTER TABLE draw_ticket_items ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
 ALTER TABLE draw_ticket_items ADD COLUMN IF NOT EXISTS image_url TEXT;
 `;
@@ -526,6 +528,7 @@ export interface DrawTicketSession {
   name: string;
   command: string;
   ticketPrice: number;
+  selectionMode: 'quantity' | 'probability';
   status: 'active' | 'closed';
   createdAt: string;
   closedAt: string | null;
@@ -579,6 +582,7 @@ async function hydrateDrawTicketSession(db: Db, row: any): Promise<DrawTicketSes
     name: row.name,
     command: row.command,
     ticketPrice: row.ticket_price,
+    selectionMode: row.selection_mode === 'quantity' ? 'quantity' : 'probability',
     status: row.status,
     createdAt: toIso(row.created_at),
     closedAt: row.closed_at == null ? null : toIso(row.closed_at),
@@ -595,13 +599,14 @@ export async function createDrawTicketSession(db: Db, input: {
   name: string;
   command: string;
   ticketPrice: number;
+  selectionMode?: 'quantity' | 'probability';
   items: Array<{ label: string; description?: string; imageUrl?: string | null; weight: number; quantity: number }>;
 }): Promise<DrawTicketSession> {
   const sessionId = await db.transaction(async (tx) => {
     await tx.query(`UPDATE draw_ticket_sessions SET status = 'closed', closed_at = COALESCE(closed_at, now()) WHERE status = 'active'`);
     const { rows } = await tx.query(
-      `INSERT INTO draw_ticket_sessions (name, command, ticket_price) VALUES ($1, $2, $3) RETURNING id`,
-      [input.name, input.command, input.ticketPrice],
+      `INSERT INTO draw_ticket_sessions (name, command, ticket_price, selection_mode) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [input.name, input.command, input.ticketPrice, input.selectionMode ?? 'probability'],
     );
     const id = rows[0].id as number;
     for (const [position, item] of input.items.entries()) {

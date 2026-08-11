@@ -118,7 +118,8 @@ describe('DrawTicketPage', () => {
     const html = renderToStaticMarkup(<DrawTicketPage />);
     expect(html).toContain('뽑기권');
     expect(html).toContain('!뽑기');
-    expect(html).toContain('가중치');
+    expect(html).toContain('수량 비례');
+    expect(html).toContain('직접 확률');
     expect(html).toContain('예상 확률');
     expect(html).toContain('항목과 설명');
     expect(html).toContain('사진');

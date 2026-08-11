@@ -2241,6 +2241,21 @@ textarea,
   background: var(--bg-deep);
   color: var(--text);
 }
+.draw-ticket-mode-picker {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 16px 0;
+  padding: 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--bg-deep);
+}
+.draw-ticket-mode-picker > span { color: var(--text); font-size: .78rem; font-weight: 800; }
+.draw-ticket-mode-picker .segmented-control { padding: 4px; }
+.draw-ticket-mode-picker .segmented-control button { min-height: 36px; padding: 0 16px; }
+.draw-ticket-mode-picker p { margin: 0; color: var(--text-dim); font-size: .74rem; line-height: 1.5; text-align: right; }
 .draw-ticket-item-table {
   margin: 16px 16px 0;
   overflow: hidden;
@@ -2271,6 +2286,10 @@ textarea,
 .draw-ticket-item-table.editable .draw-ticket-item-head,
 .draw-ticket-item-table.editable .draw-ticket-item-row {
   grid-template-columns: 72px minmax(280px, 1fr) 150px 84px 150px 40px;
+}
+.draw-ticket-item-table.editable.quantity-mode .draw-ticket-item-head,
+.draw-ticket-item-table.editable.quantity-mode .draw-ticket-item-row {
+  grid-template-columns: 72px minmax(280px, 1fr) 100px 150px 40px;
 }
 .draw-ticket-item-row > input {
   min-width: 0;

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getActiveDrawTicketSession, getActiveSession, getTicketsForSession, getSetting, type Db, type Ticket } from '../db';
+import { drawTicketItemWeight } from '../drawTicketProcessor';
 import { maskNickname } from '../maskNickname';
 import { getRouletteConfig } from '../rouletteProcessor';
 import { getOverlayAudioSettings } from '../overlayAudioSettings';
@@ -92,19 +93,20 @@ export async function buildDrawTicketListPayload(db: Db) {
   if (!session) return { active: false as const };
   const availableWeight = session.items
     .filter((item) => item.remainingQuantity > 0)
-    .reduce((sum, item) => sum + item.weight, 0);
+    .reduce((sum, item) => sum + drawTicketItemWeight(item, session.selectionMode), 0);
   return {
     active: true as const,
     name: session.name,
     command: session.command,
     ticketPrice: session.ticketPrice,
+    selectionMode: session.selectionMode,
     items: session.items.map((item) => ({
       label: item.label,
       description: item.description,
       imageUrl: item.imageUrl,
       totalQuantity: item.totalQuantity,
       remainingQuantity: item.remainingQuantity,
-      probability: item.remainingQuantity > 0 && availableWeight > 0 ? item.weight / availableWeight * 100 : 0,
+      probability: item.remainingQuantity > 0 && availableWeight > 0 ? drawTicketItemWeight(item, session.selectionMode) / availableWeight * 100 : 0,
     })),
   };
 }

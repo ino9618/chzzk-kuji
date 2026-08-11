@@ -152,7 +152,9 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
   });
 
   router.post('/draw-ticket', async (req, res) => {
-    const { name, command, ticketPrice, items } = req.body as Record<string, unknown>;
+    const { name, command, ticketPrice, selectionMode, items } = req.body as Record<string, unknown>;
+    const selectionModeProvided = selectionMode != null;
+    const normalizedMode = selectionMode === 'quantity' ? 'quantity' : selectionMode === 'probability' || selectionMode == null ? 'probability' : null;
     const validItems = Array.isArray(items) && items.length >= 1 && items.length <= 50 && items.every((item) => {
       const value = item as Record<string, unknown>;
       return typeof value.label === 'string' && value.label.trim().length >= 1 && value.label.trim().length <= 60
@@ -160,12 +162,14 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
         && (value.imageUrl == null || value.imageUrl === '' || (typeof value.imageUrl === 'string'
           && value.imageUrl.length <= 2_000_000
           && /^data:image\/(?:webp|png|jpeg);base64,[a-zA-Z0-9+/=]+$/.test(value.imageUrl)))
-        && Number.isInteger(value.weight) && Number(value.weight) >= 1 && Number(value.weight) <= 1000
+        && (normalizedMode === 'quantity' || (Number.isInteger(value.weight) && Number(value.weight) >= 1 && Number(value.weight) <= 100))
         && Number.isInteger(value.quantity) && Number(value.quantity) >= 1 && Number(value.quantity) <= 1000;
     });
+    const probabilityTotal = Array.isArray(items) ? items.reduce((sum, item) => sum + Number((item as Record<string, unknown>).weight ?? 0), 0) : 0;
     if (typeof name !== 'string' || !name.trim() || name.trim().length > 60
       || typeof command !== 'string' || !/^![\p{L}\p{N}_-]{1,20}$/u.test(command.trim())
-      || !Number.isInteger(ticketPrice) || Number(ticketPrice) < 1 || !validItems) {
+      || !Number.isInteger(ticketPrice) || Number(ticketPrice) < 1 || !normalizedMode || !validItems
+      || (selectionModeProvided && normalizedMode === 'probability' && probabilityTotal !== 100)) {
       res.status(400).json({ error: 'invalid_draw_ticket_config' });
       return;
     }
@@ -173,11 +177,12 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
       name: name.trim(),
       command: command.trim(),
       ticketPrice: Number(ticketPrice),
+      selectionMode: normalizedMode,
       items: (items as Array<Record<string, unknown>>).map((item) => ({
         label: String(item.label).trim(),
         description: typeof item.description === 'string' ? item.description.trim() : '',
         imageUrl: typeof item.imageUrl === 'string' && item.imageUrl ? item.imageUrl : null,
-        weight: Number(item.weight),
+        weight: normalizedMode === 'quantity' ? Number(item.quantity) : Number(item.weight),
         quantity: Number(item.quantity),
       })),
     });

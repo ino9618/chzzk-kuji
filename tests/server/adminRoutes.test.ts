@@ -183,6 +183,29 @@ describe('draw ticket settings', () => {
     expect((await agent.get('/api/admin/draw-ticket')).body.active).toBe(false);
   });
 
+  it('supports quantity-based odds and validates direct probabilities', async () => {
+    const quantityMode = await agent.post('/api/admin/draw-ticket').send({
+      name: '수량 뽑기', command: '!뽑기', ticketPrice: 1000, selectionMode: 'quantity',
+      items: [{ label: '희귀', quantity: 1 }, { label: '일반', quantity: 3 }],
+    });
+    expect(quantityMode.status).toBe(200);
+    expect(quantityMode.body).toMatchObject({ selectionMode: 'quantity' });
+    expect(quantityMode.body.items.map((item: any) => item.weight)).toEqual([1, 3]);
+
+    const probabilityMode = await agent.post('/api/admin/draw-ticket').send({
+      name: '확률 뽑기', command: '!뽑기', ticketPrice: 1000, selectionMode: 'probability',
+      items: [{ label: '희귀', weight: 10, quantity: 1 }, { label: '일반', weight: 90, quantity: 3 }],
+    });
+    expect(probabilityMode.status).toBe(200);
+    expect(probabilityMode.body).toMatchObject({ selectionMode: 'probability' });
+
+    const invalidTotal = await agent.post('/api/admin/draw-ticket').send({
+      name: '잘못된 확률', command: '!뽑기', ticketPrice: 1000, selectionMode: 'probability',
+      items: [{ label: '희귀', weight: 10, quantity: 1 }, { label: '일반', weight: 80, quantity: 3 }],
+    });
+    expect(invalidTotal.status).toBe(400);
+  });
+
   it('rejects unsupported draw ticket images', async () => {
     const invalid = await agent.post('/api/admin/draw-ticket').send({
       name: '잘못된 이미지', command: '!뽑기', ticketPrice: 1000,

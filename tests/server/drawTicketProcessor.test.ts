@@ -23,6 +23,12 @@ describe('draw ticket processor', () => {
     expect(await processDrawTicketDonation(db, { channelId: 'c1', nickname: '시청자', amount: 3000, message: '안녕하세요' })).toEqual({ status: 'ignored' });
   });
 
+  it('can calculate odds from the remaining quantity instead of custom weights', async () => {
+    const session = await createDraw();
+    expect(pickDrawTicketItem(session.items, () => 0.32, 'quantity').item.label).toBe('A 상품');
+    expect(pickDrawTicketItem(session.items, () => 0.34, 'quantity')).toMatchObject({ item: { label: 'B 상품' }, probability: 2 / 3 * 100 });
+  });
+
   it('requires the configured exact amount and command', async () => {
     await createDraw();
     expect(await processDrawTicketDonation(db, { channelId: 'c1', nickname: '시청자', amount: 2999, message: '!뽑기' })).toEqual({ status: 'amount_mismatch', ticketPrice: 3000 });

@@ -2,6 +2,7 @@ import {
   getActiveDrawTicketSession,
   type Db,
   type DrawTicketItem,
+  type DrawTicketSession,
 } from './db';
 import type { DonationEvent } from './donationProcessor';
 
@@ -27,17 +28,22 @@ function containsCommand(message: string, command: string): boolean {
   return message.trim().split(/\s+/u).includes(command);
 }
 
-export function pickDrawTicketItem(items: DrawTicketItem[], random = Math.random): { item: DrawTicketItem; probability: number } {
-  const available = items.filter((item) => item.remainingQuantity > 0 && item.weight > 0);
+export function drawTicketItemWeight(item: DrawTicketItem, selectionMode: DrawTicketSession['selectionMode']): number {
+  return selectionMode === 'quantity' ? item.remainingQuantity : item.weight;
+}
+
+export function pickDrawTicketItem(items: DrawTicketItem[], random = Math.random, selectionMode: DrawTicketSession['selectionMode'] = 'probability'): { item: DrawTicketItem; probability: number } {
+  const available = items.filter((item) => item.remainingQuantity > 0 && drawTicketItemWeight(item, selectionMode) > 0);
   if (available.length === 0) throw new Error('draw_ticket_sold_out');
-  const totalWeight = available.reduce((sum, item) => sum + item.weight, 0);
+  const totalWeight = available.reduce((sum, item) => sum + drawTicketItemWeight(item, selectionMode), 0);
   let cursor = random() * totalWeight;
   for (const item of available) {
-    cursor -= item.weight;
-    if (cursor < 0) return { item, probability: item.weight / totalWeight * 100 };
+    const weight = drawTicketItemWeight(item, selectionMode);
+    cursor -= weight;
+    if (cursor < 0) return { item, probability: weight / totalWeight * 100 };
   }
   const item = available[available.length - 1];
-  return { item, probability: item.weight / totalWeight * 100 };
+  return { item, probability: drawTicketItemWeight(item, selectionMode) / totalWeight * 100 };
 }
 
 export async function previewDrawTicket(db: Db, event: DonationEvent, random = Math.random): Promise<DrawTicketProcessResult> {
@@ -47,7 +53,7 @@ export async function previewDrawTicket(db: Db, event: DonationEvent, random = M
   if (event.amount !== session.ticketPrice) return { status: 'amount_mismatch', ticketPrice: session.ticketPrice };
   const available = session.items.filter((item) => item.remainingQuantity > 0);
   if (available.length === 0) return { status: 'sold_out' };
-  const { item, probability } = pickDrawTicketItem(available, random);
+  const { item, probability } = pickDrawTicketItem(available, random, session.selectionMode);
   return {
     status: 'triggered',
     result: {
@@ -88,7 +94,8 @@ export async function processDrawTicketDonation(db: Db, event: DonationEvent, ra
       position: row.position,
     }));
     if (items.length === 0) return { status: 'sold_out' };
-    const { item, probability } = pickDrawTicketItem(items, random);
+    const selectionMode = sessions[0].selection_mode === 'quantity' ? 'quantity' : 'probability';
+    const { item, probability } = pickDrawTicketItem(items, random, selectionMode);
     const nickname = event.nickname?.trim() || '익명 후원자';
     const channelId = event.channelId?.trim() || 'anonymous';
     await tx.query(`UPDATE draw_ticket_items SET remaining_quantity = remaining_quantity - 1 WHERE id = $1`, [item.id]);
