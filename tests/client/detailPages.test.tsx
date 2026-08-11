@@ -80,11 +80,13 @@ describe('detail settings pages', () => {
     expect(html).toContain('룰렛 OBS 소스');
     expect(html).toContain('룰렛 목록 OBS 소스');
     expect(html).toContain('뽑기권 결과 OBS 소스');
+    expect(html).toContain('뽑기권 목록 OBS 소스');
     expect(html).toContain('/overlay-kuji-board.html');
     expect(html).toContain('/overlay-kuji-result.html');
     expect(html).toContain('/overlay-roulette.html');
     expect(html).toContain('/overlay-roulette-list.html');
     expect(html).toContain('/overlay-draw-ticket.html');
+    expect(html).toContain('/overlay-draw-ticket-list.html');
     expect(html).toContain('한정판 피규어');
     expect(html).toContain('· 이미지');
     expect(html).toContain('직접 입력 · 예시 이미지');
@@ -118,6 +120,8 @@ describe('DrawTicketPage', () => {
     expect(html).toContain('!뽑기');
     expect(html).toContain('가중치');
     expect(html).toContain('예상 확률');
+    expect(html).toContain('항목과 설명');
+    expect(html).toContain('사진');
     expect(html).toContain('수량');
     expect(html).toContain('뽑기 시작');
   });

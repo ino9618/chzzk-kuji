@@ -150,12 +150,13 @@ describe('draw ticket settings', () => {
   it('creates an independent consumable draw and previews without consuming stock', async () => {
     const config = {
       name: '오늘의 뽑기', command: '!뽑기', ticketPrice: 3000,
-      items: [{ label: '대상', weight: 1, quantity: 1 }, { label: '참가상', weight: 4, quantity: 3 }],
+      items: [{ label: '대상', description: '한정 상품', imageUrl: 'data:image/webp;base64,UklGRg==', weight: 1, quantity: 1 }, { label: '참가상', description: '기본 상품', imageUrl: null, weight: 4, quantity: 3 }],
     };
     const create = await agent.post('/api/admin/draw-ticket').send(config);
     expect(create.status).toBe(200);
     expect(create.body).toMatchObject({ name: '오늘의 뽑기', command: '!뽑기', ticketPrice: 3000, status: 'active' });
     expect(create.body.items).toHaveLength(2);
+    expect(create.body.items[0]).toMatchObject({ description: '한정 상품', imageUrl: 'data:image/webp;base64,UklGRg==' });
 
     const test = await agent.post('/api/admin/draw-ticket/test');
     expect(test.status).toBe(200);
@@ -180,6 +181,14 @@ describe('draw ticket settings', () => {
     });
     expect((await agent.post('/api/admin/draw-ticket/close')).body).toEqual({ ok: true });
     expect((await agent.get('/api/admin/draw-ticket')).body.active).toBe(false);
+  });
+
+  it('rejects unsupported draw ticket images', async () => {
+    const invalid = await agent.post('/api/admin/draw-ticket').send({
+      name: '잘못된 이미지', command: '!뽑기', ticketPrice: 1000,
+      items: [{ label: '상품', description: '', imageUrl: 'https://example.com/image.png', weight: 1, quantity: 1 }],
+    });
+    expect(invalid.status).toBe(400);
   });
 });
 

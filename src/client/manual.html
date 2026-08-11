@@ -6,16 +6,15 @@
     <style>
       @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css');
 
-      /* Matches the admin dashboard's CHZZK-style dark theme. */
       :root {
-        --bg: #141517;
-        --panel: #1f2023;
-        --panel-border: #2e3033;
-        --text: #eaecee;
-        --text-dim: #9da1a8;
-        --accent: #00ffa3;
-        --danger: #ff5454;
-        --danger-bg: rgba(255, 84, 84, 0.09);
+        --bg: #edf4fa;
+        --panel: #ffffff;
+        --panel-border: #c9d9e7;
+        --text: #17283b;
+        --text-dim: #60758a;
+        --accent: #287fbd;
+        --danger: #cf5260;
+        --danger-bg: #fbecef;
       }
 
       body {
@@ -26,7 +25,7 @@
       }
 
       .manual-shell {
-        max-width: 720px;
+        max-width: 880px;
         margin: 0 auto;
         padding: 32px;
       }
@@ -62,7 +61,7 @@
         color: var(--text);
       }
       .manual-shell code {
-        background: #0e0f10;
+        background: #eaf3f9;
         border: 1px solid var(--panel-border);
         border-radius: 4px;
         padding: 1px 6px;
@@ -76,7 +75,7 @@
       .manual-shell .callout {
         background: var(--panel);
         border: 1px solid var(--panel-border);
-        border-radius: 10px;
+        border-radius: 8px;
         padding: 14px 18px;
         margin: 14px 0;
       }
@@ -93,92 +92,66 @@
     <div class="manual-shell">
       <a class="back-link" href="/admin.html">← 관리자 화면으로 돌아가기</a>
       <h1>호갱 API 사용법</h1>
-      <p>치지직 후원과 연동해 번호별 상품을 자동으로 배정하는 프로그램입니다. 최초 설정이 끝났다면, 방송할 때마다 아래 순서대로 진행하세요.</p>
+      <p>치지직 후원을 이치방쿠지, 룰렛, 뽑기권과 연결해 방송 화면에 표시합니다. 아래 순서대로 설정하면 됩니다.</p>
 
-      <h2>1. 프로그램 켜기</h2>
-      <p>
-        <code>Web/chzzk-kuji</code> 폴더에서 <code>npm run dev</code> 실행. 로컬 PC에서 쓰는 경우 이 창을
-        <strong>방송 내내 켜두어야</strong> 후원을 계속 받을 수 있습니다. 껐다 켤 때마다 치지직 계정을 다시
-        인가할 필요는 없습니다 — 연결 정보는 이미 저장되어 있습니다.
-      </p>
-
-      <h2>2. 회차 만들기</h2>
+      <h2>1. 로그인과 방송 연결</h2>
       <ol>
-        <li>
-          관리자 화면(<code>/admin.html</code>) 접속 → <strong>네이버 계정으로 로그인</strong> 버튼 클릭.
-          모든 네이버·치지직 계정이 별도 초대 없이 관리자 화면에 로그인할 수 있습니다. 가장 처음 로그인한
-          계정은 후원 수신 채널의 소유자로 등록되고, 소유자 로그인과 동시에 치지직 후원 수신 연결도 자동으로
-          시작됩니다.
-        </li>
-        <li><strong>간편 운영</strong>에서 방송 연결이 <code>연결됨</code>인지 확인합니다.</li>
-        <li>
-          <strong>회차 설정</strong>으로 이동해 기본 정보와 상품 구성을 입력합니다:
-          <ul>
-            <li><strong>회차 이름</strong>: 자유롭게 (예: "7월 6일 이치방쿠지")</li>
-            <li><strong>장당 가격</strong>: 티켓 1장당 치즈 금액 (예: 1000)</li>
-            <li><strong>최대 번호</strong>: 몇 번까지 팔 것인지 (예: 10이면 1~10번)</li>
-            <li><strong>번호,상품명,등급(선택)</strong>: 한 줄에 하나씩, 쉼표로 구분 (예: <code>1,A상</code>)</li>
-          </ul>
-        </li>
-        <li>번호 확인에서 "회차 시작" 클릭 → 판매 번호판이 뜨면 준비 완료</li>
+        <li>관리자 화면에서 <strong>네이버 계정으로 로그인</strong>을 누릅니다.</li>
+        <li>후원을 받는 치지직 스트리밍 채널과 연결된 네이버 계정으로 로그인합니다.</li>
+        <li><strong>치지직 연결</strong>에서 채널명과 연결 상태가 정상인지 확인합니다.</li>
       </ol>
+      <div class="callout"><strong>스트림키는 필요하지 않습니다.</strong> 관리자 페이지도 방송 내내 열어둘 필요가 없습니다. 서버가 연결된 치지직 채널의 후원 이벤트를 계속 수신합니다.</div>
 
-      <div class="callout">
-        모바일에서는 하단의 <strong>더보기</strong>에서 회차 설정과 오버레이를 열 수 있습니다. 방송 중에는
-        <strong>운영</strong> 화면만 확인하면 연결, 판매 현황, 처리 필요 항목, 회차 종료를 한 번에 관리할 수 있습니다.
-      </div>
+      <h2>2. 방송 전 확인</h2>
+      <p><strong>방송 전 점검</strong>에서 치지직 연결, 진행 중인 회차와 OBS 준비 상태를 확인합니다. 실제 내역을 변경하지 않는 오버레이 테스트도 이 화면과 <strong>오버레이</strong> 메뉴에서 실행할 수 있습니다.</p>
 
-      <h2>3. 후원 받기</h2>
-      <p>
-        시청자가 "장당 가격"만큼 치즈를 후원하면서 메시지에 원하는 번호(예: "3번")를 적으면 자동으로 처리됩니다.
-      </p>
-      <div class="callout">
-        번호가 아직 안 팔렸으면 → 즉시 그 시청자에게 배정되어 번호판/오버레이에 반영됩니다.<br />
-        이미 팔린 번호거나, 금액이 안 맞거나, 번호를 안 적었으면 → 배정되지 않고 "처리 필요 큐"에 기록만
-        됩니다. <strong>환불은 자동으로 되지 않으니</strong> 방송에서 직접 안내해주세요.
-      </div>
+      <h2>3. 이치방쿠지</h2>
+      <ol>
+        <li><strong>회차 설정</strong>에서 회차 이름과 장당 가격을 입력합니다.</li>
+        <li>상품별 등급, 상품명, 사진과 수량을 등록한 뒤 회차를 시작합니다.</li>
+        <li>시청자가 설정 금액을 후원하면서 원하는 번호를 메시지에 입력합니다. 예: <code>3번</code></li>
+        <li>정상 배정되면 번호판과 당첨 애니메이션에 즉시 반영됩니다.</li>
+      </ol>
+      <p>이미 판매된 번호, 범위를 벗어난 번호, 금액 불일치는 <strong>처리 필요</strong> 항목으로 남습니다. 자동 환불은 지원하지 않습니다.</p>
 
-      <h2>4. OBS에 오버레이 넣기 (한 번만 설정)</h2>
-      <p>
-        OBS에서 소스 추가 → <strong>브라우저</strong> 선택 → 쿠지 번호판은 <code>http://localhost:5173/overlay-kuji-board.html</code>, 당첨 애니메이션은 <code>http://localhost:5173/overlay-kuji-result.html</code>, 룰렛 추첨은 <code>http://localhost:5173/overlay-roulette.html</code>, 룰렛 목록은 <code>http://localhost:5173/overlay-roulette-list.html</code>
-        입력. 배경이 투명한 번호판이 화면에 뜹니다. 판매된 번호는 초록색으로 강조되고, 방금 팔린 번호는 잠깐
-        반짝이는 효과가 나타납니다.
-      </p>
+      <h2>4. 후원 룰렛</h2>
+      <ol>
+        <li><strong>후원 룰렛</strong>에서 최소 후원 금액과 항목별 가중치를 설정합니다.</li>
+        <li>시청자가 설정 금액 이상을 후원하면서 <code>!룰렛</code>을 입력하면 룰렛이 실행됩니다.</li>
+        <li>후원 등록 기능을 켠 경우 설정된 등록 금액과 <code>!등록 항목명</code>으로 새 항목을 추가할 수 있습니다.</li>
+      </ol>
+      <p>가중치 비율은 룰렛 목록에 당첨 확률로 표시됩니다.</p>
 
-      <h2>5. 회차 마무리</h2>
-      <p>
-        번호가 다 팔렸거나 방송을 마무리할 때 관리자 화면에서 <strong>"회차 종료"</strong> 클릭. 종료된 회차
-        기록은 삭제되지 않고 남아있고, 다음 방송에는 "회차 시작"으로 새로 만들면 됩니다.
-      </p>
+      <h2>5. 뽑기권</h2>
+      <ol>
+        <li><strong>뽑기권</strong>에서 이름, 후원 명령어, 정확한 후원 금액을 설정합니다.</li>
+        <li>각 항목에 사진, 항목명, 설명, 가중치와 수량을 등록합니다.</li>
+        <li>시청자가 설정한 금액을 정확히 후원하면서 설정 명령어를 입력합니다. 예: <code>!뽑기</code></li>
+        <li>남아 있는 항목 중 하나가 추첨되고 해당 항목 수량이 1개 차감됩니다.</li>
+      </ol>
+      <div class="callout">수량이 0이 된 항목은 같은 뽑기에서 다시 나오지 않습니다. 모든 수량이 소진되면 뽑기권은 자동 종료됩니다.</div>
 
-      <h2>6. 처리 필요 큐 확인</h2>
-      <p>
-        "처리 필요 큐"에 쌓인 항목(중복 후원, 금액 불일치 등)은 방송 중/후에 확인해서 시청자에게 안내하거나
-        필요하면 직접 처리한 뒤, "처리완료" 버튼으로 정리하세요.
-      </p>
+      <h2>6. OBS 오버레이 설정</h2>
+      <ol>
+        <li>관리자 <strong>오버레이</strong> 메뉴에서 필요한 OBS 주소의 <strong>복사</strong> 버튼을 누릅니다.</li>
+        <li>OBS에서 <strong>브라우저 소스</strong>를 추가하고 복사한 주소를 붙여 넣습니다.</li>
+        <li>소스 크기는 <strong>1920 × 1080</strong>으로 설정합니다.</li>
+      </ol>
+      <p>쿠지 번호판·당첨 애니메이션, 룰렛·룰렛 목록, 뽑기권 결과·뽑기권 목록은 각각 별도 주소입니다. 상품이나 항목을 변경해도 OBS 주소를 다시 입력할 필요 없이 자동 반영됩니다.</p>
 
-      <h2>문제 생겼을 때</h2>
-      <h3>연결 상태가 "reconnecting"</h3>
-      <p>일시적 문제입니다. 잠시 후 자동으로 <code>connected</code>로 돌아옵니다.</p>
+      <h2>7. 효과음과 TTS</h2>
+      <p><strong>오버레이</strong> 메뉴에서 효과음과 Google Cloud TTS를 각각 켜거나 끌 수 있습니다. 테스트 버튼은 실제 판매, 추첨 수량과 결과 기록을 변경하지 않습니다.</p>
 
-      <h3>빨간 배너("재인증 필요")가 뜰 때</h3>
-      <div class="callout danger">
-        배너의 <strong>"네이버로 다시 로그인"</strong> 링크를 클릭해 인가를 완료하면 후원 수신 연결이
-        <strong>즉시 자동으로 복구</strong>됩니다. 서버를 재시작할 필요는 없습니다.
-      </div>
+      <h2>8. 기록과 종료</h2>
+      <p>이치방쿠지는 회차별 당첨 내역을, 룰렛과 뽑기권은 최근 결과를 각각 확인할 수 있습니다. 방송이 끝나면 진행 중인 회차나 뽑기권을 종료하세요. 처리 필요 항목은 확인 후 개별 또는 일괄 처리할 수 있습니다.</p>
 
-      <h2>로그인과 관리자 계정</h2>
-      <p>
-        접속은 <strong>네이버 계정 로그인만</strong> 지원합니다. 처음 로그인한 치지직 계정이 <strong>소유자</strong>로
-        등록됩니다. 그 밖의 모든 정상 네이버·치지직 계정도 별도 초대 없이 관리 화면을 사용할 수 있습니다.
-        소유자가 아닌 계정의 로그인은 후원 수신 연결에는 영향을 주지 않습니다(소유자 계정만 치지직 소켓을 관리).
-        로그아웃은 왼쪽 메뉴 하단의 <strong>로그아웃</strong>
-        버튼을 쓰세요.
-      </p>
-      <p>
-        치지직 OAuth 장애 등으로 로그인이 아예 불가능해질 때를 대비한 비상용 접근 방법은 프로젝트 README에
-        정리되어 있습니다.
-      </p>
+      <h2>문제가 생겼을 때</h2>
+      <h3>연결 상태가 재연결 중일 때</h3>
+      <p>일시적인 네트워크 문제일 수 있습니다. 잠시 기다린 뒤 <strong>치지직 연결</strong>에서 상태를 새로 확인합니다.</p>
+      <h3>재인증 필요가 표시될 때</h3>
+      <div class="callout danger"><strong>후원을 받는 스트리머 계정</strong>으로 네이버 로그인을 다시 완료하면 연결이 복구됩니다.</div>
+      <h3>OBS 화면이 갱신되지 않을 때</h3>
+      <p>OBS 브라우저 소스를 한 번 새로고침합니다. 평소 설정과 목록 변경은 최대 10초 이내 자동 반영됩니다.</p>
     </div>
   </body>
 </html>

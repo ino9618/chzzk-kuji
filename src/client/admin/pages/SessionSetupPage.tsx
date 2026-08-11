@@ -3,6 +3,7 @@ import { buildTickets, validateSessionDraft, type PrizeGroup, type TicketDraft }
 import { InlineFeedback } from '../components/InlineFeedback';
 import { ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
 import { NumberStepper } from '../components/NumberStepper';
+import { resizeUploadImage } from '../imageUtils';
 
 interface SessionSetupPageProps {
   onCreate: (payload: { name: string; ticketPrice: number; numberRangeMin: number; numberRangeMax: number; tickets: TicketDraft[] }) => Promise<void>;
@@ -18,28 +19,6 @@ function shuffle<T>(items: T[]): T[] {
     [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
   }
   return result;
-}
-
-async function resizePrizeImage(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 선택할 수 있습니다.');
-  if (file.size > 5 * 1024 * 1024) throw new Error('이미지는 5MB 이하만 등록할 수 있습니다.');
-  const source = URL.createObjectURL(file);
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const element = new Image();
-      element.onload = () => resolve(element);
-      element.onerror = () => reject(new Error('이미지를 읽지 못했습니다.'));
-      element.src = source;
-    });
-    const scale = Math.min(1, 640 / Math.max(image.naturalWidth, image.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-    canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/webp', 0.82);
-  } finally {
-    URL.revokeObjectURL(source);
-  }
 }
 
 export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 1000, template = null }: SessionSetupPageProps) {
@@ -75,7 +54,7 @@ export function SessionSetupPage({ onCreate, onCreated, defaultTicketPrice = 100
     if (!file) return;
     setImageError('');
     try {
-      updateGroup(index, 'prizeImageUrl', await resizePrizeImage(file));
+      updateGroup(index, 'prizeImageUrl', await resizeUploadImage(file));
     } catch (error) {
       setImageError(error instanceof Error ? error.message : '이미지를 처리하지 못했습니다.');
     }

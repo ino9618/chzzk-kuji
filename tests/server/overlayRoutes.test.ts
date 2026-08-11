@@ -150,6 +150,25 @@ describe('GET /api/overlay/board', () => {
   });
 });
 
+describe('GET /api/overlay/draw-ticket', () => {
+  it('publishes item photos, descriptions, live probabilities, and remaining stock', async () => {
+    await agent.post('/api/admin/draw-ticket').send({
+      name: '오늘의 뽑기', command: '!뽑기', ticketPrice: 3000,
+      items: [
+        { label: '스페셜', description: '한정 상품', imageUrl: 'data:image/webp;base64,UklGRg==', weight: 1, quantity: 1 },
+        { label: '일반', description: '기본 상품', imageUrl: null, weight: 3, quantity: 2 },
+      ],
+    });
+    const { app } = await createApp(db, { adminPasswordHash: PASSWORD_HASH });
+    const res = await request(app).get('/api/overlay/draw-ticket');
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toContain('no-store');
+    expect(res.body).toMatchObject({ active: true, name: '오늘의 뽑기', command: '!뽑기', ticketPrice: 3000 });
+    expect(res.body.items[0]).toMatchObject({ label: '스페셜', description: '한정 상품', imageUrl: 'data:image/webp;base64,UklGRg==', remainingQuantity: 1, probability: 25 });
+    expect(res.body.items[1]).toMatchObject({ label: '일반', remainingQuantity: 2, probability: 75 });
+  });
+});
+
 describe('GET /api/overlay/audio-settings', () => {
   it('is public, non-cacheable, and reflects saved audio switches', async () => {
     await setSetting(db, 'overlay_sound_enabled', 'false');

@@ -2250,7 +2250,7 @@ textarea,
 .draw-ticket-item-head,
 .draw-ticket-item-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 120px 120px;
+  grid-template-columns: 64px minmax(220px, 1fr) 120px 120px;
   align-items: center;
   gap: 10px;
   min-height: 52px;
@@ -2270,7 +2270,7 @@ textarea,
 .draw-ticket-item-row.sold-out strong { text-decoration: line-through; }
 .draw-ticket-item-table.editable .draw-ticket-item-head,
 .draw-ticket-item-table.editable .draw-ticket-item-row {
-  grid-template-columns: minmax(220px, 1fr) 150px 84px 150px 40px;
+  grid-template-columns: 72px minmax(280px, 1fr) 150px 84px 150px 40px;
 }
 .draw-ticket-item-row > input {
   min-width: 0;
@@ -2288,6 +2288,29 @@ textarea,
   line-height: 1.5;
 }
 .draw-ticket-page .inline-feedback { margin-bottom: 16px; }
+.draw-ticket-thumb,
+.draw-ticket-image-control {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--bg-deep);
+  color: var(--text-dim);
+}
+.draw-ticket-thumb img,
+.draw-ticket-image-control > img { width: 100%; height: 100%; border-radius: 7px; object-fit: cover; }
+.draw-ticket-thumb svg,
+.draw-ticket-image-control > svg { width: 22px; height: 22px; }
+.draw-ticket-image-control label { position: absolute; inset: 0; cursor: pointer; }
+.draw-ticket-image-control input { width: 1px; height: 1px; opacity: 0; }
+.draw-ticket-image-control > button { position: absolute; top: -8px; right: -8px; z-index: 2; width: 20px; height: 20px; min-height: 0; display: grid; place-items: center; padding: 0; border: 1px solid var(--panel-border); border-radius: 50%; background: #fff; color: var(--danger); line-height: 1; }
+.draw-ticket-item-copy,
+.draw-ticket-item-inputs { min-width: 0; display: grid; gap: 6px; }
+.draw-ticket-item-copy small { overflow: hidden; color: var(--text-dim); font-size: .72rem; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.draw-ticket-item-inputs input { min-width: 0; min-height: 36px; padding: 0 10px; border: 1px solid var(--panel-border); border-radius: 6px; background: var(--bg-deep); color: var(--text); }
 
 .draw-ticket-overlay-test {
   grid-template-columns: minmax(0, 1fr) auto;

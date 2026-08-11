@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getActiveSession, getTicketsForSession, getSetting, type Db, type Ticket } from '../db';
+import { getActiveDrawTicketSession, getActiveSession, getTicketsForSession, getSetting, type Db, type Ticket } from '../db';
 import { maskNickname } from '../maskNickname';
 import { getRouletteConfig } from '../rouletteProcessor';
 import { getOverlayAudioSettings } from '../overlayAudioSettings';
@@ -87,6 +87,28 @@ export async function buildRouletteListPayload(db: Db) {
   };
 }
 
+export async function buildDrawTicketListPayload(db: Db) {
+  const session = await getActiveDrawTicketSession(db);
+  if (!session) return { active: false as const };
+  const availableWeight = session.items
+    .filter((item) => item.remainingQuantity > 0)
+    .reduce((sum, item) => sum + item.weight, 0);
+  return {
+    active: true as const,
+    name: session.name,
+    command: session.command,
+    ticketPrice: session.ticketPrice,
+    items: session.items.map((item) => ({
+      label: item.label,
+      description: item.description,
+      imageUrl: item.imageUrl,
+      totalQuantity: item.totalQuantity,
+      remainingQuantity: item.remainingQuantity,
+      probability: item.remainingQuantity > 0 && availableWeight > 0 ? item.weight / availableWeight * 100 : 0,
+    })),
+  };
+}
+
 export function createOverlayRouter(db: Db): Router {
   const router = Router();
 
@@ -102,6 +124,11 @@ export function createOverlayRouter(db: Db): Router {
   router.get('/roulette', async (_req, res) => {
     res.set('Cache-Control', 'no-store');
     res.json(await buildRouletteListPayload(db));
+  });
+
+  router.get('/draw-ticket', async (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(await buildDrawTicketListPayload(db));
   });
 
   router.get('/audio-settings', async (_req, res) => {

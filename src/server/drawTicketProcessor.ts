@@ -8,6 +8,8 @@ import type { DonationEvent } from './donationProcessor';
 export interface DrawTicketResult {
   sessionId: number;
   label: string;
+  description: string;
+  imageUrl: string | null;
   nickname: string;
   amount: number;
   probability: number;
@@ -51,6 +53,8 @@ export async function previewDrawTicket(db: Db, event: DonationEvent, random = M
     result: {
       sessionId: session.id,
       label: item.label,
+      description: item.description,
+      imageUrl: item.imageUrl,
       nickname: event.nickname?.trim() || '익명 후원자',
       amount: event.amount,
       probability,
@@ -76,6 +80,8 @@ export async function processDrawTicketDonation(db: Db, event: DonationEvent, ra
       id: row.id,
       sessionId: row.session_id,
       label: row.label,
+      description: row.description ?? '',
+      imageUrl: row.image_url ?? null,
       weight: row.weight,
       totalQuantity: row.total_quantity,
       remainingQuantity: row.remaining_quantity,
@@ -96,7 +102,7 @@ export async function processDrawTicketDonation(db: Db, event: DonationEvent, ra
     }
     return {
       status: 'triggered',
-      result: { sessionId: current.id, label: item.label, nickname, amount: event.amount, probability, remainingTotal },
+      result: { sessionId: current.id, label: item.label, description: item.description, imageUrl: item.imageUrl, nickname, amount: event.amount, probability, remainingTotal },
     };
   });
 }

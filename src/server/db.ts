@@ -131,6 +131,8 @@ CREATE TABLE IF NOT EXISTS draw_ticket_items (
   id SERIAL PRIMARY KEY,
   session_id INTEGER NOT NULL REFERENCES draw_ticket_sessions(id) ON DELETE CASCADE,
   label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  image_url TEXT,
   weight INTEGER NOT NULL,
   total_quantity INTEGER NOT NULL,
   remaining_quantity INTEGER NOT NULL,
@@ -150,6 +152,8 @@ CREATE TABLE IF NOT EXISTS draw_ticket_results (
 );
 
 ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prize_image_url TEXT;
+ALTER TABLE draw_ticket_items ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+ALTER TABLE draw_ticket_items ADD COLUMN IF NOT EXISTS image_url TEXT;
 `;
 
 export async function initSchema(db: Db): Promise<void> {
@@ -509,6 +513,8 @@ export interface DrawTicketItem {
   id: number;
   sessionId: number;
   label: string;
+  description: string;
+  imageUrl: string | null;
   weight: number;
   totalQuantity: number;
   remainingQuantity: number;
@@ -543,6 +549,8 @@ function rowToDrawTicketItem(row: any): DrawTicketItem {
     id: row.id,
     sessionId: row.session_id,
     label: row.label,
+    description: row.description ?? '',
+    imageUrl: row.image_url ?? null,
     weight: row.weight,
     totalQuantity: row.total_quantity,
     remainingQuantity: row.remaining_quantity,
@@ -587,7 +595,7 @@ export async function createDrawTicketSession(db: Db, input: {
   name: string;
   command: string;
   ticketPrice: number;
-  items: Array<{ label: string; weight: number; quantity: number }>;
+  items: Array<{ label: string; description?: string; imageUrl?: string | null; weight: number; quantity: number }>;
 }): Promise<DrawTicketSession> {
   const sessionId = await db.transaction(async (tx) => {
     await tx.query(`UPDATE draw_ticket_sessions SET status = 'closed', closed_at = COALESCE(closed_at, now()) WHERE status = 'active'`);
@@ -598,8 +606,8 @@ export async function createDrawTicketSession(db: Db, input: {
     const id = rows[0].id as number;
     for (const [position, item] of input.items.entries()) {
       await tx.query(
-        `INSERT INTO draw_ticket_items (session_id, label, weight, total_quantity, remaining_quantity, position) VALUES ($1, $2, $3, $4, $4, $5)`,
-        [id, item.label, item.weight, item.quantity, position],
+        `INSERT INTO draw_ticket_items (session_id, label, description, image_url, weight, total_quantity, remaining_quantity, position) VALUES ($1, $2, $3, $4, $5, $6, $6, $7)`,
+        [id, item.label, item.description ?? '', item.imageUrl ?? null, item.weight, item.quantity, position],
       );
     }
     return id;

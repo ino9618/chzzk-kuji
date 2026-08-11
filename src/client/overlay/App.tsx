@@ -7,6 +7,7 @@ import loginMascotDuoUrl from '../assets/login-mascot-duo.png';
 import rouletteMascotGroupUrl from '../assets/roulette-mascot-group.png';
 import kujiMascotCheerUrl from '../assets/kuji-mascot-cheer.png';
 import kujiMascotLoungeUrl from '../assets/kuji-mascot-lounge.png';
+import kujiMascotPeekUrl from '../assets/kuji-mascot-peek.png';
 import { SequentialEventQueue } from './eventQueue';
 import './overlay.css';
 
@@ -60,6 +61,8 @@ interface RouletteListPayload {
 interface DrawTicketResult {
   sessionId: number;
   label: string;
+  description: string;
+  imageUrl: string | null;
   nickname: string;
   amount: number;
   probability: number;
@@ -68,12 +71,27 @@ interface DrawTicketResult {
   test?: boolean;
 }
 
+interface DrawTicketListPayload {
+  active: boolean;
+  name?: string;
+  command?: string;
+  ticketPrice?: number;
+  items?: Array<{
+    label: string;
+    description: string;
+    imageUrl: string | null;
+    totalQuantity: number;
+    remainingQuantity: number;
+    probability: number;
+  }>;
+}
+
 interface OverlayAudioSettings {
   soundEnabled: boolean;
   ttsEnabled: boolean;
 }
 
-export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'draw-ticket' | 'combined';
+export type OverlayMode = 'kuji' | 'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'draw-ticket' | 'draw-ticket-list' | 'combined';
 
 const ROULETTE_SPIN_MS = 2500;
 const ROULETTE_RESULT_HOLD_MS = 2500;
@@ -106,6 +124,26 @@ function RouletteListOverlay({ config }: { config: RouletteListPayload }) {
         </li>)}
       </ol>
       {!config.enabled && <p className="roulette-list-disabled-note">현재 룰렛이 잠시 쉬고 있어요</p>}
+    </section>
+  </div>;
+}
+
+function DrawTicketListOverlay({ config }: { config: DrawTicketListPayload }) {
+  const items = config.items ?? [];
+  const total = items.reduce((sum, item) => sum + item.totalQuantity, 0);
+  const remaining = items.reduce((sum, item) => sum + item.remainingQuantity, 0);
+  return <div className="draw-ticket-list-stage">
+    <section className={`draw-ticket-list-card ${items.length > 12 ? 'many-items' : ''} ${config.active ? '' : 'disabled'}`}>
+      <img className="draw-ticket-list-mascot" src={kujiMascotPeekUrl} alt="" aria-hidden="true" />
+      <header className="draw-ticket-list-header"><div><span>DRAW TICKET</span><h1>{config.name || '오늘의 뽑기권'}</h1></div><b>{config.active ? '진행 중' : '종료'}</b></header>
+      {config.active && <div className="draw-ticket-list-summary"><span><strong>{config.command}</strong> 명령어</span><span><strong>{(config.ticketPrice ?? 0).toLocaleString('ko-KR')}</strong> 치즈</span><span><strong>{remaining}</strong> / {total}개 남음</span></div>}
+      <div className="draw-ticket-list-items">
+        {items.map((item, index) => <article className={`draw-ticket-list-item ${item.remainingQuantity === 0 ? 'sold-out' : ''}`} key={`${item.label}-${index}`}>
+          <div className="draw-ticket-list-image">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : <span>✦</span>}</div>
+          <div className="draw-ticket-list-copy"><strong>{item.label}</strong>{item.description && <p>{item.description}</p>}<footer><span>{item.remainingQuantity} / {item.totalQuantity}개</span><b>{item.remainingQuantity > 0 ? formatProbability(item.probability) : '소진'}</b></footer></div>
+        </article>)}
+      </div>
+      {!config.active && <p className="draw-ticket-list-empty">현재 진행 중인 뽑기권이 없습니다.</p>}
     </section>
   </div>;
 }
@@ -189,10 +227,9 @@ function DrawTicketAnnouncement({ result }: { result: DrawTicketResult }) {
       <img className="draw-ticket-result-mascot cheer" src={kujiMascotCheerUrl} alt="" aria-hidden="true" />
       <img className="draw-ticket-result-mascot lounge" src={kujiMascotLoungeUrl} alt="" aria-hidden="true" />
       <div className="draw-ticket-stub"><span>DRAW TICKET</span><strong>뽑기권</strong></div>
-      <div className="draw-ticket-reveal">
-        <span>당첨 결과</span>
-        <strong>{result.label}</strong>
-        <p>{result.nickname} · {result.amount.toLocaleString('ko-KR')} 치즈</p>
+      <div className={`draw-ticket-reveal ${result.imageUrl ? 'has-image' : ''}`}>
+        {result.imageUrl && <img src={result.imageUrl} alt="" />}
+        <div><span>당첨 결과</span><strong>{result.label}</strong>{result.description && <small>{result.description}</small>}<p>{result.nickname} · {result.amount.toLocaleString('ko-KR')} 치즈</p></div>
       </div>
       <div className="draw-ticket-result-meta"><span>당첨 당시 확률 <b>{formatProbability(result.probability)}</b></span><span>남은 뽑기권 <b>{result.remainingTotal}개</b></span></div>
     </section>
@@ -228,6 +265,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const [justSold, setJustSold] = useState<number | null>(null);
   const [activeEvent, setActiveEvent] = useState<QueuedOverlayEvent | null>(null);
   const [rouletteList, setRouletteList] = useState<RouletteListPayload | null>(null);
+  const [drawTicketList, setDrawTicketList] = useState<DrawTicketListPayload | null>(null);
   const [audioSettings, setAudioSettings] = useState<OverlayAudioSettings>({ soundEnabled: true, ttsEnabled: true });
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const eventQueue = useRef(new SequentialEventQueue<QueuedOverlayEvent>());
@@ -238,6 +276,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
   const showRoulette = mode === 'combined' || mode === 'roulette';
   const showRouletteList = mode === 'roulette-list';
   const showDrawTicket = mode === 'combined' || mode === 'draw-ticket';
+  const showDrawTicketList = mode === 'draw-ticket-list';
 
   const enqueueKuji = (payload: Omit<OverlayAnnouncement, 'key'>) => {
     const activated = eventQueue.current.enqueue({ id: ++eventId.current, kind: 'kuji', payload });
@@ -300,11 +339,17 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     let rouletteListPoll: number | undefined;
     if (import.meta.env.DEV) {
       const preview = new URLSearchParams(window.location.search).get('preview3d');
-      isDevPreview = preview === 'kuji' || preview === 'kuji-no-image' || preview === 'roulette' || preview === 'draw-ticket' || preview === 'queue' || preview === 'roulette-list' || preview === 'roulette-list-many' || preview === 'board';
+      isDevPreview = preview === 'kuji' || preview === 'kuji-no-image' || preview === 'roulette' || preview === 'draw-ticket' || preview === 'draw-ticket-list' || preview === 'queue' || preview === 'roulette-list' || preview === 'roulette-list-many' || preview === 'board';
       if (preview === 'kuji') enqueueKuji({ number: 7, grade: 'A', prizeName: '한정판 피규어', prizeImageUrl: mascotSuccessUrl, nickname: '테스트 후원자', test: true });
       if (preview === 'kuji-no-image') enqueueKuji({ number: 12, grade: 'B', prizeName: '설냥갱 스페셜 굿즈', nickname: '테스트 후원자', test: true });
       if (preview === 'roulette') enqueueRoulette({ label: '랜덤 미션', nickname: '테스트 후원자', amount: 5000, items: ['노래 한 곡', '랜덤 미션', '다시 돌리기', '간식 타임'], probability: 40, test: true });
-      if (preview === 'draw-ticket') enqueueDrawTicket({ sessionId: 1, label: '설냥갱 스페셜 굿즈', nickname: '테스트 후원자', amount: 3000, probability: 12.5, remainingTotal: 7, test: true });
+      if (preview === 'draw-ticket') enqueueDrawTicket({ sessionId: 1, label: '설냥갱 스페셜 굿즈', description: '방송 한정 스페셜 패키지', imageUrl: mascotSuccessUrl, nickname: '테스트 후원자', amount: 3000, probability: 12.5, remainingTotal: 7, test: true });
+      if (preview === 'draw-ticket-list') setDrawTicketList({ active: true, name: '설냥갱의 오늘 뽑기', command: '!뽑기', ticketPrice: 3000, items: [
+        { label: '스페셜 굿즈', description: '방송 한정 패키지', imageUrl: mascotSuccessUrl, totalQuantity: 1, remainingQuantity: 1, probability: 10 },
+        { label: '랜덤 포토카드', description: '설냥갱 랜덤 포토카드 1장', imageUrl: kujiMascotCheerUrl, totalQuantity: 3, remainingQuantity: 2, probability: 30 },
+        { label: '음료 쿠폰', description: '원하는 음료 한 잔', imageUrl: null, totalQuantity: 4, remainingQuantity: 4, probability: 40 },
+        { label: '다시 뽑기', description: '한 번 더 참여할 수 있어요', imageUrl: null, totalQuantity: 2, remainingQuantity: 0, probability: 0 },
+      ] });
       if (preview === 'queue') {
         enqueueKuji({ number: 3, grade: 'A', prizeName: '첫 번째 쿠지 결과', nickname: '첫 후원자', test: true });
         enqueueRoulette({ label: '두 번째 룰렛 결과', nickname: '두 번째 후원자', amount: 5000, items: ['첫 항목', '두 번째 룰렛 결과', '세 번째 항목'], probability: 33.3, test: true });
@@ -354,6 +399,12 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       void refreshRouletteList();
       rouletteListPoll = window.setInterval(refreshRouletteList, 10_000);
     }
+    let drawTicketListPoll: number | undefined;
+    if (!isDevPreview && showDrawTicketList) {
+      const refreshDrawTicketList = () => fetch('/api/overlay/draw-ticket', { cache: 'no-store' }).then((response) => response.json()).then(setDrawTicketList).catch(() => undefined);
+      void refreshDrawTicketList();
+      drawTicketListPoll = window.setInterval(refreshDrawTicketList, 10_000);
+    }
 
     socket.on('board:update', (next: BoardPayload) => {
       if (!receiveKuji) return;
@@ -394,6 +445,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       eventQueue.current.clear();
       if (boardPoll) window.clearInterval(boardPoll);
       if (rouletteListPoll) window.clearInterval(rouletteListPoll);
+      if (drawTicketListPoll) window.clearInterval(drawTicketListPoll);
     };
   }, [mode]);
 
@@ -424,7 +476,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
     return makeConfetti(gradeClass(announce.grade) === 'grade-a' ? 42 : 26);
   }, [announce?.key]);
 
-  if (!(showBoard && board.active) && !announce && !rouletteResult && !drawTicketResult && !(showRouletteList && rouletteList)) {
+  if (!(showBoard && board.active) && !announce && !rouletteResult && !drawTicketResult && !(showRouletteList && rouletteList) && !(showDrawTicketList && drawTicketList)) {
     return <div className="overlay-empty" />;
   }
 
@@ -494,6 +546,7 @@ export function App({ mode = 'combined' }: { mode?: OverlayMode }) {
       {rouletteResult && <RouletteAnnouncement result={rouletteResult} audioSettings={audioSettings} onComplete={completeActiveEvent} />}
       {drawTicketResult && <DrawTicketAnnouncement result={drawTicketResult} />}
       {showRouletteList && rouletteList && <RouletteListOverlay config={rouletteList} />}
+      {showDrawTicketList && drawTicketList && <DrawTicketListOverlay config={drawTicketList} />}
     </div>
   );
 }

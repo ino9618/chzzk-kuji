@@ -1337,20 +1337,26 @@
 .draw-ticket-reveal {
   display: grid;
   place-content: center;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 26px;
   min-width: 0;
   padding: 48px 72px;
   text-align: center;
   animation: drawTicketReveal .7s .5s cubic-bezier(.2, 1, .3, 1) both;
 }
-.draw-ticket-reveal > span { color: #c48a26; font-size: 28px; font-weight: 800; }
-.draw-ticket-reveal > strong {
+.draw-ticket-reveal.has-image { grid-template-columns: 200px minmax(0, 1fr); padding: 38px 54px; text-align: left; }
+.draw-ticket-reveal > img { width: 200px; height: 200px; border: 3px solid #c8e3ee; border-radius: 16px; background: #fff; object-fit: contain; box-shadow: 0 10px 24px rgba(75,112,132,.16); }
+.draw-ticket-reveal > div { min-width: 0; display: grid; gap: 14px; }
+.draw-ticket-reveal span { color: #c48a26; font-size: 28px; font-weight: 800; }
+.draw-ticket-reveal strong {
   max-width: 680px;
   overflow-wrap: anywhere;
   color: #354e5e;
   font-size: 64px;
   line-height: 1.15;
 }
+.draw-ticket-reveal small { overflow-wrap: anywhere; color: #728795; font-size: 21px; line-height: 1.35; }
 .draw-ticket-reveal p { margin: 0; color: #6a7f8d; font-size: 25px; }
 .draw-ticket-result-meta {
   grid-column: 1 / -1;
@@ -1384,3 +1390,40 @@
   from { opacity: 0; transform: translateY(18px) scale(.92); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* Persistent draw-ticket catalog for a dedicated OBS browser source. */
+.draw-ticket-list-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; display: grid; place-items: center; overflow: hidden; color: #3f5664; }
+.draw-ticket-list-card { position: relative; width: 1440px; max-height: 920px; padding: 34px; border: 4px solid #a7d8e9; border-bottom-color: #efb6c4; border-radius: 24px; background: #f8fcff; box-shadow: inset 0 0 0 6px #e3f3f9, 0 0 0 9px rgba(255,255,255,.95), 0 24px 56px rgba(75,112,132,.22); }
+.draw-ticket-list-mascot { position: absolute; top: -128px; right: 60px; z-index: 3; width: 300px; filter: drop-shadow(0 10px 12px rgba(75,112,132,.18)); }
+.draw-ticket-list-header { min-height: 112px; display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 8px 330px 22px 12px; border-bottom: 3px dashed #c5e3ee; }
+.draw-ticket-list-header span { color: #d57f95; font-size: 1.25rem; font-weight: 900; }
+.draw-ticket-list-header h1 { max-width: 900px; margin: 5px 0 0; overflow: hidden; color: #315a70; font-size: 3rem; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
+.draw-ticket-list-header > b { position: absolute; top: 72px; right: 330px; padding: 9px 16px; border: 2px solid #9dd9c4; border-radius: 999px; background: #eaf8f2; color: #35836a; font-size: 1.15rem; }
+.draw-ticket-list-summary { min-height: 76px; display: flex; align-items: center; gap: 34px; padding: 14px 12px; color: #6c7f8b; font-size: 1.25rem; }
+.draw-ticket-list-summary span { display: inline-flex; align-items: baseline; gap: 7px; }
+.draw-ticket-list-summary strong { color: #bd8730; font-size: 1.5rem; }
+.draw-ticket-list-summary span:first-child strong { color: #4f8daa; }
+.draw-ticket-list-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.draw-ticket-list-item { min-width: 0; min-height: 116px; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; padding: 12px; border: 2px solid #cfe6ef; border-radius: 14px; background: #eef8fc; }
+.draw-ticket-list-item:nth-child(3n + 2) { border-color: #eed3dc; background: #fff5f7; }
+.draw-ticket-list-item:nth-child(3n) { border-color: #eadcae; background: #fff9e9; }
+.draw-ticket-list-image { width: 92px; height: 92px; display: grid; place-items: center; overflow: hidden; border: 2px solid rgba(143,190,211,.55); border-radius: 12px; background: #fff; color: #8fc8df; font-size: 2.2rem; }
+.draw-ticket-list-image img { width: 100%; height: 100%; object-fit: contain; }
+.draw-ticket-list-copy { min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 4px; }
+.draw-ticket-list-copy > strong { overflow: hidden; color: #3f5664; font-size: 1.45rem; text-overflow: ellipsis; white-space: nowrap; }
+.draw-ticket-list-copy p { margin: 0; overflow: hidden; color: #718592; font-size: 1rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.draw-ticket-list-copy footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #718592; font-size: 1.05rem; }
+.draw-ticket-list-copy footer b { color: #b87918; font-size: 1.15rem; }
+.draw-ticket-list-item.sold-out { border-color: #dce3e7; background: #f2f4f5; opacity: .62; }
+.draw-ticket-list-item.sold-out .draw-ticket-list-copy > strong { text-decoration: line-through; }
+.draw-ticket-list-card.many-items { width: 1660px; padding: 26px; }
+.draw-ticket-list-card.many-items .draw-ticket-list-header { min-height: 92px; padding-bottom: 14px; }
+.draw-ticket-list-card.many-items .draw-ticket-list-summary { min-height: 58px; padding-top: 8px; padding-bottom: 8px; }
+.draw-ticket-list-card.many-items .draw-ticket-list-items { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.draw-ticket-list-card.many-items .draw-ticket-list-item { min-height: 58px; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; padding: 6px 8px; border-radius: 8px; }
+.draw-ticket-list-card.many-items .draw-ticket-list-image { width: 46px; height: 46px; border-radius: 7px; font-size: 1.1rem; }
+.draw-ticket-list-card.many-items .draw-ticket-list-copy > strong { font-size: 1rem; }
+.draw-ticket-list-card.many-items .draw-ticket-list-copy p { display: none; }
+.draw-ticket-list-card.many-items .draw-ticket-list-copy footer { font-size: .82rem; }
+.draw-ticket-list-card.many-items .draw-ticket-list-copy footer b { font-size: .9rem; }
+.draw-ticket-list-empty { margin: 24px 0 0; padding: 26px; border: 2px solid #eadcae; border-radius: 12px; background: #fff9e9; color: #7d6b3d; font-size: 1.35rem; font-weight: 900; text-align: center; }

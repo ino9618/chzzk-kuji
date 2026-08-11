@@ -78,11 +78,11 @@ export interface RouletteConfig { enabled: boolean; minimumAmount: number; regis
 export interface RouletteLogEntry { id: number; donorNickname: string; donorChannelId: string; amount: number; resultLabel: string; createdAt: string; }
 export type RouletteProcessResult = { status: 'ignored' | 'disabled' } | { status: 'below_minimum' | 'registration_below_minimum'; minimumAmount: number } | { status: 'registration_rejected'; reason: string } | { status: 'registered'; label: string; nickname: string; amount: number } | { status: 'triggered'; result: { label: string; nickname: string; amount: number; items: string[]; probability: number } };
 
-export interface DrawTicketItem { id: number; sessionId: number; label: string; weight: number; totalQuantity: number; remainingQuantity: number; position: number; }
+export interface DrawTicketItem { id: number; sessionId: number; label: string; description: string; imageUrl: string | null; weight: number; totalQuantity: number; remainingQuantity: number; position: number; }
 export interface DrawTicketSession { id: number; name: string; command: string; ticketPrice: number; status: 'active' | 'closed'; createdAt: string; closedAt: string | null; items: DrawTicketItem[]; }
 export interface DrawTicketResultEntry { id: number; sessionId: number; itemId: number | null; donorNickname: string; donorChannelId: string; amount: number; resultLabel: string; probability: number; createdAt: string; }
 export interface DrawTicketState { active: boolean; session?: DrawTicketSession; results: DrawTicketResultEntry[]; }
-export type DrawTicketProcessResult = { status: 'ignored' | 'inactive' | 'sold_out' } | { status: 'amount_mismatch'; ticketPrice: number } | { status: 'triggered'; result: { sessionId: number; label: string; nickname: string; amount: number; probability: number; remainingTotal: number } };
+export type DrawTicketProcessResult = { status: 'ignored' | 'inactive' | 'sold_out' } | { status: 'amount_mismatch'; ticketPrice: number } | { status: 'triggered'; result: { sessionId: number; label: string; description: string; imageUrl: string | null; nickname: string; amount: number; probability: number; remainingTotal: number } };
 
 async function jsonFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
@@ -115,7 +115,7 @@ export const api = {
   getRouletteLog: () => jsonFetch<RouletteLogEntry[]>('/api/admin/roulette/log'),
   testRoulette: () => jsonFetch<RouletteProcessResult>('/api/admin/roulette/test', { method: 'POST' }),
   getDrawTicket: () => jsonFetch<DrawTicketState>('/api/admin/draw-ticket'),
-  createDrawTicket: (config: { name: string; command: string; ticketPrice: number; items: Array<{ label: string; weight: number; quantity: number }> }) =>
+  createDrawTicket: (config: { name: string; command: string; ticketPrice: number; items: Array<{ label: string; description: string; imageUrl: string | null; weight: number; quantity: number }> }) =>
     jsonFetch<DrawTicketSession>('/api/admin/draw-ticket', { method: 'POST', body: JSON.stringify(config) }),
   closeDrawTicket: () => jsonFetch<{ ok: true }>('/api/admin/draw-ticket/close', { method: 'POST' }),
   testDrawTicket: () => jsonFetch<DrawTicketProcessResult>('/api/admin/draw-ticket/test', { method: 'POST' }),

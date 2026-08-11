@@ -18,6 +18,7 @@ export default defineConfig({
         overlayRoulette: path.resolve(__dirname, 'src/client/overlay-roulette.html'),
         overlayRouletteList: path.resolve(__dirname, 'src/client/overlay-roulette-list.html'),
         overlayDrawTicket: path.resolve(__dirname, 'src/client/overlay-draw-ticket.html'),
+        overlayDrawTicketList: path.resolve(__dirname, 'src/client/overlay-draw-ticket-list.html'),
         manual: path.resolve(__dirname, 'src/client/manual.html'),
         preview3d: path.resolve(__dirname, 'src/client/preview-3d.html'),
       },

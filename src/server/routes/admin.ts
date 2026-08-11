@@ -156,6 +156,10 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
     const validItems = Array.isArray(items) && items.length >= 1 && items.length <= 50 && items.every((item) => {
       const value = item as Record<string, unknown>;
       return typeof value.label === 'string' && value.label.trim().length >= 1 && value.label.trim().length <= 60
+        && (value.description == null || (typeof value.description === 'string' && value.description.trim().length <= 160))
+        && (value.imageUrl == null || value.imageUrl === '' || (typeof value.imageUrl === 'string'
+          && value.imageUrl.length <= 2_000_000
+          && /^data:image\/(?:webp|png|jpeg);base64,[a-zA-Z0-9+/=]+$/.test(value.imageUrl)))
         && Number.isInteger(value.weight) && Number(value.weight) >= 1 && Number(value.weight) <= 1000
         && Number.isInteger(value.quantity) && Number(value.quantity) >= 1 && Number(value.quantity) <= 1000;
     });
@@ -169,7 +173,13 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
       name: name.trim(),
       command: command.trim(),
       ticketPrice: Number(ticketPrice),
-      items: (items as Array<Record<string, unknown>>).map((item) => ({ label: String(item.label).trim(), weight: Number(item.weight), quantity: Number(item.quantity) })),
+      items: (items as Array<Record<string, unknown>>).map((item) => ({
+        label: String(item.label).trim(),
+        description: typeof item.description === 'string' ? item.description.trim() : '',
+        imageUrl: typeof item.imageUrl === 'string' && item.imageUrl ? item.imageUrl : null,
+        weight: Number(item.weight),
+        quantity: Number(item.quantity),
+      })),
     });
     res.json(session);
   });

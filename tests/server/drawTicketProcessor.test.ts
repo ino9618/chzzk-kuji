@@ -11,7 +11,7 @@ afterAll(async () => { await db.close(); });
 async function createDraw() {
   return createDrawTicketSession(db, {
     name: '테스트 뽑기', command: '!뽑기', ticketPrice: 3000,
-    items: [{ label: 'A 상품', weight: 3, quantity: 1 }, { label: 'B 상품', weight: 1, quantity: 2 }],
+    items: [{ label: 'A 상품', description: '한정 상품', imageUrl: 'data:image/webp;base64,UklGRg==', weight: 3, quantity: 1 }, { label: 'B 상품', weight: 1, quantity: 2 }],
   });
 }
 
@@ -31,7 +31,7 @@ describe('draw ticket processor', () => {
   it('depletes inventory and never selects a sold-out item again', async () => {
     await createDraw();
     const first = await processDrawTicketDonation(db, { channelId: 'c1', nickname: '첫째', amount: 3000, message: '!뽑기' }, () => 0);
-    expect(first).toMatchObject({ status: 'triggered', result: { label: 'A 상품', remainingTotal: 2 } });
+    expect(first).toMatchObject({ status: 'triggered', result: { label: 'A 상품', description: '한정 상품', imageUrl: 'data:image/webp;base64,UklGRg==', remainingTotal: 2 } });
     const second = await processDrawTicketDonation(db, { channelId: 'c2', nickname: '둘째', amount: 3000, message: '!뽑기' }, () => 0);
     expect(second).toMatchObject({ status: 'triggered', result: { label: 'B 상품', remainingTotal: 1 } });
     const third = await processDrawTicketDonation(db, { channelId: 'c3', nickname: '셋째', amount: 3000, message: '!뽑기' }, () => 0);

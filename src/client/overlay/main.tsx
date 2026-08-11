@@ -10,6 +10,8 @@ const mode: OverlayMode = path.endsWith('/overlay-kuji-board.html')
       ? 'kuji'
       : path.endsWith('/overlay-roulette-list.html')
         ? 'roulette-list'
+      : path.endsWith('/overlay-draw-ticket-list.html')
+        ? 'draw-ticket-list'
       : path.endsWith('/overlay-draw-ticket.html')
         ? 'draw-ticket'
       : path.endsWith('/overlay-roulette.html')

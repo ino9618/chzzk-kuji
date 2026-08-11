@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, type DrawTicketState } from '../api';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { DrawTicketIcon, PlusIcon, TrashIcon } from '../components/Icons';
+import { DrawTicketIcon, ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
 import { InlineFeedback } from '../components/InlineFeedback';
 import { NumberStepper } from '../components/NumberStepper';
+import { resizeUploadImage } from '../imageUtils';
 
-interface DraftItem { label: string; weight: number; quantity: number; }
+interface DraftItem { label: string; description: string; imageUrl: string | null; weight: number; quantity: number; }
 const initialItems: DraftItem[] = [
-  { label: '스페셜 상품', weight: 1, quantity: 1 },
-  { label: '일반 상품', weight: 3, quantity: 3 },
+  { label: '스페셜 상품', description: '오늘의 특별 상품', imageUrl: null, weight: 1, quantity: 1 },
+  { label: '일반 상품', description: '방송에서 안내할 상품', imageUrl: null, weight: 3, quantity: 3 },
 ];
 
 export function DrawTicketPage({ refreshKey = 0 }: { refreshKey?: number }) {
@@ -59,22 +60,27 @@ export function DrawTicketPage({ refreshKey = 0 }: { refreshKey?: number }) {
   const totalQuantity = activeItems.reduce((sum, item) => sum + item.totalQuantity, 0);
   const draftWeight = useMemo(() => items.reduce((sum, item) => sum + item.weight, 0), [items]);
   const updateItem = (index: number, patch: Partial<DraftItem>) => setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
+  const selectImage = async (index: number, file?: File) => {
+    if (!file) return;
+    try { updateItem(index, { imageUrl: await resizeUploadImage(file) }); }
+    catch (error) { setFeedback({ ok: false, text: error instanceof Error ? error.message : '이미지를 처리하지 못했습니다.' }); }
+  };
 
   return <div className="admin-page draw-ticket-page">
     <header className="page-header"><div><h1>뽑기권</h1><p>설정 금액과 명령어가 일치하면 남은 항목 중 하나를 뽑고 수량을 1개 차감합니다.</p></div>{state.active && <span className="draw-ticket-live"><i />진행 중</span>}</header>
     {state.active && state.session ? <section className="draw-ticket-active roulette-config-panel">
       <div className="roulette-config-head"><div className="roulette-icon"><DrawTicketIcon /></div><div><strong>{state.session.name}</strong><p><code>{state.session.command}</code> · {state.session.ticketPrice.toLocaleString('ko-KR')} 치즈 정확히 후원</p></div><div className="draw-ticket-stock"><span>남은 뽑기권</span><strong>{remainingTotal}<small>/ {totalQuantity}</small></strong></div></div>
       <div className="draw-ticket-item-table">
-        <div className="draw-ticket-item-head"><span>항목</span><span>현재 확률</span><span>남은 수량</span></div>
-        {activeItems.map((item) => <div className={`draw-ticket-item-row ${item.remainingQuantity === 0 ? 'sold-out' : ''}`} key={item.id}><strong>{item.label}</strong><span>{item.remainingQuantity > 0 && activeWeight > 0 ? `${Number((item.weight / activeWeight * 100).toFixed(1))}%` : '-'}</span><span><b>{item.remainingQuantity}</b> / {item.totalQuantity}</span></div>)}
+        <div className="draw-ticket-item-head"><span>사진</span><span>항목</span><span>현재 확률</span><span>남은 수량</span></div>
+        {activeItems.map((item) => <div className={`draw-ticket-item-row ${item.remainingQuantity === 0 ? 'sold-out' : ''}`} key={item.id}><div className="draw-ticket-thumb">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : <ImageIcon />}</div><div className="draw-ticket-item-copy"><strong>{item.label}</strong>{item.description && <small>{item.description}</small>}</div><span>{item.remainingQuantity > 0 && activeWeight > 0 ? `${Number((item.weight / activeWeight * 100).toFixed(1))}%` : '-'}</span><span><b>{item.remainingQuantity}</b> / {item.totalQuantity}</span></div>)}
       </div>
       <p className="draw-ticket-rule-note">수량이 0이 된 항목은 이 회차에서 다시 나오지 않습니다. 마지막 항목이 소진되면 자동 종료됩니다.</p>
       <div className="roulette-actions"><button className="secondary-button" disabled={pending} onClick={test}>오버레이 테스트</button><button className="danger-button" disabled={pending} onClick={() => setConfirmClose(true)}>뽑기 종료</button></div>
     </section> : <section className="draw-ticket-setup roulette-config-panel">
       <div className="roulette-config-head"><div className="roulette-icon"><DrawTicketIcon /></div><div><strong>새 뽑기권 설정</strong><p>가중치는 확률을, 수량은 해당 항목이 나올 수 있는 횟수를 결정합니다.</p></div></div>
       <div className="draw-ticket-fields"><label>뽑기 이름<input value={name} maxLength={60} onChange={(event) => setName(event.target.value)} /></label><label>후원 명령어<input value={command} maxLength={21} onChange={(event) => setCommand(event.target.value.replace(/\s/g, ''))} /></label><label>후원 금액<NumberStepper aria-label="뽑기권 후원 금액" min={1} step={100} suffix="치즈" value={ticketPrice} onValueChange={setTicketPrice} /></label></div>
-      <div className="draw-ticket-item-table editable"><div className="draw-ticket-item-head"><span>항목</span><span>가중치</span><span>예상 확률</span><span>수량</span><span /></div>{items.map((item, index) => <div className="draw-ticket-item-row" key={index}><input aria-label={`${index + 1}번 뽑기 항목`} value={item.label} maxLength={60} onChange={(event) => updateItem(index, { label: event.target.value })} /><NumberStepper aria-label={`${index + 1}번 가중치`} min={1} max={1000} value={item.weight} onValueChange={(weight) => updateItem(index, { weight })} /><span>{draftWeight > 0 ? `${Number((item.weight / draftWeight * 100).toFixed(1))}%` : '-'}</span><NumberStepper aria-label={`${index + 1}번 수량`} min={1} max={1000} value={item.quantity} onValueChange={(quantity) => updateItem(index, { quantity })} /><button className="icon-button" aria-label={`${index + 1}번 항목 삭제`} disabled={items.length <= 1} onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}><TrashIcon /></button></div>)}</div>
-      <button className="secondary-button add-prize-button" disabled={items.length >= 50} onClick={() => setItems((current) => [...current, { label: '', weight: 1, quantity: 1 }])}><PlusIcon />항목 추가</button>
+      <div className="draw-ticket-item-table editable"><div className="draw-ticket-item-head"><span>사진</span><span>항목과 설명</span><span>가중치</span><span>예상 확률</span><span>수량</span><span /></div>{items.map((item, index) => <div className="draw-ticket-item-row" key={index}><div className="draw-ticket-image-control">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : <ImageIcon />}<label title="항목 사진 선택"><span className="sr-only">{index + 1}번 항목 사진 선택</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void selectImage(index, event.target.files?.[0]); event.target.value = ''; }} /></label>{item.imageUrl && <button aria-label={`${index + 1}번 항목 사진 삭제`} onClick={() => updateItem(index, { imageUrl: null })}>×</button>}</div><div className="draw-ticket-item-inputs"><input aria-label={`${index + 1}번 뽑기 항목`} value={item.label} maxLength={60} onChange={(event) => updateItem(index, { label: event.target.value })} placeholder="항목명" /><input aria-label={`${index + 1}번 뽑기 설명`} value={item.description} maxLength={160} onChange={(event) => updateItem(index, { description: event.target.value })} placeholder="시청자에게 보여줄 설명" /></div><NumberStepper aria-label={`${index + 1}번 가중치`} min={1} max={1000} value={item.weight} onValueChange={(weight) => updateItem(index, { weight })} /><span>{draftWeight > 0 ? `${Number((item.weight / draftWeight * 100).toFixed(1))}%` : '-'}</span><NumberStepper aria-label={`${index + 1}번 수량`} min={1} max={1000} value={item.quantity} onValueChange={(quantity) => updateItem(index, { quantity })} /><button className="icon-button" aria-label={`${index + 1}번 항목 삭제`} disabled={items.length <= 1} onClick={() => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index))}><TrashIcon /></button></div>)}</div>
+      <button className="secondary-button add-prize-button" disabled={items.length >= 50} onClick={() => setItems((current) => [...current, { label: '', description: '', imageUrl: null, weight: 1, quantity: 1 }])}><PlusIcon />항목 추가</button>
       <div className="roulette-actions"><button disabled={pending} onClick={create}>{pending ? '시작 중' : '뽑기 시작'}</button></div>
     </section>}
     {feedback && <InlineFeedback tone={feedback.ok ? 'success' : 'error'}>{feedback.text}</InlineFeedback>}
