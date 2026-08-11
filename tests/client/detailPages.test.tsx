@@ -12,6 +12,7 @@ import { SessionSetupPage } from '../../src/client/admin/pages/SessionSetupPage'
 import { DrawResultCard, drawStageScale } from '../../src/client/overlay/DrawAnnouncement';
 import { RoulettePage } from '../../src/client/admin/pages/RoulettePage';
 import { FeaturesPage } from '../../src/client/admin/pages/FeaturesPage';
+import { DrawTicketPage } from '../../src/client/admin/pages/DrawTicketPage';
 import type { Winner } from '../../src/client/admin/api';
 
 const winners: Winner[] = [{ sessionId: 1, sessionName: '여름 회차', number: 2, prizeName: '아메리카노', prizeGrade: 'A', ownerNickname: '홍길동', ownerChannelId: 'channel-1', soldAt: '2026-07-11T00:00:00.000Z' }];
@@ -30,6 +31,7 @@ describe('FeaturesPage', () => {
     expect(html).toContain('방송 기능');
     expect(html).toContain('이치방쿠지');
     expect(html).toContain('후원 룰렛');
+    expect(html).toContain('뽑기권');
     expect(html).toContain('빠른 실행');
     expect(html).toContain('방송 전 점검');
     expect(html).toContain('쿠지 번호판');
@@ -77,10 +79,12 @@ describe('detail settings pages', () => {
     expect(html).toContain('쿠지 당첨 애니메이션 OBS 소스');
     expect(html).toContain('룰렛 OBS 소스');
     expect(html).toContain('룰렛 목록 OBS 소스');
+    expect(html).toContain('뽑기권 결과 OBS 소스');
     expect(html).toContain('/overlay-kuji-board.html');
     expect(html).toContain('/overlay-kuji-result.html');
     expect(html).toContain('/overlay-roulette.html');
     expect(html).toContain('/overlay-roulette-list.html');
+    expect(html).toContain('/overlay-draw-ticket.html');
     expect(html).toContain('한정판 피규어');
     expect(html).toContain('· 이미지');
     expect(html).toContain('직접 입력 · 예시 이미지');
@@ -104,6 +108,18 @@ describe('detail settings pages', () => {
     expect(html).toContain('사용법');
     expect(html).toContain('로그아웃');
     expect(html).not.toContain('치지직 연결');
+  });
+});
+
+describe('DrawTicketPage', () => {
+  it('renders independent command, probability, and quantity controls', () => {
+    const html = renderToStaticMarkup(<DrawTicketPage />);
+    expect(html).toContain('뽑기권');
+    expect(html).toContain('!뽑기');
+    expect(html).toContain('가중치');
+    expect(html).toContain('예상 확률');
+    expect(html).toContain('수량');
+    expect(html).toContain('뽑기 시작');
   });
 });
 

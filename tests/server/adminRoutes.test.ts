@@ -104,17 +104,23 @@ describe('admin session routes', () => {
       name: '초기화 회차', ticketPrice: 1000, numberRangeMin: 1, numberRangeMax: 1,
       tickets: [{ number: 1, prizeName: 'A상' }],
     });
-    const { insertDonationLog, insertRouletteLog, setSetting } = await import('../../src/server/db');
+    const { createDrawTicketSession, insertDonationLog, insertRouletteLog, setSetting } = await import('../../src/server/db');
+    const { processDrawTicketDonation } = await import('../../src/server/drawTicketProcessor');
     await insertDonationLog(db, {
       sessionId: null, donorNickname: '후원자', donorChannelId: 'c1', amount: 1000,
       rawMessage: '1번', status: 'processed', needsAttention: false,
     });
     await insertRouletteLog(db, { donorNickname: '후원자', donorChannelId: 'c1', amount: 1000, resultLabel: 'A' });
     await setSetting(db, 'roulette_items', JSON.stringify([{ label: 'A', weight: 1 }, { label: 'B', weight: 1 }]));
+    await createDrawTicketSession(db, {
+      name: '초기화 뽑기', command: '!뽑기', ticketPrice: 1000,
+      items: [{ label: '뽑기 상품', weight: 1, quantity: 1 }],
+    });
+    await processDrawTicketDonation(db, { donorNickname: '후원자', donorChannelId: 'c1', amount: 1000, message: '!뽑기' });
 
     const reset = await agent.post('/api/admin/history/reset');
     expect(reset.status).toBe(200);
-    expect(reset.body).toEqual({ ok: true, deleted: { sessions: 1, donations: 1, rouletteResults: 1 } });
+    expect(reset.body).toEqual({ ok: true, deleted: { sessions: 1, donations: 1, rouletteResults: 1, drawTicketSessions: 1, drawTicketResults: 1 } });
     expect((await agent.get('/api/admin/sessions')).body).toEqual([]);
     expect((await agent.get('/api/admin/log')).body).toEqual([]);
     expect((await agent.get('/api/admin/roulette/log')).body).toEqual([]);
@@ -137,6 +143,43 @@ describe('roulette settings', () => {
   it('rejects invalid roulette weights', async () => {
     const res = await agent.post('/api/admin/roulette').send({ enabled: true, minimumAmount: 1000, registrationAmount: 5000, items: [{ label: 'A', weight: 0 }, { label: 'B', weight: 1 }] });
     expect(res.status).toBe(400);
+  });
+});
+
+describe('draw ticket settings', () => {
+  it('creates an independent consumable draw and previews without consuming stock', async () => {
+    const config = {
+      name: '오늘의 뽑기', command: '!뽑기', ticketPrice: 3000,
+      items: [{ label: '대상', weight: 1, quantity: 1 }, { label: '참가상', weight: 4, quantity: 3 }],
+    };
+    const create = await agent.post('/api/admin/draw-ticket').send(config);
+    expect(create.status).toBe(200);
+    expect(create.body).toMatchObject({ name: '오늘의 뽑기', command: '!뽑기', ticketPrice: 3000, status: 'active' });
+    expect(create.body.items).toHaveLength(2);
+
+    const test = await agent.post('/api/admin/draw-ticket/test');
+    expect(test.status).toBe(200);
+    expect(test.body.status).toBe('triggered');
+
+    const state = await agent.get('/api/admin/draw-ticket');
+    expect(state.body.active).toBe(true);
+    expect(state.body.session.items.map((item: any) => item.remainingQuantity)).toEqual([1, 3]);
+    expect(state.body.results).toEqual([]);
+  });
+
+  it('validates the command and supports ending the active draw', async () => {
+    const invalid = await agent.post('/api/admin/draw-ticket').send({
+      name: '잘못된 뽑기', command: '뽑기', ticketPrice: 1000,
+      items: [{ label: '상품', weight: 1, quantity: 1 }],
+    });
+    expect(invalid.status).toBe(400);
+
+    await agent.post('/api/admin/draw-ticket').send({
+      name: '종료할 뽑기', command: '!뽑기', ticketPrice: 1000,
+      items: [{ label: '상품', weight: 1, quantity: 1 }],
+    });
+    expect((await agent.post('/api/admin/draw-ticket/close')).body).toEqual({ ok: true });
+    expect((await agent.get('/api/admin/draw-ticket')).body.active).toBe(false);
   });
 });
 

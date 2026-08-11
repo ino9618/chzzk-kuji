@@ -11,6 +11,7 @@ import {
   TicketIcon,
   TrophyIcon,
   RouletteIcon,
+  DrawTicketIcon,
 } from './Icons';
 import { adminNavigationSections, type AdminIconName } from '../adminFeatures';
 import { MoreSheet } from './MoreSheet';
@@ -32,6 +33,7 @@ const iconMap: Record<AdminIconName, typeof DashboardIcon> = {
   settings: SettingsIcon,
   sliders: SlidersIcon,
   roulette: RouletteIcon,
+  draw: DrawTicketIcon,
 };
 
 const statusLabels: Record<string, string> = {

@@ -13,11 +13,12 @@ import { processDonation } from './donationProcessor';
 import { ChzzkSocketClient } from './chzzkSocket';
 import { loadTokens, saveTokens } from './chzzkAuth';
 import { broadcastBoardUpdate, broadcastQueueUpdate, broadcastConnectionStatus } from './broadcast';
-import { broadcastKujiResult, broadcastRouletteResult } from './broadcast';
+import { broadcastDrawTicketResult, broadcastKujiResult, broadcastRouletteResult } from './broadcast';
 import { getRouletteConfig, processRouletteDonation } from './rouletteProcessor';
-import { buildRouletteSpeech, buildWinnerSpeech, createGoogleTtsSynthesizer, type RouletteSpeechInput, type WinnerSpeechInput } from './googleTts';
+import { buildDrawTicketSpeech, buildRouletteSpeech, buildWinnerSpeech, createGoogleTtsSynthesizer, type DrawTicketSpeechInput, type RouletteSpeechInput, type WinnerSpeechInput } from './googleTts';
 import { isValidAdminToken } from './middleware/adminAuth';
 import { getOverlayAudioSettings } from './overlayAudioSettings';
+import { previewDrawTicket, processDrawTicketDonation } from './drawTicketProcessor';
 
 /**
  * Extracts the value of a single cookie by name from a raw Cookie header
@@ -144,6 +145,7 @@ export interface AppOptions {
   adminPasswordHash: string;
   disconnectChzzk?: () => Promise<void> | void;
   simulateRoulette?: (event: import('./donationProcessor').DonationEvent) => Promise<import('./rouletteProcessor').RouletteProcessResult>;
+  simulateDrawTicket?: (event: import('./donationProcessor').DonationEvent) => Promise<import('./drawTicketProcessor').DrawTicketProcessResult>;
 }
 
 export async function createApp(db: Db, options: AppOptions) {
@@ -177,6 +179,7 @@ export async function createApp(db: Db, options: AppOptions) {
     getChzzkStatus: () => chzzkStatus,
     disconnectChzzk: options.disconnectChzzk,
     simulateRoulette: options.simulateRoulette ?? ((event) => processRouletteDonation(db, event)),
+    simulateDrawTicket: options.simulateDrawTicket ?? ((event) => previewDrawTicket(db, event)),
   }));
   app.use('/api/overlay', createOverlayRouter(db));
 
@@ -217,10 +220,12 @@ async function main(): Promise<void> {
 
   let disconnectActiveChzzk = () => undefined;
   let simulateRoulette = (event: import('./donationProcessor').DonationEvent) => processRouletteDonation(db, event);
+  let simulateDrawTicket = (event: import('./donationProcessor').DonationEvent) => previewDrawTicket(db, event);
   const { app, setChzzkStatus } = await createApp(db, {
     adminPasswordHash,
     disconnectChzzk: () => disconnectActiveChzzk(),
     simulateRoulette: (event) => simulateRoulette(event),
+    simulateDrawTicket: (event) => simulateDrawTicket(event),
   });
 
   if (process.env.NODE_ENV === 'production') {
@@ -235,6 +240,7 @@ async function main(): Promise<void> {
   const synthesizeSpeech = googleTtsCredentials ? createGoogleTtsSynthesizer(googleTtsCredentials) : undefined;
   const createWinnerAudio = synthesizeSpeech ? (input: WinnerSpeechInput) => synthesizeSpeech(buildWinnerSpeech(input)) : undefined;
   const createRouletteAudio = synthesizeSpeech ? (input: RouletteSpeechInput) => synthesizeSpeech(buildRouletteSpeech(input)) : undefined;
+  const createDrawTicketAudio = synthesizeSpeech ? (input: DrawTicketSpeechInput) => synthesizeSpeech(buildDrawTicketSpeech(input)) : undefined;
   registerSocketHandlers(io, db, createWinnerAudio, createRouletteAudio);
   const announceProcessedWinners = async (
     event: import('./donationProcessor').DonationEvent,
@@ -271,6 +277,19 @@ async function main(): Promise<void> {
   simulateRoulette = async (event) => {
     const result = await processRouletteDonation(db, event);
     if (result.status === 'triggered') broadcastRouletteResult(io, await addRouletteAudio(result.result));
+    return result;
+  };
+  const addDrawTicketAudio = async (result: import('./drawTicketProcessor').DrawTicketResult) => {
+    if (!createDrawTicketAudio || !(await getOverlayAudioSettings(db)).ttsEnabled) return result;
+    try { return { ...result, audioDataUrl: await createDrawTicketAudio(result) }; }
+    catch (error) {
+      console.error('Google Cloud draw ticket TTS generation failed:', error);
+      return result;
+    }
+  };
+  simulateDrawTicket = async (event) => {
+    const result = await previewDrawTicket(db, event);
+    if (result.status === 'triggered') broadcastDrawTicketResult(io, { ...await addDrawTicketAudio(result.result), test: true });
     return result;
   };
 
@@ -336,8 +355,13 @@ async function main(): Promise<void> {
         const roulette = await processRouletteDonation(db, event);
         if (roulette.status === 'triggered') broadcastRouletteResult(io, await addRouletteAudio(roulette.result));
         if (roulette.status === 'registered') io.to('admin').emit('roulette:config-updated', { label: roulette.label, nickname: roulette.nickname, amount: roulette.amount });
+        const drawTicket = roulette.status === 'ignored' ? await processDrawTicketDonation(db, event) : undefined;
+        if (drawTicket?.status === 'triggered') {
+          broadcastDrawTicketResult(io, await addDrawTicketAudio(drawTicket.result));
+          io.to('admin').emit('draw-ticket:update');
+        }
         let kujiResult: import('./donationProcessor').ProcessDonationResult | undefined;
-        if (roulette.status === 'ignored') {
+        if (roulette.status === 'ignored' && drawTicket?.status === 'ignored') {
           kujiResult = await processDonation(db, event);
         }
         const board = await buildBoardPayload(db);

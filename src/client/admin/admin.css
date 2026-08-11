@@ -2190,3 +2190,113 @@ textarea,
 }
 .features-page .feature-quick-action:nth-child(2) { border-bottom-color: #f0d5dc; }
 .features-page .feature-quick-action:nth-child(3) { border-bottom-color: #eadcae; }
+
+/* Consumable draw tickets are intentionally separate from Kuji and roulette. */
+.features-page .feature-item:nth-child(3) {
+  border-top-color: #dfbd75;
+  border-left-color: #d9aa4c;
+}
+.features-page .feature-item:nth-child(3) .feature-item-icon {
+  border: 1px solid #eadcae;
+  background: #fff6da;
+  color: #b87919;
+}
+.draw-ticket-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--success);
+  font-size: .78rem;
+  font-weight: 800;
+}
+.draw-ticket-live i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 5px var(--success-bg);
+}
+.draw-ticket-stock {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+.draw-ticket-stock span { color: var(--text-dim); font-size: .7rem; font-weight: 700; }
+.draw-ticket-stock strong { color: var(--accent); font-size: 1.45rem; }
+.draw-ticket-stock small { margin-left: 4px; color: var(--text-dim); font-size: .75rem; }
+.draw-ticket-fields {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px 230px;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--panel-border);
+}
+.draw-ticket-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-dim);
+  font-size: .72rem;
+  font-weight: 800;
+}
+.draw-ticket-fields input {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  background: var(--bg-deep);
+  color: var(--text);
+}
+.draw-ticket-item-table {
+  margin: 16px 16px 0;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+.draw-ticket-item-head,
+.draw-ticket-item-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 120px 120px;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 12px;
+}
+.draw-ticket-item-head {
+  min-height: 36px;
+  background: var(--bg-deep);
+  color: var(--text-dim);
+  font-size: .7rem;
+  font-weight: 800;
+}
+.draw-ticket-item-row { border-top: 1px solid var(--panel-border); }
+.draw-ticket-item-row > span { color: var(--accent); font-size: .78rem; font-weight: 800; text-align: right; }
+.draw-ticket-item-row > span b { font-size: 1rem; }
+.draw-ticket-item-row.sold-out { background: #f5f7f8; opacity: .62; }
+.draw-ticket-item-row.sold-out strong { text-decoration: line-through; }
+.draw-ticket-item-table.editable .draw-ticket-item-head,
+.draw-ticket-item-table.editable .draw-ticket-item-row {
+  grid-template-columns: minmax(220px, 1fr) 150px 84px 150px 40px;
+}
+.draw-ticket-item-row > input {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--bg-deep);
+  color: var(--text);
+}
+.draw-ticket-rule-note {
+  margin: 14px 16px 0;
+  color: var(--text-dim);
+  font-size: .72rem;
+  line-height: 1.5;
+}
+.draw-ticket-page .inline-feedback { margin-bottom: 16px; }
+
+@media (min-width: 1240px) {
+  .features-page .feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .features-page .feature-item { grid-template-columns: 52px minmax(0, 1fr); }
+  .features-page .feature-item > button { grid-column: 1 / -1; justify-self: end; }
+}

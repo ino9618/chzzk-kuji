@@ -31,5 +31,5 @@ export async function createTestDb(): Promise<Db> {
 }
 
 export async function resetDb(db: Db): Promise<void> {
-  await db.query('TRUNCATE sessions, tickets, donation_log, roulette_log, settings RESTART IDENTITY CASCADE');
+  await db.query('TRUNCATE sessions, tickets, donation_log, roulette_log, draw_ticket_sessions, draw_ticket_items, draw_ticket_results, settings RESTART IDENTITY CASCADE');
 }

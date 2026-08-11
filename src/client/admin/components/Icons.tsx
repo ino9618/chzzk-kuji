@@ -29,3 +29,4 @@ export const ImageIcon = (props: IconProps) => <IconBase {...props}><rect x="3" 
 export const ArrowLeftIcon = (props: IconProps) => <IconBase {...props}><path d="m15 18-6-6 6-6M9 12h11" /></IconBase>;
 export const ChevronRightIcon = (props: IconProps) => <IconBase {...props}><path d="m9 18 6-6-6-6" /></IconBase>;
 export const RouletteIcon = (props: IconProps) => <IconBase {...props}><circle cx="12" cy="12" r="9" /><path d="M12 3v9l6.4 6.4M12 12l-8.4 3.3" /><circle cx="12" cy="12" r="2" /></IconBase>;
+export const DrawTicketIcon = (props: IconProps) => <IconBase {...props}><path d="M5 4h14v4a2.5 2.5 0 0 0 0 5v7H5v-7a2.5 2.5 0 0 0 0-5z" /><path d="M9 4v16M12 8h4M12 12h4M12 16h3" /></IconBase>;

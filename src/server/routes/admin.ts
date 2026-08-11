@@ -15,6 +15,10 @@ import {
   setSetting,
   deleteSetting,
   listRouletteLog,
+  closeActiveDrawTicketSession,
+  createDrawTicketSession,
+  getActiveDrawTicketSession,
+  listDrawTicketResults,
   type Db,
 } from '../db';
 import { requireAdmin } from '../middleware/adminAuth';
@@ -22,11 +26,13 @@ import { requireOwner } from '../middleware/adminAuth';
 import type { DonationEvent } from '../donationProcessor';
 import { getRouletteConfig, type RouletteConfig, type RouletteProcessResult } from '../rouletteProcessor';
 import { getOverlayAudioSettings, saveOverlayAudioSettings } from '../overlayAudioSettings';
+import type { DrawTicketProcessResult } from '../drawTicketProcessor';
 
 export interface AdminRouterDeps {
   getChzzkStatus: () => 'connected' | 'disconnected' | 'reconnecting' | 'not_configured' | 'needs_reauth';
   disconnectChzzk?: () => Promise<void> | void;
   simulateRoulette: (event: DonationEvent) => Promise<RouletteProcessResult>;
+  simulateDrawTicket: (event: DonationEvent) => Promise<DrawTicketProcessResult>;
 }
 
 export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
@@ -138,6 +144,48 @@ export function createAdminRouter(db: Db, deps: AdminRouterDeps): Router {
       return;
     }
     res.json(await deps.simulateRoulette({ channelId: 'roulette-test', nickname: '테스트 후원자', amount: config.minimumAmount, message: '!룰렛' }));
+  });
+
+  router.get('/draw-ticket', async (_req, res) => {
+    const [session, results] = await Promise.all([getActiveDrawTicketSession(db), listDrawTicketResults(db, 50)]);
+    res.json(session ? { active: true, session, results } : { active: false, results });
+  });
+
+  router.post('/draw-ticket', async (req, res) => {
+    const { name, command, ticketPrice, items } = req.body as Record<string, unknown>;
+    const validItems = Array.isArray(items) && items.length >= 1 && items.length <= 50 && items.every((item) => {
+      const value = item as Record<string, unknown>;
+      return typeof value.label === 'string' && value.label.trim().length >= 1 && value.label.trim().length <= 60
+        && Number.isInteger(value.weight) && Number(value.weight) >= 1 && Number(value.weight) <= 1000
+        && Number.isInteger(value.quantity) && Number(value.quantity) >= 1 && Number(value.quantity) <= 1000;
+    });
+    if (typeof name !== 'string' || !name.trim() || name.trim().length > 60
+      || typeof command !== 'string' || !/^![\p{L}\p{N}_-]{1,20}$/u.test(command.trim())
+      || !Number.isInteger(ticketPrice) || Number(ticketPrice) < 1 || !validItems) {
+      res.status(400).json({ error: 'invalid_draw_ticket_config' });
+      return;
+    }
+    const session = await createDrawTicketSession(db, {
+      name: name.trim(),
+      command: command.trim(),
+      ticketPrice: Number(ticketPrice),
+      items: (items as Array<Record<string, unknown>>).map((item) => ({ label: String(item.label).trim(), weight: Number(item.weight), quantity: Number(item.quantity) })),
+    });
+    res.json(session);
+  });
+
+  router.post('/draw-ticket/close', async (_req, res) => {
+    await closeActiveDrawTicketSession(db);
+    res.json({ ok: true });
+  });
+
+  router.post('/draw-ticket/test', async (_req, res) => {
+    const session = await getActiveDrawTicketSession(db);
+    if (!session) {
+      res.status(409).json({ error: 'draw_ticket_inactive' });
+      return;
+    }
+    res.json(await deps.simulateDrawTicket({ channelId: 'draw-ticket-test', nickname: '테스트 후원자', amount: session.ticketPrice, message: session.command }));
   });
 
   router.get('/nickname-mode', async (_req, res) => {

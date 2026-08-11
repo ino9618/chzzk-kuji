@@ -1,4 +1,4 @@
-import { MonitorIcon, RouletteIcon, SettingsIcon, TicketIcon } from '../components/Icons';
+import { DrawTicketIcon, MonitorIcon, RouletteIcon, SettingsIcon, TicketIcon } from '../components/Icons';
 import type { AdminPage } from '../adminModel';
 import loginMascotDuoUrl from '../../assets/login-mascot-duo.png';
 
@@ -20,6 +20,13 @@ const features = [
     description: '후원 메시지로 가중치 룰렛을 실행하고 결과를 오버레이에 표시합니다.',
     icon: RouletteIcon,
     action: '설정하기',
+  },
+  {
+    page: 'draw-ticket' as const,
+    title: '뽑기권',
+    description: '수량이 정해진 항목을 가중치에 따라 뽑고, 당첨된 재고를 자동으로 소진합니다.',
+    icon: DrawTicketIcon,
+    action: '운영하기',
   },
 ];
 

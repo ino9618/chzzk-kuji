@@ -60,7 +60,7 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
   const [testPending, setTestPending] = useState(false);
   const [audioPending, setAudioPending] = useState(false);
   const [audioSettings, setAudioSettings] = useState<OverlayAudioSettings>({ soundEnabled: true, ttsEnabled: true });
-  const [testMode, setTestMode] = useState<'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list'>('kuji-result');
+  const [testMode, setTestMode] = useState<'kuji-board' | 'kuji-result' | 'roulette' | 'roulette-list' | 'draw-ticket'>('kuji-result');
   const [test, setTest] = useState<OverlayTestPayload>({ number: 1, grade: 'A', prizeName: '테스트 상품', nickname: '테스트 후원자', prizeImageUrl: examplePrizeImage });
   const [rouletteTest, setRouletteTest] = useState<RouletteOverlayTestPayload>({ label: '테스트 룰렛 결과', nickname: '테스트 후원자', amount: 5000 });
   const origin = typeof window === 'undefined' ? '' : window.location.origin;
@@ -68,10 +68,13 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
   const kujiResultUrl = `${origin}/overlay-kuji-result.html`;
   const rouletteUrl = `${origin}/overlay-roulette.html`;
   const rouletteListUrl = `${origin}/overlay-roulette-list.html`;
+  const drawTicketUrl = `${origin}/overlay-draw-ticket.html`;
   const previewUrl = testMode === 'kuji-board'
     ? '/overlay-kuji-board.html'
     : testMode === 'kuji-result'
       ? '/overlay-kuji-result.html?preview3d=kuji'
+      : testMode === 'draw-ticket'
+        ? '/overlay-draw-ticket.html?preview3d=draw-ticket'
       : testMode === 'roulette-list'
         ? '/overlay-roulette-list.html?preview3d=roulette-list'
         : '/overlay-roulette.html?preview3d=roulette';
@@ -151,6 +154,18 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
       setTestPending(false);
     }
   };
+  const runDrawTicketTest = async () => {
+    setTestPending(true);
+    setFeedback('');
+    try {
+      const result = await api.testDrawTicket();
+      setFeedback(result.status === 'triggered'
+        ? `뽑기권 테스트를 전송했습니다. 결과는 “${result.result.label}”이며 실제 수량은 차감되지 않습니다.`
+        : '진행 중인 뽑기권을 먼저 설정해 주세요.');
+    } catch {
+      setFeedback('진행 중인 뽑기권을 먼저 설정해 주세요.');
+    } finally { setTestPending(false); }
+  };
   const selectRegisteredTicket = (value: string) => {
     const sourceTicketNumber = Number(value);
     const ticket = registeredTickets.find((item) => item.number === sourceTicketNumber);
@@ -178,8 +193,9 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
           <button className={testMode === 'kuji-result' ? 'active' : ''} onClick={() => setTestMode('kuji-result')}>당첨 애니메이션</button>
           <button className={testMode === 'roulette' ? 'active' : ''} onClick={() => setTestMode('roulette')}>룰렛</button>
           <button className={testMode === 'roulette-list' ? 'active' : ''} onClick={() => setTestMode('roulette-list')}>룰렛 목록</button>
+          <button className={testMode === 'draw-ticket' ? 'active' : ''} onClick={() => setTestMode('draw-ticket')}>뽑기권</button>
         </div>
-        {testMode === 'kuji-board' ? <p className="overlay-test-note overlay-board-note">번호판은 현재 진행 중인 회차와 판매 상태를 실시간으로 표시합니다.</p> : testMode === 'roulette-list' ? <p className="overlay-test-note overlay-board-note">관리자에서 저장한 룰렛 항목과 당첨 확률을 자동으로 불러옵니다.</p> : testMode === 'kuji-result' ? <div className="overlay-test-form">
+        {testMode === 'kuji-board' ? <p className="overlay-test-note overlay-board-note">번호판은 현재 진행 중인 회차와 판매 상태를 실시간으로 표시합니다.</p> : testMode === 'roulette-list' ? <p className="overlay-test-note overlay-board-note">관리자에서 저장한 룰렛 항목과 당첨 확률을 자동으로 불러옵니다.</p> : testMode === 'draw-ticket' ? <div className="overlay-test-form draw-ticket-overlay-test"><p>현재 진행 중인 뽑기권에서 결과를 미리 뽑습니다. 실제 잔여 수량과 결과 기록은 변경되지 않습니다.</p><button disabled={testPending} onClick={runDrawTicketTest}>{testPending ? '표시 중' : '뽑기권 테스트'}</button></div> : testMode === 'kuji-result' ? <div className="overlay-test-form">
           <label className="overlay-prize-source">등록 상품<select value={test.sourceTicketNumber ?? ''} onChange={(event) => selectRegisteredTicket(event.target.value)}><option value="">직접 입력 · 예시 이미지</option>{registeredTickets.map((ticket) => <option value={ticket.number} key={ticket.number}>{ticket.number}번 · {ticket.prizeGrade ? `${ticket.prizeGrade}상 · ` : ''}{ticket.prizeName}{ticket.prizeImageUrl ? ' · 이미지' : ''}</option>)}</select></label>
           <label>번호<NumberStepper aria-label="테스트 번호" min={1} max={9999} disabled={test.sourceTicketNumber != null} value={test.number} onValueChange={(number) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, number }))} /></label>
           <label>등급<input type="text" maxLength={8} disabled={test.sourceTicketNumber != null} value={test.grade} onChange={(event) => setTest((current) => ({ ...current, sourceTicketNumber: undefined, grade: event.target.value }))} /></label>
@@ -212,6 +228,9 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
         </SettingRow>
         <SettingRow title="룰렛 목록 OBS 소스" description="등록된 룰렛 항목과 가중치 기반 당첨 확률을 계속 표시합니다. 설정 저장 후 10초 이내 자동 반영됩니다.">
           <div className="overlay-actions"><code>{rouletteListUrl}</code><button onClick={() => copy(rouletteListUrl, '룰렛 목록 오버레이')}>복사</button><button className="secondary-button" onClick={() => window.open(rouletteListUrl, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>
+        </SettingRow>
+        <SettingRow title="뽑기권 결과 OBS 소스" description="소진형 뽑기권 당첨 결과만 표시합니다. OBS 크기는 1920 × 1080으로 설정하세요.">
+          <div className="overlay-actions"><code>{drawTicketUrl}</code><button onClick={() => copy(drawTicketUrl, '뽑기권 결과 오버레이')}>복사</button><button className="secondary-button" onClick={() => window.open(drawTicketUrl, '_blank', 'noopener,noreferrer')}>새 창 미리보기</button></div>
         </SettingRow>
         <SettingRow title="닉네임 표시" description="전체 노출은 방송 화면에 시청자 닉네임을 그대로 표시합니다.">
           <div className="segmented-control"><button disabled={pending} className={nicknameMode === 'masked' ? 'active' : ''} onClick={() => setMode('masked')}>부분 마스킹</button><button disabled={pending} className={nicknameMode === 'full' ? 'active' : ''} onClick={() => setMode('full')}>전체 노출</button></div>

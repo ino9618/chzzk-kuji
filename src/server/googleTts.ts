@@ -10,6 +10,11 @@ export interface RouletteSpeechInput {
   label: string;
 }
 
+export interface DrawTicketSpeechInput {
+  nickname: string | null;
+  label: string;
+}
+
 export function buildWinnerSpeech(input: WinnerSpeechInput): string {
   const winner = input.nickname?.trim() || '익명 후원자';
   const grade = input.grade?.trim() ? `${input.grade.trim()}상 ` : '';
@@ -21,6 +26,12 @@ export function buildRouletteSpeech(input: RouletteSpeechInput): string {
   const winner = input.nickname?.trim() || '익명 후원자';
   const result = input.label.trim() || '당첨';
   return `${winner}님의 룰렛 결과는 ${result}입니다. 축하합니다.`;
+}
+
+export function buildDrawTicketSpeech(input: DrawTicketSpeechInput): string {
+  const winner = input.nickname?.trim() || '익명 후원자';
+  const result = input.label.trim() || '상품';
+  return `${winner}님의 뽑기권 결과는 ${result}입니다. 축하합니다.`;
 }
 
 export async function synthesizeGoogleTts(text: string, accessToken: string, fetcher: typeof fetch = fetch): Promise<string> {

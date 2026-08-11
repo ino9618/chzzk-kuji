@@ -117,6 +117,38 @@ CREATE TABLE IF NOT EXISTS roulette_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS draw_ticket_sessions (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  command TEXT NOT NULL,
+  ticket_price INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS draw_ticket_items (
+  id SERIAL PRIMARY KEY,
+  session_id INTEGER NOT NULL REFERENCES draw_ticket_sessions(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  weight INTEGER NOT NULL,
+  total_quantity INTEGER NOT NULL,
+  remaining_quantity INTEGER NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS draw_ticket_results (
+  id SERIAL PRIMARY KEY,
+  session_id INTEGER NOT NULL REFERENCES draw_ticket_sessions(id) ON DELETE CASCADE,
+  item_id INTEGER REFERENCES draw_ticket_items(id) ON DELETE SET NULL,
+  donor_nickname TEXT NOT NULL,
+  donor_channel_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  result_label TEXT NOT NULL,
+  probability DOUBLE PRECISION NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prize_image_url TEXT;
 `;
 
@@ -287,8 +319,11 @@ export async function listSessionHistory(db: Db): Promise<SessionHistoryEntry[]>
   });
 }
 
-export async function clearBroadcastHistory(db: Db): Promise<{ sessions: number; donations: number; rouletteResults: number }> {
+export async function clearBroadcastHistory(db: Db): Promise<{ sessions: number; donations: number; rouletteResults: number; drawTicketSessions: number; drawTicketResults: number }> {
   return db.transaction(async (tx) => {
+    const drawTicketResult = await tx.query(`DELETE FROM draw_ticket_results`);
+    await tx.query(`DELETE FROM draw_ticket_items`);
+    const drawTicketSessionResult = await tx.query(`DELETE FROM draw_ticket_sessions`);
     await tx.query(`DELETE FROM tickets`);
     const donationResult = await tx.query(`DELETE FROM donation_log`);
     const sessionResult = await tx.query(`DELETE FROM sessions`);
@@ -297,6 +332,8 @@ export async function clearBroadcastHistory(db: Db): Promise<{ sessions: number;
       sessions: sessionResult.rowCount,
       donations: donationResult.rowCount,
       rouletteResults: rouletteResult.rowCount,
+      drawTicketSessions: drawTicketSessionResult.rowCount,
+      drawTicketResults: drawTicketResult.rowCount,
     };
   });
 }
@@ -466,4 +503,117 @@ export async function insertRouletteLog(db: Db, entry: Omit<RouletteLogEntry, 'i
 export async function listRouletteLog(db: Db, limit = 100): Promise<RouletteLogEntry[]> {
   const { rows } = await db.query(`SELECT * FROM roulette_log ORDER BY id DESC LIMIT $1`, [limit]);
   return rows.map((row) => ({ id: row.id, donorNickname: row.donor_nickname, donorChannelId: row.donor_channel_id, amount: row.amount, resultLabel: row.result_label, createdAt: toIso(row.created_at) }));
+}
+
+export interface DrawTicketItem {
+  id: number;
+  sessionId: number;
+  label: string;
+  weight: number;
+  totalQuantity: number;
+  remainingQuantity: number;
+  position: number;
+}
+
+export interface DrawTicketSession {
+  id: number;
+  name: string;
+  command: string;
+  ticketPrice: number;
+  status: 'active' | 'closed';
+  createdAt: string;
+  closedAt: string | null;
+  items: DrawTicketItem[];
+}
+
+export interface DrawTicketResultEntry {
+  id: number;
+  sessionId: number;
+  itemId: number | null;
+  donorNickname: string;
+  donorChannelId: string;
+  amount: number;
+  resultLabel: string;
+  probability: number;
+  createdAt: string;
+}
+
+function rowToDrawTicketItem(row: any): DrawTicketItem {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    label: row.label,
+    weight: row.weight,
+    totalQuantity: row.total_quantity,
+    remainingQuantity: row.remaining_quantity,
+    position: row.position,
+  };
+}
+
+function rowToDrawTicketResult(row: any): DrawTicketResultEntry {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    itemId: row.item_id,
+    donorNickname: row.donor_nickname,
+    donorChannelId: row.donor_channel_id,
+    amount: row.amount,
+    resultLabel: row.result_label,
+    probability: Number(row.probability),
+    createdAt: toIso(row.created_at),
+  };
+}
+
+async function hydrateDrawTicketSession(db: Db, row: any): Promise<DrawTicketSession> {
+  const { rows } = await db.query(`SELECT * FROM draw_ticket_items WHERE session_id = $1 ORDER BY position ASC, id ASC`, [row.id]);
+  return {
+    id: row.id,
+    name: row.name,
+    command: row.command,
+    ticketPrice: row.ticket_price,
+    status: row.status,
+    createdAt: toIso(row.created_at),
+    closedAt: row.closed_at == null ? null : toIso(row.closed_at),
+    items: rows.map(rowToDrawTicketItem),
+  };
+}
+
+export async function getActiveDrawTicketSession(db: Db): Promise<DrawTicketSession | undefined> {
+  const { rows } = await db.query(`SELECT * FROM draw_ticket_sessions WHERE status = 'active' ORDER BY id DESC LIMIT 1`);
+  return rows[0] ? hydrateDrawTicketSession(db, rows[0]) : undefined;
+}
+
+export async function createDrawTicketSession(db: Db, input: {
+  name: string;
+  command: string;
+  ticketPrice: number;
+  items: Array<{ label: string; weight: number; quantity: number }>;
+}): Promise<DrawTicketSession> {
+  const sessionId = await db.transaction(async (tx) => {
+    await tx.query(`UPDATE draw_ticket_sessions SET status = 'closed', closed_at = COALESCE(closed_at, now()) WHERE status = 'active'`);
+    const { rows } = await tx.query(
+      `INSERT INTO draw_ticket_sessions (name, command, ticket_price) VALUES ($1, $2, $3) RETURNING id`,
+      [input.name, input.command, input.ticketPrice],
+    );
+    const id = rows[0].id as number;
+    for (const [position, item] of input.items.entries()) {
+      await tx.query(
+        `INSERT INTO draw_ticket_items (session_id, label, weight, total_quantity, remaining_quantity, position) VALUES ($1, $2, $3, $4, $4, $5)`,
+        [id, item.label, item.weight, item.quantity, position],
+      );
+    }
+    return id;
+  });
+  const session = await getActiveDrawTicketSession(db);
+  if (!session || session.id !== sessionId) throw new Error('draw_ticket_session_create_failed');
+  return session;
+}
+
+export async function closeActiveDrawTicketSession(db: Db): Promise<void> {
+  await db.query(`UPDATE draw_ticket_sessions SET status = 'closed', closed_at = COALESCE(closed_at, now()) WHERE status = 'active'`);
+}
+
+export async function listDrawTicketResults(db: Db, limit = 100): Promise<DrawTicketResultEntry[]> {
+  const { rows } = await db.query(`SELECT * FROM draw_ticket_results ORDER BY id DESC LIMIT $1`, [limit]);
+  return rows.map(rowToDrawTicketResult);
 }

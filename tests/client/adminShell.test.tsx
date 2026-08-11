@@ -15,6 +15,7 @@ describe('AppShell', () => {
     expect(html).toContain('방송 기능');
     expect(html).toContain('이치방쿠지 관리');
     expect(html).toContain('후원 룰렛');
+    expect(html).toContain('뽑기권');
     expect(html).toContain('판매 번호판');
     expect(html).toContain('당첨 내역');
     expect(html).toContain('회차 설정');

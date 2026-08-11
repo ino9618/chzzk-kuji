@@ -19,3 +19,7 @@ export function broadcastRouletteResult(io: SocketIOServer, result: unknown): vo
 export function broadcastKujiResult(io: SocketIOServer, result: unknown): void {
   io.emit('kuji:result', result);
 }
+
+export function broadcastDrawTicketResult(io: SocketIOServer, result: unknown): void {
+  io.emit('draw-ticket:result', result);
+}
