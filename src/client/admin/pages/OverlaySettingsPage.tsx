@@ -208,7 +208,7 @@ export function OverlaySettingsPage({ session, nicknameMode, onSetNicknameMode, 
           <label>후원자<input type="text" maxLength={40} value={rouletteTest.nickname} onChange={(event) => setRouletteTest((current) => ({ ...current, nickname: event.target.value }))} /></label>
           <button disabled={testPending} onClick={runRouletteTest}>{testPending ? '표시 중' : '룰렛 테스트'}</button>
         </div>}
-        {testMode !== 'roulette-list' && <p className="overlay-test-note">테스트는 OBS와 위 미리보기에 동시에 표시되며 회차, 번호판, 당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다.</p>}
+        {testMode !== 'roulette-list' && <p className="overlay-test-note">테스트는 OBS와 위 미리보기에 동시에 표시되며 회차, 번호판, 당첨 내역, 룰렛 및 뽑기권 결과에는 저장되지 않습니다.</p>}
       </section>
       <section className="workflow-section">
         <SettingRow title="효과음" description="이치방쿠지 당첨음과 룰렛 회전·정지 효과음을 켜거나 끕니다.">

@@ -2295,6 +2295,28 @@ textarea,
 }
 .draw-ticket-page .inline-feedback { margin-bottom: 16px; }
 
+.draw-ticket-overlay-test {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 16px;
+  border-top: 1px solid var(--panel-border);
+}
+.draw-ticket-overlay-test p {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-dim);
+  font-size: .84rem;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+.draw-ticket-overlay-test button {
+  min-width: 164px;
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: .82rem;
+}
+
 @media (min-width: 1240px) {
   .features-page .feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .features-page .feature-item { grid-template-columns: 52px minmax(0, 1fr); }

@@ -97,7 +97,7 @@ describe('detail settings pages', () => {
     expect(html).toContain('이치방쿠지 테스트');
     expect(html).toContain('당첨 애니메이션');
     expect(html).toContain('룰렛');
-    expect(html).toContain('당첨 내역 및 룰렛 결과 내역에는 저장되지 않습니다');
+    expect(html).toContain('당첨 내역, 룰렛 및 뽑기권 결과에는 저장되지 않습니다');
     expect(html).toContain('효과음');
     expect(html).toContain('Google Cloud TTS');
     expect(html).toContain('API를 호출하지 않습니다');
